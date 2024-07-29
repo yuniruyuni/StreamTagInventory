@@ -1,0 +1,54 @@
+{
+  "name": "twitch-tag-inventory",
+  "productName": "twitch-tag-inventory",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "Twitch Tag Inventory is a tool for managing your twitch streaming category and tags.",
+  "type": "module",
+  "module": "es2022",
+  "keywords": [],
+  "author": {
+    "name": "yuniruyuni",
+    "email": "yuniruyuni@gmail.com"
+  },
+  "scripts": {
+    "start": "run-p 'start:**'",
+    "start:frontend:static": "mkdir -p static && cp src/index.html static/index.html",
+    "start:frontend:bundle": "bun build  --watch --sourcemap=inline --outdir=static/ src/index.tsx",
+    "start:frontend:tailwind": "tailwindcss --watch -o static/index.css -i src/index.css",
+    "start:test": "bun --watch test",
+    "start:type": "tsc --noEmit --watch",
+    "start:lint": "bun run lint",
+    "build": "run-s build:frontend",
+    "build:frontend": "run-p 'build:frontend:**'",
+    "build:frontend:html": "mkdir -p static && cp src/index.html static/index.html",
+    "build:frontend:bundle": "NODE_ENV=production bun build --minify --outdir=./static/ src/index.tsx",
+    "build:frontend:tailwind": "tailwindcss -i src/index.css -o ./static/index.css",
+    "test": "bun test",
+    "type": "tsc --noEmit",
+    "lint": "biome lint",
+    "format": "biome format --write",
+    "check": "biome check --write"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "swr": "^2.2.5",
+    "wouter": "^3.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "@types/bun": "^1.1.6",
+    "@types/node": "^20.14.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/web": "^0.0.151",
+    "bun": "^1.1.20",
+    "daisyui": "^4.12.10",
+    "npm-run-all2": "^6.2.2",
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.5.4"
+  },
+  "trustedDependencies": ["@biomejs/biome", "bun"]
+}
