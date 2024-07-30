@@ -9,6 +9,6 @@ RUN bun install --frozen-lockfile
 ADD . /work
 RUN bun run build
 
-FROM joseluisq/static-web-server:latest
+FROM nginx:alpine-slim
 
-COPY --from=build /work/static/* /public/
+COPY --from=build /work/static/* /usr/share/nginx/html/
