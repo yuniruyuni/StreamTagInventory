@@ -1,6 +1,6 @@
 import { type Dispatch, type FC, type ReactNode, createContext, useCallback, useEffect, useState } from "react";
 
-const CLIENT_ID = "e30r2pc3vbafazj0hpjau9snc9d4kc";
+import { CLIENT_ID } from "./constant";
 
 export const TwitchAuthContext = createContext<AuthToken>("");
 
