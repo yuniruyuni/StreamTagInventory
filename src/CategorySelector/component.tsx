@@ -50,8 +50,8 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
       setCursor(next);
 
       ref.current?.children[next]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
+        behavior: "smooth",
+        block: "nearest",
       });
     },
     [cursor, categories],

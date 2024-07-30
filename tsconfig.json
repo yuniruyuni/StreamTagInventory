@@ -9,7 +9,7 @@
     /* Alias */
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],
+      "~/*": ["./src/*"]
     },
 
     /* Bundler mode */
@@ -29,5 +29,5 @@
     /* Debugging */
     "sourceMap": true
   },
-  "exclude": ["static/**/*"],
+  "exclude": ["static/**/*"]
 }
