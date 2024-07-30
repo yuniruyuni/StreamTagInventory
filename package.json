@@ -13,6 +13,7 @@
   },
   "scripts": {
     "start": "run-p 'start:**'",
+    "start:backend": "bun run --watch bin/local.ts",
     "start:frontend:static": "mkdir -p static && cp src/index.html static/index.html",
     "start:frontend:bundle": "bun build  --watch --sourcemap=inline --outdir=static/ src/index.tsx",
     "start:frontend:tailwind": "tailwindcss --watch -o static/index.css -i src/index.css",
