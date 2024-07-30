@@ -2,12 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import useSWR from "swr";
 import "./index.css";
-import { twitch } from "./fetcher";
 
+import { CategorySelector } from "~/CategorySelector";
+import type { Category } from "~/model/category";
 import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
+import { twitch } from "./fetcher";
 
 function MainScreen() {
     const token = React.useContext(TwitchAuthContext);
+    const [category, setCategory] = React.useState<Category | undefined>(undefined);
 
     const { data: users, isLoading, error } = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get);
 
@@ -16,7 +19,8 @@ function MainScreen() {
 
     return (
         <div>
-            user: {users.data[0].display_name}
+            <span>user: {users.data[0].display_name}</span>
+            <CategorySelector value={category} onChange={setCategory} />
         </div>
     );
 }
