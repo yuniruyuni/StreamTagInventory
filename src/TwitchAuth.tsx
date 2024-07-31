@@ -3,7 +3,15 @@ import { type FC, type ReactNode, createContext, } from "react";
 import { CLIENT_ID } from "~/constant";
 import { useStorage } from "~/useStorage";
 
-export const TwitchAuthContext = createContext<AuthToken>("");
+export const TwitchAuthContext = createContext<AuthInfo>({
+  token: "",
+  logout: () => {},
+});
+
+type AuthInfo = {
+  token: AuthToken;
+  logout: () => void;
+};
 
 type AuthToken = string;
 
@@ -37,8 +45,9 @@ export const TwitchAuthProvider: FC<{ children: ReactNode }> = ({
   }
 
   if (token && token !== "") {
+    const logout = () => { setToken("") };
     return (
-      <TwitchAuthContext.Provider value={token}>
+      <TwitchAuthContext.Provider value={{token, logout}} >
         {children}
       </TwitchAuthContext.Provider>
     );

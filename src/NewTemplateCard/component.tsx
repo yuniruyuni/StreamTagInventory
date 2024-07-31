@@ -1,5 +1,6 @@
 import React from "react";
 import type { FC } from "react";
+import { ulid } from 'ulid';
 import type { Template } from "~/model/template";
 
 import { CategorySelector } from "~/CategorySelector";
@@ -13,10 +14,13 @@ function validateTemplate(template: Partial<Template>): template is Template {
   return template.title !== undefined && template.category !== undefined && template.tags !== undefined;
 }
 
+function newTemplate(): Partial<Template> {
+return {id: ulid()};
+}
 
 // TODO: refine UI design.
 export const NewTemplateCard: FC<Props> = ({ onAdd }) => {
-  const [template, setTemplate] = React.useState<Partial<Template>>({});
+  const [template, setTemplate] = React.useState<Partial<Template>>(newTemplate());
 
   return (
     <div className="card w-96 bg-base-100 shadow-xl">
@@ -31,6 +35,7 @@ export const NewTemplateCard: FC<Props> = ({ onAdd }) => {
           <button type="button" className="btn btn-primary" onClick={() => {
             if( !validateTemplate(template) ) return;
             onAdd(template);
+            setTemplate(newTemplate());
           }}>Add</button>
         </div>
       </div>
