@@ -3,16 +3,15 @@ import ReactDOM from "react-dom/client";
 import useSWR from "swr";
 import "./index.css";
 
-import { CategorySelector } from "~/CategorySelector";
-import type { Category } from "~/model/category";
+import { NewTemplateCard } from "~/NewTemplateCard";
+import { useStorage } from "~/useStorage";
 import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
 import { twitch } from "./fetcher";
+import type { Template } from "./model/template";
 
 function MainScreen() {
   const token = React.useContext(TwitchAuthContext);
-  const [category, setCategory] = React.useState<Category | undefined>(
-    undefined,
-  );
+  const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
   const {
     data: users,
@@ -26,7 +25,16 @@ function MainScreen() {
   return (
     <div className="p-16">
       <span>user: {users.data[0].display_name}</span>
-      <CategorySelector value={category} onChange={setCategory} />
+      {
+        templates.map((template) => (
+          <div key={template.title}>
+            <span>{template.title}</span>
+            <span>{template.category.name}</span>
+            <span>{template.tags}</span>
+          </div>
+        ))
+      }
+      <NewTemplateCard onAdd={(template) => setTemplates([...templates, template])} />
     </div>
   );
 }

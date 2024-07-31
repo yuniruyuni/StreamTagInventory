@@ -1,14 +1,7 @@
-import {
-  type Dispatch,
-  type FC,
-  type ReactNode,
-  createContext,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { type FC, type ReactNode, createContext, } from "react";
 
-import { CLIENT_ID } from "./constant";
+import { CLIENT_ID } from "~/constant";
+import { useStorage } from "~/useStorage";
 
 export const TwitchAuthContext = createContext<AuthToken>("");
 
@@ -25,29 +18,6 @@ function generateURI(auth: Auth) {
   const scope = auth.scope.join("+");
   return `${url}?client_id=${CLIENT_ID}&redirect_uri=${auth.redirect_url}&response_type=${auth.response_type}&scope=${scope}`;
 }
-
-const useStorage = <T,>(key: string, def: T): [T, Dispatch<T>] => {
-  const [storage, setState] = useState<T>(def);
-
-  useEffect(() => {
-    const loaded = localStorage.getItem(key);
-    if (loaded == null) return;
-    const parsed = JSON.parse(loaded);
-    if (!parsed) return;
-    setState(parsed);
-  }, [key]);
-
-  const setStorage = useCallback(
-    (updated: T) => {
-      const json = JSON.stringify(updated);
-      localStorage.setItem(key, json);
-      setState(updated);
-    },
-    [key],
-  );
-
-  return [storage, setStorage];
-};
 
 export const TwitchAuthProvider: FC<{ children: ReactNode }> = ({
   children,

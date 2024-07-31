@@ -60,7 +60,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
   return (
     <div className="dropdown relative">
       <label htmlFor="text" className="relative w-full h-24">
-        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+        <div className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none ">
           {value && <img src={value.box_art_url} alt={value.name} />}
         </div>
 
@@ -124,6 +124,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
             }
           }}
           className={clsx(
+            "relative z-10",
             "w-full h-24 ps-24",
             "input input-bordered form-input",
             "focus:outline-none",
@@ -136,7 +137,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
         className={clsx(
           open ? "visible" : "invisible",
           "absolute top-0",
-          "w-full h-fit -z-10",
+          "w-full h-fit",
           "border border-slate-300",
           "outline outline-slate-200",
           "bg-base-100",
@@ -148,7 +149,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
           className={clsx(
             "menu",
             "mt-24",
-            "w-full max-h-80 py-0 p-2 -z-10",
+            "w-full max-h-80 py-0 p-2",
             "flex-nowrap overflow-auto",
           )}
         >
