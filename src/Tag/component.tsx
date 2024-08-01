@@ -24,10 +24,12 @@ export const Tag: React.FC<Props> = ({ onClose, children }) => (
         type="button"
         className={clsx(
           "inline-flex items-center",
-          "p-1 ms-2",
-          "text-sm text-blue-400 bg-transparent",
           "rounded-sm",
-          "hover:bg-blue-200 hover:text-blue-900 dark:hover:bg-blue-800 dark:hover:text-blue-300",
+          "p-1 ms-2",
+          "text-sm",
+          "text-blue-400 bg-transparent",
+          "hover:bg-blue-200 hover:text-blue-900",
+          "dark:hover:bg-blue-800 dark:hover:text-blue-300",
         )}
         data-dismiss-target="#badge-dismiss-default"
         aria-label="Remove"
