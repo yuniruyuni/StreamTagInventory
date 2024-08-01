@@ -19,11 +19,11 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
 
   const ref = React.useRef<HTMLUListElement>(null);
 
-  const { data } = useSWR(
+  const { data: categories } = useSWR(
     [`https://api.twitch.tv/helix/search/categories?query=${query}`, token],
-    twitch.get,
+    twitch.get<Category[]>,
     {
-      onSuccess: ({ data: categories }: { data: Category[] }) => {
+      onSuccess: (categories) => {
         setCursor(0);
 
         const foundIndex = categories.findIndex((item) => item.name === query);
@@ -34,11 +34,10 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
       },
     },
   );
-  const categories: Category[] = data?.data ?? [];
 
   const moveCursor = React.useCallback(
     (diff: number) => {
-      if (categories.length === 0) {
+      if (!categories || categories.length === 0) {
         setCursor(0);
         return;
       }
@@ -75,7 +74,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
           }}
           onChange={(e) => {
             setQuery(e.target.value);
-            const found = categories.find(
+            const found = categories?.find(
               (item) => item.name === e.target.value,
             );
             if (!found) return;
@@ -99,7 +98,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
             if (e.key === "Tab") {
               e.preventDefault();
 
-              if (categories.length === 0) return;
+              if (!categories || categories.length === 0) return;
 
               const index = categories.findIndex((item) =>
                 item.name.startsWith(query),
@@ -115,6 +114,8 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
 
             if (e.key === "Enter") {
               e.preventDefault();
+              if( !categories ) return;
+
               const current = categories[cursor];
               if (!current) return;
               if (current !== value) onChange(current);
@@ -153,7 +154,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
             "flex-nowrap overflow-auto",
           )}
         >
-          {categories.map((item, index) => (
+          {!categories || categories.map((item, index) => (
             <li key={item.id}>
               <button
                 type="button"

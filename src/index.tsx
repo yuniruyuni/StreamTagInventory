@@ -11,47 +11,54 @@ import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
 import { twitch } from "./fetcher";
 import type { Template } from "./model/template";
 
+type User = {
+  id: string;
+  display_name: string;
+  profile_image_url: string;
+};
+
+const Menu: React.FC<{user: User}> = ({user}) => {
+  const { logout } = React.useContext(TwitchAuthContext);
+
+  return (
+    <div className="navbar bg-base-100">
+      <div className="flex-1">
+        <a href="/" className="btn btn-ghost text-xl">Stream Tag Inventory</a>
+      </div>
+      <div className="flex-none gap-2">
+        <div className="dropdown dropdown-end">
+          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+            <div className="w-10 rounded-full">
+              <img
+                alt={`${user.display_name} icon`}
+                src={user.profile_image_url}
+              />
+            </div>
+          </div>
+          <button type="button" tabIndex={0}>
+            <ul
+              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+              <li><button type="button" onClick={() => logout()}>Logout</button></li>
+            </ul>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 function MainScreen() {
-  const { token, logout } = React.useContext(TwitchAuthContext);
+  const { token } = React.useContext(TwitchAuthContext);
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
-  const {
-    data: users,
-    isLoading,
-    error,
-  } = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get);
-
-  const { trigger: applyTemplate } = useSWRMutation(() => [`https://api.twitch.tv/helix/channels?broadcaster_id=${users.data[0].id}`, token], twitch.patch);
-
-  if (isLoading) return <div>loading...</div>;
-  if (error) return <div>failed to load</div>;
+  const {data: users, isLoading} = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get<User[]>);
+  const { trigger: applyTemplate } = useSWRMutation(() => [`https://api.twitch.tv/helix/channels?broadcaster_id=${!users || users[0].id}`, token], twitch.patch);
 
   return (
     <div className="container mx-auto">
-      <div className="navbar bg-base-100">
-        <div className="flex-1">
-          <a href="/" className="btn btn-ghost text-xl">Stream Tag Inventory</a>
-        </div>
-        <div className="flex-none gap-2">
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                <img
-                  alt={`${users.data[0].display_name} icon`}
-                  src={users.data[0].profile_image_url}
-                />
-              </div>
-            </div>
-            <button type="button" tabIndex={0}>
-              <ul
-                className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                <li><button type="button" onClick={() => logout()}>Logout</button></li>
-              </ul>
-            </button>
-          </div>
-        </div>
-      </div>
-
+      {isLoading && <div className="skelton" />}
+      {users && <Menu user={users[0]} />}
       <div className="p-16 grid grid-cols-4 gap-4">
         {templates.map((template) => (
           <TemplateCard
