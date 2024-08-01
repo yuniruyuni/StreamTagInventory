@@ -4,12 +4,12 @@ import type { Template } from "~/model/template";
 
 type Props = {
   template: Template;
-  onUse: (template: Template) => void;
+  onApply: (template: Template) => void;
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
 };
 
-export const TemplateCard: FC<Props> = ({ template, onUse, onRemove, onClone }) => (
+export const TemplateCard: FC<Props> = ({ template, onApply, onRemove, onClone }) => (
   <div className="card w-max-96 bg-base-100 shadow-xl">
     <div className="card-body">
       <h2 className="card-title">{template.title}</h2>
@@ -23,8 +23,8 @@ export const TemplateCard: FC<Props> = ({ template, onUse, onRemove, onClone }) 
           onRemove(template);
         }}>Remove</button>
         <button type="button" className="btn btn-primary" onClick={() => {
-          onUse(template);
-        }}>Use</button>
+          onApply(template);
+        }}>Apply</button>
         <button type="button" className="btn btn-secondary" onClick={() => {
           onClone(template);
         }}>Clone</button>

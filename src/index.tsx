@@ -63,7 +63,7 @@ function MainScreen() {
           <TemplateCard
             key={template.id}
             template={template}
-            onUse={(template) => {
+            onApply={(template) => {
               const args = {
                 broadcaster_language: "ja",
                 game_id: template.category.id,
