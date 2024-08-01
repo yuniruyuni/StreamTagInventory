@@ -84,7 +84,11 @@ const root = document.getElementById("root");
 if (root) {
   ReactDOM.createRoot(root).render(
     <React.StrictMode>
-      <TwitchAuthProvider>
+      <TwitchAuthProvider scope={[
+        "user:edit:broadcast",
+        "channel:manage:broadcast",
+        "channel_editor",
+      ]}>
         <MainScreen />
       </TwitchAuthProvider>
     </React.StrictMode>,
