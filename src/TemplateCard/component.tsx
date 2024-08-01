@@ -1,34 +1,64 @@
+import React from "react";
 import type { FC } from "react";
-import { Tag } from "~/Tag";
-import type { Template } from "~/model/template";
+import { type Template, validateTemplate } from "~/model/template";
+
+import { CategorySelector } from "~/CategorySelector";
+import { InputTags } from "~/InputTags";
 
 type Props = {
   template: Template;
   onApply: (template: Template) => void;
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
+  onSave: (template: Template) => void;
 };
 
-export const TemplateCard: FC<Props> = ({ template, onApply, onRemove, onClone }) => (
-  <div className="card w-max-96 bg-base-100 shadow-xl">
-    <div className="card-body">
-      <h2 className="card-title">{template.title}</h2>
-      <div className="flex flex-cols align-middle">
-        <img className="h-fit w-16" alt={template.category.name} src={template.category.box_art_url} />
-        <div className="flex-1">{template.category.name}</div>
-      </div>
-      {template.tags.map((tag) => (<Tag key={tag}>{tag}</Tag>))}
-      <div className="card-actions justify-end">
-        <button type="button" className="btn btn-error" onClick={() => {
-          onRemove(template);
-        }}>Remove</button>
-        <button type="button" className="btn btn-primary" onClick={() => {
-          onApply(template);
-        }}>Apply</button>
-        <button type="button" className="btn btn-secondary" onClick={() => {
-          onClone(template);
-        }}>Clone</button>
+// TODO: refine UI design.
+export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, onSave }) => {
+  const [temp, setTemp] = React.useState<Template>(template);
+  const changed = JSON.stringify(template) !== JSON.stringify(temp);
+  const valid = validateTemplate(temp);
+
+  return (
+    <div className="card w-min-96 bg-base-100 shadow-xl">
+      <div className="card-body">
+        <label>Title</label>
+        <input
+          type="text"
+          className="border border-slate-300 rounded"
+          onChange={(e) => setTemp({ ...temp, title: e.target.value })}
+          value={temp.title}
+        />
+
+        <label>Category</label>
+        <CategorySelector value={temp.category} onChange={(category) => setTemp({ ...temp, category })} />
+
+        <label>Tags</label>
+        <InputTags tags={temp.tags ?? []} onChange={(tags) => setTemp({ ...temp, tags })} />
+
+        <div className="card-actions justify-end">
+          {
+            changed && (<>
+              <button type="button" className="btn btn-error" onClick={() => setTemp(template)}>Revert</button>
+              <button type="button" className="btn btn-primary" onClick={() => onSave(temp)}>Save</button>
+            </>)
+          }
+          {
+            !changed && (<>
+              {!valid && <button type="button" className="btn btn-disabled">Apply</button>}
+              <button type="button" className="btn btn-secondary" onClick={() => {
+                onClone(template);
+              }}>Clone</button>
+              <button type="button" className="btn btn-error" onClick={() => {
+                onRemove(temp);
+              }}>Remove</button>
+              {valid && <button type="button" className="btn btn-primary" onClick={() => {
+                onApply(temp);
+              }}>Apply</button>}
+            </>)
+          }
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

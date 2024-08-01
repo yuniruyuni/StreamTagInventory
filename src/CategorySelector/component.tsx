@@ -8,7 +8,7 @@ import type { Category } from "~/model/category";
 
 type Props = {
   value?: Category;
-  onChange: (category?: Category) => void;
+  onChange: (category: Category) => void;
 };
 
 export const CategorySelector: FC<Props> = ({ value, onChange }) => {
