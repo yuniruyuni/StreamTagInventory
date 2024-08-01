@@ -1,5 +1,18 @@
 import { CLIENT_ID } from "./constant";
 
+export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
+  for( const expr of exprs ) {
+    if ( expr === null ) throw new Error("null parameter is assigned so skip request");
+    if ( expr === undefined ) throw new Error("undefined parameter is assigned so skip request");
+  }
+
+  let [res, ...strs] = templs;
+  for( let i = 0; i < exprs.length; i++ ) {
+    res += strs[i] + exprs[i];
+  }
+  return res;
+}
+
 const fetchWithError = async (url: string, init: RequestInit) => {
   const res = await fetch(url, {
     ...init,

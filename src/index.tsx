@@ -8,7 +8,7 @@ import { NewTemplateCard } from "~/NewTemplateCard";
 import { useStorage } from "~/useStorage";
 import { TemplateCard } from "./TemplateCard";
 import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
-import { twitch } from "./fetcher";
+import { dep, twitch } from "./fetcher";
 import type { Template } from "./model/template";
 
 type User = {
@@ -53,7 +53,7 @@ function MainScreen() {
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
   const {data: users, isLoading} = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get<User[]>);
-  const { trigger: applyTemplate } = useSWRMutation(() => [`https://api.twitch.tv/helix/channels?broadcaster_id=${!users || users[0].id}`, token], twitch.patch);
+  const { trigger: applyTemplate } = useSWRMutation(() => [dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`, token], twitch.patch);
 
   return (
     <div className="container mx-auto">
