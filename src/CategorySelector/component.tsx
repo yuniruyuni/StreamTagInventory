@@ -114,9 +114,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
 
             if (e.key === "Enter") {
               e.preventDefault();
-              if( !categories ) return;
-
-              const current = categories[cursor];
+              const current = categories?.[cursor];
               if (!current) return;
               if (current !== value) onChange(current);
               setQuery(current.name);
@@ -154,7 +152,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
             "flex-nowrap overflow-auto",
           )}
         >
-          {!categories || categories.map((item, index) => (
+          {categories?.map((item, index) => (
             <li key={item.id}>
               <button
                 type="button"
