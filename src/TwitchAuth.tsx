@@ -27,7 +27,19 @@ function generateURI(auth: Auth) {
   return `${url}?client_id=${CLIENT_ID}&redirect_uri=${auth.redirect_url}&response_type=${auth.response_type}&scope=${scope}`;
 }
 
-export const TwitchAuthProvider: FC<{ children: ReactNode }> = ({
+export type EntranceProps = {
+  uri: string;
+};
+
+type Props = {
+  scope: string[];
+  entrance: (uri: string) => ReactNode;
+  children: ReactNode;
+};
+
+export const TwitchAuthProvider: FC<Props> = ({
+  scope,
+  entrance,
   children,
 }) => {
   const [token, setToken] = useStorage<AuthToken>("twitch-auth", "");
@@ -56,13 +68,9 @@ export const TwitchAuthProvider: FC<{ children: ReactNode }> = ({
   const auth: Auth = {
     redirect_url: window.location.href,
     response_type: "token",
-    scope: [
-      "user:edit:broadcast",
-      "channel:manage:broadcast",
-      "channel_editor",
-    ],
+    scope: scope,
   };
 
   const uri = generateURI(auth);
-  return <a href={uri}>Login with Twitch</a>;
+  return entrance(uri);
 };
