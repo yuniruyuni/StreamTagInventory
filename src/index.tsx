@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import "./index.css";
+import { ulid } from "ulid";
 
 import { NewTemplateCard } from "~/NewTemplateCard";
 import { useStorage } from "~/useStorage";
@@ -75,6 +76,10 @@ function MainScreen() {
               const newTemplates = [...templates];
               const index = newTemplates.findIndex((t) => t.id === removed.id);
               newTemplates.splice(index, 1);
+              setTemplates(newTemplates);
+            }}
+            onClone={(cloned) => {
+              const newTemplates = [...templates, { ...cloned, id: ulid() }];
               setTemplates(newTemplates);
             }}
           />
