@@ -5,12 +5,11 @@ import useSWRMutation from "swr/mutation";
 import "./index.css";
 import { ulid } from "ulid";
 
-import { NewTemplateCard } from "~/NewTemplateCard";
+import { type Template, newTemplate } from "~/model/template";
 import { useStorage } from "~/useStorage";
 import { TemplateCard } from "./TemplateCard";
 import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
 import { dep, twitch } from "./fetcher";
-import type { Template } from "./model/template";
 
 type User = {
   id: string;
@@ -82,9 +81,20 @@ function MainScreen() {
               const newTemplates = [...templates, { ...cloned, id: ulid() }];
               setTemplates(newTemplates);
             }}
+            onSave={(saved) => {
+              const newTemplates = [...templates];
+              const index = newTemplates.findIndex((t) => t.id === saved.id);
+              newTemplates[index] = saved;
+              setTemplates(newTemplates);
+            }}
           />
         ))}
-        <NewTemplateCard onAdd={(template) => setTemplates([...templates, template])} />
+
+        <div className="w-min-96 outline-dashed rounded outline-2 outline-slate-400 flex flex-col items-center place-content-center">
+          <button type="button" className="btn btn-primary" onClick={() => setTemplates([...templates, newTemplate()])}>
+            Add
+          </button>
+        </div>
       </div>
     </div>
   );
