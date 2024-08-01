@@ -3,7 +3,7 @@ import React, { type FC } from "react";
 import useSWR from "swr";
 
 import { TwitchAuthContext } from "~/TwitchAuth";
-import { twitch } from "~/fetcher";
+import { dep, twitch } from "~/fetcher";
 import type { Category } from "~/model/category";
 
 type Props = {
@@ -20,7 +20,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
   const ref = React.useRef<HTMLUListElement>(null);
 
   const { data: categories } = useSWR(
-    [`https://api.twitch.tv/helix/search/categories?query=${query}`, token],
+    () => [dep`https://api.twitch.tv/helix/search/categories?query=${query !== "" ? query : undefined}`, token],
     twitch.get<Category[]>,
     {
       onSuccess: (categories) => {
