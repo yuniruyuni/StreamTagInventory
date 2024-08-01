@@ -20,7 +20,7 @@ export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, 
   const valid = validateTemplate(temp);
 
   return (
-    <div className="card w-min-96 bg-base-100 shadow-xl">
+    <div className="card w-96 bg-base-100 shadow-xl">
       <div className="card-body">
         <label>Title</label>
         <input

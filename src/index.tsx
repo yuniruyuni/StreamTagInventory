@@ -57,7 +57,7 @@ function MainScreen() {
     <div className="container mx-auto">
       {isLoading && <div className="skelton" />}
       {users && <Menu user={users[0]} />}
-      <div className="p-16 grid grid-cols-4 gap-4">
+      <div className="p-16 flex flex-wrap gap-4">
         {templates.map((template) => (
           <TemplateCard
             key={template.id}
@@ -90,7 +90,7 @@ function MainScreen() {
           />
         ))}
 
-        <div className="w-min-96 outline-dashed rounded outline-2 outline-slate-400 flex flex-col items-center place-content-center">
+        <div className="w-96 min-h-64 outline-dashed rounded outline-2 outline-slate-400 flex flex-col items-center place-content-center">
           <button type="button" className="btn btn-primary" onClick={() => setTemplates([...templates, newTemplate()])}>
             Add
           </button>
