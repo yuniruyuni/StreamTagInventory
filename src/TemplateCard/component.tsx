@@ -25,7 +25,7 @@ export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, 
         <label>Title</label>
         <input
           type="text"
-          className="border border-slate-300 rounded"
+          className="p-2 border border-slate-300 rounded"
           onChange={(e) => setTemp({ ...temp, title: e.target.value })}
           value={temp.title}
         />
