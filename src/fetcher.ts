@@ -17,34 +17,51 @@ const fetchWithError = async (url: string, init: RequestInit) => {
   return await res.json();
 };
 
+export class TwitchError extends Error {
+  constructor(
+    public error: string,
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+const fetchForTwitch = async <T>(url: string, init: RequestInit): Promise<T> => {
+  const res = await fetchWithError(url, init);
+
+  if( res.error ) throw new TwitchError(res.error, res.status, res.message);
+  return res.data;
+};
+
 export const twitch = {
-  get: ([url, token]: [string, string]) =>
-    fetchWithError(url, {
+  get: <T>([url, token]: [string, string]) =>
+    fetchForTwitch<T>(url, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, "Client-Id": CLIENT_ID },
     }),
-  post: <Arg>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchWithError(url, {
+  post: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
       method: "POST",
       body: JSON.stringify(arg),
       headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
     }),
-  put: <Arg>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchWithError(url, {
+  put: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
       method: "PUT",
       body: JSON.stringify(arg),
       headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
     }),
 
-  patch: <Arg>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchWithError(url, {
+  patch: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
       method: "PATCH",
       body: JSON.stringify(arg),
       headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
     }),
 
-  delete: <Arg>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchWithError(url, {
+  delete: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
       method: "DELETE",
       body: JSON.stringify(arg),
       headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
