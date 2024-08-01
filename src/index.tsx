@@ -30,7 +30,7 @@ function MainScreen() {
     <div className="container mx-auto">
       <div className="navbar bg-base-100">
         <div className="flex-1">
-          <a href="/" className="btn btn-ghost text-xl">Twitch Stream Tag Inventory</a>
+          <a href="/" className="btn btn-ghost text-xl">Stream Tag Inventory</a>
         </div>
         <div className="flex-none gap-2">
           <div className="dropdown dropdown-end">
