@@ -45,15 +45,15 @@ export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, 
           }
           {
             !changed && (<>
-              {!valid && <button type="button" className="btn btn-disabled">Apply</button>}
               <button type="button" className="btn btn-secondary" onClick={() => {
                 onClone(template);
               }}>Clone</button>
               <button type="button" className="btn btn-error" onClick={() => {
-                onRemove(temp);
+                onRemove(template);
               }}>Remove</button>
+              {!valid && <button type="button" className="btn btn-disabled">Apply</button>}
               {valid && <button type="button" className="btn btn-primary" onClick={() => {
-                onApply(temp);
+                onApply(template);
               }}>Apply</button>}
             </>)
           }
