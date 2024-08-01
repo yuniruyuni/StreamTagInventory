@@ -35,12 +35,10 @@ const Menu: React.FC<{user: User}> = ({user}) => {
               />
             </div>
           </div>
-          <button type="button" tabIndex={0}>
-            <ul
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-              <li><button type="button" onClick={() => logout()}>Logout</button></li>
-            </ul>
-          </button>
+          <ul
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+            <li><button type="button" onClick={() => logout()}>Logout</button></li>
+          </ul>
         </div>
       </div>
     </div>
