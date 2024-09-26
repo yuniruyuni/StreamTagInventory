@@ -68,6 +68,10 @@ function MainScreen() {
                 game_id: template.category.id,
                 title: template.title,
                 tags: template.tags,
+                content_classification_labels: template.ccls.map((ccl) => ({
+                  id: ccl,
+                  is_enabled: true,
+                })),
               };
               applyTemplate(args);
             }}

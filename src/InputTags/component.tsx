@@ -42,7 +42,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       {tags.map((tag, i) => (<Tag key={tag} onClose={() => onClose(i)}>{tag}</Tag>))}
       <input
         type="text"
-        className="flex-grow border-0 mb-1 outline-none"
+        className="flex-grow mb-1 outline-none"
         onFocus={() => setActive(true)}
         onBlur={() => setActive(false)}
         onKeyDown={handleKeyDown}

@@ -2,6 +2,7 @@ import React from "react";
 import type { FC } from "react";
 import { type Template, validateTemplate } from "~/model/template";
 
+import { CCLSelector } from "~/CCLSelector";
 import { CategorySelector } from "~/CategorySelector";
 import { InputTags } from "~/InputTags";
 
@@ -34,7 +35,10 @@ export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, 
         <CategorySelector value={temp.category} onChange={(category) => setTemp({ ...temp, category })} />
 
         <label>Tags</label>
-        <InputTags tags={temp.tags ?? []} onChange={(tags) => setTemp({ ...temp, tags })} />
+        <InputTags tags={temp.tags} onChange={(tags) => setTemp({ ...temp, tags })} />
+
+        <label>ContentClassificationLabels</label>
+        <CCLSelector selections={temp.ccls} onChange={(ccls) => setTemp({ ...temp, ccls })} />
 
         <div className="card-actions justify-end">
           {

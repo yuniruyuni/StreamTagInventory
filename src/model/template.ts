@@ -1,11 +1,13 @@
 import { ulid } from 'ulid';
 import { type Category, newCategory } from '~/model/category';
+import type { CCLSelection } from '~/model/ccl';
 
 export type Template = {
   id: string;
   title: string;
   category: Category;
   tags: string[];
+  ccls: CCLSelection[];
 };
 
 
@@ -15,6 +17,7 @@ export function newTemplate(): Template {
     title: "",
     category: newCategory(),
     tags: [],
+    ccls: [],
   };
 }
 
