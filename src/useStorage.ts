@@ -13,7 +13,10 @@ export const useStorage = <T,>(key: string, def: T): [T, Dispatch<T>] => {
     const loaded = localStorage.getItem(key);
     if (loaded == null) return;
     const parsed = JSON.parse(loaded);
-    if (!parsed) return;
+    if (!parsed) {
+      localStorage.removeItem(key);
+      return;
+    }
     setState(parsed);
   }, [key]);
 
