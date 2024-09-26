@@ -52,6 +52,7 @@ function MainScreen() {
 
   const {data: users, isLoading} = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get<User[]>);
   const { trigger: applyTemplate } = useSWRMutation(() => [dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`, token], twitch.patch);
+  const { trigger: createMarker } = useSWRMutation(() => [dep`https://api.twitch.tv/helix/streams/markers`, token], twitch.post);
 
   return (
     <div className="container mx-auto">
@@ -62,14 +63,17 @@ function MainScreen() {
           <TemplateCard
             key={template.id}
             template={template}
-            onApply={(template) => {
-              const args = {
+            onApply={async (template) => {
+              applyTemplate({
                 broadcaster_language: "ja",
                 game_id: template.category.id,
                 title: template.title,
                 tags: template.tags,
-              };
-              applyTemplate(args);
+              });
+              createMarker({
+                user_id: users?.[0]?.id,
+                description: template.title,
+              });
             }}
             onRemove={(removed) => {
               const newTemplates = [...templates];
