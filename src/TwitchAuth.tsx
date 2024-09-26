@@ -1,4 +1,5 @@
 import { type FC, type ReactNode, createContext, } from "react";
+import { SWRConfig } from "swr";
 
 import { CLIENT_ID } from "~/constant";
 import { useStorage } from "~/useStorage";
@@ -60,7 +61,20 @@ export const TwitchAuthProvider: FC<Props> = ({
     const logout = () => { setToken("") };
     return (
       <TwitchAuthContext.Provider value={{token, logout}} >
-        {children}
+        <SWRConfig value={{
+          onError: (err) => {
+            try {
+              const parsed = JSON.parse(err);
+              if (parsed.status === 401) {
+                logout();
+              }
+            } catch {
+              logout();
+            }
+          },
+        }}>
+          {children}
+        </SWRConfig>
       </TwitchAuthContext.Provider>
     );
   }
