@@ -13,7 +13,26 @@ export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
   return res;
 }
 
-const fetchWithError = async (url: string, init: RequestInit) => {
+export class TwitchError extends Error {
+  constructor(
+    public error: string,
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+type TwitchErrorResponse = {
+  error: string;
+  status: number;
+  message: string;
+};
+
+const fetchForTwitch = async <T>(
+  url: string,
+  init: RequestInit,
+): Promise<T> => {
   const res = await fetch(url, {
     ...init,
     headers: {
@@ -26,25 +45,43 @@ const fetchWithError = async (url: string, init: RequestInit) => {
       Accept: "application/json",
     },
   });
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
-};
 
-export class TwitchError extends Error {
-  constructor(
-    public error: string,
-    public status: number,
-    message: string,
-  ) {
-    super(message);
+  type Resp = { data: T, error?: string } | TwitchErrorResponse;
+
+  function isTwitchErrorResponse(
+    arg: Resp,
+  ): arg is TwitchErrorResponse {
+    return arg.error !== undefined;
   }
-}
 
-const fetchForTwitch = async <T>(url: string, init: RequestInit): Promise<T> => {
-  const res = await fetchWithError(url, init);
+  let json: Resp;
+  try {
+    json = await res.json();
+  } catch {
+    throw new TwitchError(
+      "parse error",
+      500,
+      "invalid json payload was returned from twitch",
+    );
+  }
 
-  if( res.error ) throw new TwitchError(res.error, res.status, res.message);
-  return res.data;
+  if (!res.ok) {
+    throw new TwitchError(
+      json.error ?? "",
+      res.status,
+      "twitch returns error status code",
+    );
+  }
+
+  if (isTwitchErrorResponse(json)) {
+    throw new TwitchError(
+      json.error,
+      res.status,
+      "twitch returns error payload",
+    );
+  }
+
+  return json.data;
 };
 
 export const twitch = {
