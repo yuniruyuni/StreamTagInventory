@@ -2,7 +2,7 @@ import { type FC, type ReactNode, createContext, } from "react";
 import { SWRConfig } from "swr";
 
 import { CLIENT_ID } from "~/constant";
-import { useStorage } from "~/useStorage";
+import { useSession } from "~/useSession";
 
 export const TwitchAuthContext = createContext<AuthInfo>({
   token: "",
@@ -43,7 +43,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   entrance,
   children,
 }) => {
-  const [token, setToken] = useStorage<AuthToken>("twitch-auth", "");
+  const [token, setToken] = useSession<AuthToken>("twitch-auth", "");
 
   const param = Object.fromEntries(new URLSearchParams(window.location.hash));
   const paramToken = param["#access_token"];
