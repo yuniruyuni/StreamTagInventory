@@ -63,12 +63,8 @@ export const TwitchAuthProvider: FC<Props> = ({
       <TwitchAuthContext.Provider value={{token, logout}} >
         <SWRConfig value={{
           onError: (err) => {
-            try {
-              const parsed = JSON.parse(err);
-              if (parsed.status === 401) {
-                logout();
-              }
-            } catch {
+            console.log(err);
+            if (err.status === 401) {
               logout();
             }
           },
