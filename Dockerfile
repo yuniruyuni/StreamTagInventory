@@ -3,7 +3,7 @@ FROM oven/bun:latest AS build
 WORKDIR /work
 
 ADD package.json /work
-ADD bun.lockb /work
+ADD bun.lock /work
 RUN bun install --frozen-lockfile
 
 ADD . /work
