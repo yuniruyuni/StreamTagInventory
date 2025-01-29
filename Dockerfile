@@ -11,4 +11,5 @@ RUN bun run build
 
 FROM nginx:alpine-slim
 
+COPY conf.d/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /work/static/* /usr/share/nginx/html/
