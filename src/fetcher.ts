@@ -65,19 +65,19 @@ const fetchForTwitch = async <T>(
     );
   }
 
+  if (isTwitchErrorResponse(json)) {
+    throw new TwitchError(
+      json.error,
+      res.status,
+      json.message,
+    );
+  }
+
   if (!res.ok) {
     throw new TwitchError(
       json.error ?? "",
       res.status,
       "twitch returns error status code",
-    );
-  }
-
-  if (isTwitchErrorResponse(json)) {
-    throw new TwitchError(
-      json.error,
-      res.status,
-      "twitch returns error payload",
     );
   }
 
