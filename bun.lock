@@ -10,6 +10,7 @@
         "bun-bagel": "^1.1.0",
         "clsx": "^2.1.1",
         "react": "^18.3.1",
+        "react-call": "^1.7.0",
         "react-dom": "^18.3.1",
         "swr": "^2.3.0",
         "ulid": "^2.3.0",
@@ -384,6 +385,8 @@
     "queue-microtask": ["queue-microtask@1.2.3", "", {}, "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A=="],
 
     "react": ["react@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=="],
+
+    "react-call": ["react-call@1.7.0", "", { "peerDependencies": { "react": ">=18" } }, "sha512-HjWK7zzeooYkOlFulkmEd1PFKKPfx7oEHogtSvOCv+6LIh/zTSsTtM0hpAnC5Sm5QVadhSeYLCos86JkcXD0Ag=="],
 
     "react-dom": ["react-dom@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0", "scheduler": "^0.23.2" }, "peerDependencies": { "react": "^18.3.1" } }, "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw=="],
 

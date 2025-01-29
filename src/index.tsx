@@ -8,6 +8,7 @@ import { ulid } from "ulid";
 import { type Template, newTemplate } from "~/model/template";
 import { useStorage } from "~/useStorage";
 import { TemplateCard } from "./TemplateCard";
+import { ErrorNotification } from "./ErrorNotification";
 import { TwitchAuthContext, TwitchAuthProvider } from "./TwitchAuth";
 import { dep, twitch } from "./fetcher";
 
@@ -51,7 +52,22 @@ function MainScreen() {
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
   const {data: users, isLoading} = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get<User[]>);
-  const { trigger: applyTemplate } = useSWRMutation(() => [dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`, token], twitch.patch);
+  const { trigger: applyTemplate } = useSWRMutation(
+    () => [dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`, token], twitch.patch,
+    {
+      onError: async (error) => {
+        await ErrorNotification.call({
+          // TODO: make it i18n.
+          title: "Twitchでエラーが生じたようです",
+          message: error.message,
+        });
+      },
+    }
+  );
+
+  // Ignore errors for createMarker.
+  // 1. It's not critical error.
+  // 2. It will always fail until stream opened and checking it is not worth.
   const { trigger: createMarker } = useSWRMutation(() => [dep`https://api.twitch.tv/helix/streams/markers`, token], twitch.post);
 
   return (
@@ -65,6 +81,7 @@ function MainScreen() {
             template={template}
             onApply={async (template) => {
               applyTemplate({
+                // TODO: make it i18n.
                 broadcaster_language: "ja",
                 game_id: template.category.id,
                 title: template.title,
@@ -117,6 +134,7 @@ const root = document.getElementById("root");
 if (root) {
   ReactDOM.createRoot(root).render(
     <React.StrictMode>
+      <ErrorNotification.Root />
       <TwitchAuthProvider
         scope={[
           "user:edit:broadcast",
