@@ -32,29 +32,29 @@
     "check": "biome check --write"
   },
   "dependencies": {
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
-    "@mui/material": "^5.16.7",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^5.16.14",
     "bun-bagel": "^1.1.0",
     "clsx": "^2.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "swr": "^2.2.5",
+    "swr": "^2.3.0",
     "ulid": "^2.3.0",
-    "wouter": "^3.3.5"
+    "wouter": "^3.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
-    "@types/bun": "^1.1.10",
-    "@types/node": "^20.16.9",
-    "@types/react": "^18.3.9",
-    "@types/react-dom": "^18.3.0",
+    "@types/bun": "^1.2.1",
+    "@types/node": "^20.17.16",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
     "@types/web": "^0.0.151",
-    "bun": "^1.1.29",
-    "daisyui": "^4.12.10",
-    "npm-run-all2": "^6.2.3",
-    "tailwindcss": "^3.4.13",
-    "typescript": "^5.6.2"
+    "bun": "^1.2.1",
+    "daisyui": "^4.12.23",
+    "npm-run-all2": "^6.2.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
   },
   "trustedDependencies": ["@biomejs/biome", "bun"]
 }
