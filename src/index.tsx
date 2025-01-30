@@ -52,7 +52,7 @@ function MainScreen() {
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
   const {data: users, isLoading} = useSWR(["https://api.twitch.tv/helix/users", token], twitch.get<User[]>);
-  const { trigger: applyTemplate } = useSWRMutation(
+  const {trigger: applyTemplate} = useSWRMutation(
     () => [dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`, token], twitch.patch,
     {
       onError: async (error) => {

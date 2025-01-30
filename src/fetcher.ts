@@ -1,5 +1,7 @@
 import { CLIENT_ID } from "./constant";
 
+const HTTP_STATUS_NO_CONTENT = 204;
+
 export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
   for( const expr of exprs ) {
     if ( expr === null ) throw new Error("null parameter is assigned so skip request");
@@ -52,6 +54,13 @@ const fetchForTwitch = async <T>(
     arg: Resp,
   ): arg is TwitchErrorResponse {
     return arg.error !== undefined;
+  }
+
+  // special case for no content response,
+  // twitch api sometimes return 204 no content response
+  // in this case, we should return undefined anyway.
+  if (res.status === HTTP_STATUS_NO_CONTENT) {
+    return undefined as T;
   }
 
   let json: Resp;
