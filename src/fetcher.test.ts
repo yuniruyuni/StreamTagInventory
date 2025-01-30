@@ -1,6 +1,6 @@
 import { afterEach,  expect, test } from "bun:test";
 import { clearMocks, mock } from "bun-bagel";
-import { TwitchError, twitch } from "./fetcher";
+import { TwitchError, twitch, dep } from "./fetcher";
 
 type Res = {
   hoge: string,
@@ -92,4 +92,20 @@ test("twtich.delete makes requests with DELETE method", async () => {
 
   const res = await twitch.delete<string, Res>(["https://example.com/", "token"], {arg: ""});
   expect(res).toEqual({hoge: "hoge"});
+});
+
+test("dep expand templates", () => {
+  const val1 = 123;
+  const val2 = 456;
+  expect(dep`https://example.com/${val1}/${val2}`).toBe("https://example.com/123/456");
+});
+
+test("dep throws exceptions for undefined values", () => {
+  const val = undefined;
+  expect(() => dep`https://example.com/${val}`).toThrowError("undefined parameter is assigned so skip request");
+});
+
+test("dep throws exceptions for null values", () => {
+  const val = null;
+  expect(() => dep`https://example.com/${val}`).toThrowError("null parameter is assigned so skip request");
 });

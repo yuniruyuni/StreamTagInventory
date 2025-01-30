@@ -8,7 +8,7 @@ export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
 
   let [res, ...strs] = templs;
   for( let i = 0; i < exprs.length; i++ ) {
-    res += strs[i] + exprs[i];
+    res += exprs[i] + strs[i];
   }
   return res;
 }
