@@ -5,6 +5,9 @@ import { type Template, validateTemplate } from "~/model/template";
 import { CategorySelector } from "~/CategorySelector";
 import { InputTags } from "~/InputTags";
 
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 type Props = {
   template: Template;
   onApply: (template: Template) => void;
@@ -15,13 +18,28 @@ type Props = {
 
 // TODO: refine UI design.
 export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, onSave }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: template.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const [temp, setTemp] = React.useState<Template>(template);
   const changed = JSON.stringify(template) !== JSON.stringify(temp);
   const valid = validateTemplate(temp);
 
   return (
-    <div className="card w-96 bg-base-100 shadow-xl">
+    <div className="card w-96 bg-base-100 shadow-xl" ref={setNodeRef} {...attributes} style={style}>
       <div className="card-body">
+        <button {...listeners} className="absolute top-0 right-0 p-4 cursor-grab">
+          <svg viewBox="0 0 20 20" width="20">
+            <title>drag handle</title>
+            <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z">
+              drag
+            </path>
+          </svg>
+        </button>
         <label>Title</label>
         <input
           type="text"
