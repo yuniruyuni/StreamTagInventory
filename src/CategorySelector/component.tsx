@@ -14,7 +14,7 @@ type Props = {
 export const CategorySelector: FC<Props> = ({ value, onChange }) => {
   const { token } = React.useContext(TwitchAuthContext);
   const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = React.useState(value?.name ?? "");
   const [cursor, setCursor] = React.useState(0);
 
   const ref = React.useRef<HTMLUListElement>(null);
