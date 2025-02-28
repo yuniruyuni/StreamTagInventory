@@ -3,13 +3,15 @@ import { CLIENT_ID } from "./constant";
 const HTTP_STATUS_NO_CONTENT = 204;
 
 export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
-  for( const expr of exprs ) {
-    if ( expr === null ) throw new Error("null parameter is assigned so skip request");
-    if ( expr === undefined ) throw new Error("undefined parameter is assigned so skip request");
+  for (const expr of exprs) {
+    if (expr === null)
+      throw new Error("null parameter is assigned so skip request");
+    if (expr === undefined)
+      throw new Error("undefined parameter is assigned so skip request");
   }
 
   let [res, ...strs] = templs;
-  for( let i = 0; i < exprs.length; i++ ) {
+  for (let i = 0; i < exprs.length; i++) {
     res += exprs[i] + strs[i];
   }
   return res;
@@ -48,11 +50,9 @@ const fetchForTwitch = async <T>(
     },
   });
 
-  type Resp = { data: T, error?: string } | TwitchErrorResponse;
+  type Resp = { data: T; error?: string } | TwitchErrorResponse;
 
-  function isTwitchErrorResponse(
-    arg: Resp,
-  ): arg is TwitchErrorResponse {
+  function isTwitchErrorResponse(arg: Resp): arg is TwitchErrorResponse {
     return arg.error !== undefined;
   }
 
@@ -75,11 +75,7 @@ const fetchForTwitch = async <T>(
   }
 
   if (isTwitchErrorResponse(json)) {
-    throw new TwitchError(
-      json.error,
-      res.status,
-      json.message,
-    );
+    throw new TwitchError(json.error, res.status, json.message);
   }
 
   if (!res.ok) {

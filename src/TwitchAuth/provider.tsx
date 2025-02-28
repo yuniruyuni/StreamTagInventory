@@ -1,32 +1,8 @@
-import { type FC, type ReactNode, createContext } from "react";
+import type { FC, ReactNode } from "react";
 import { SWRConfig } from "swr";
-
-import { CLIENT_ID } from "~/constant";
 import { useSession } from "~/useSession";
-
-export const TwitchAuthContext = createContext<AuthInfo>({
-  token: "",
-  logout: () => {},
-});
-
-type AuthInfo = {
-  token: AuthToken;
-  logout: () => void;
-};
-
-type AuthToken = string;
-
-type Auth = {
-  redirect_url: string;
-  response_type: string;
-  scope: string[];
-};
-
-function generateURI(auth: Auth) {
-  const url = "https://id.twitch.tv/oauth2/authorize";
-  const scope = auth.scope.join("+");
-  return `${url}?client_id=${CLIENT_ID}&redirect_uri=${auth.redirect_url}&response_type=${auth.response_type}&scope=${scope}`;
-}
+import { type AuthToken, TwitchAuthContext } from "./context";
+import { type Auth, clearHash, generateURI, parseTokenFromHash } from "./utils";
 
 export type EntranceProps = {
   uri: string;
@@ -45,15 +21,11 @@ export const TwitchAuthProvider: FC<Props> = ({
 }) => {
   const [token, setToken] = useSession<AuthToken>("twitch-auth", "");
 
-  const param = Object.fromEntries(new URLSearchParams(window.location.hash));
-  const paramToken = param["#access_token"];
+  const paramToken = parseTokenFromHash();
 
   if (paramToken && paramToken !== "") {
     setToken(paramToken);
-
-    if (window.location.hash) {
-      window.history.replaceState("", document.title, window.location.pathname);
-    }
+    clearHash();
     return <>reloading...</>;
   }
 
