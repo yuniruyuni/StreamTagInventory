@@ -5,6 +5,8 @@ import useSWR from "swr";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { dep, twitch } from "~/fetcher";
 import type { Category } from "~/model/category";
+import { CategoryInput } from "./CategoryInput";
+import { CategoryList } from "./CategoryList";
 
 type Props = {
   value?: Category;
@@ -17,10 +19,11 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
   const [query, setQuery] = React.useState(value?.name ?? "");
   const [cursor, setCursor] = React.useState(0);
 
-  const ref = React.useRef<HTMLUListElement>(null);
-
   const { data: categories } = useSWR(
-    () => [dep`https://api.twitch.tv/helix/search/categories?query=${query !== "" ? query : undefined}`, token],
+    () => [
+      dep`https://api.twitch.tv/helix/search/categories?query=${query !== "" ? query : undefined}`,
+      token,
+    ],
     twitch.get<Category[]>,
     {
       onSuccess: (categories) => {
@@ -47,90 +50,77 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
       next %= categories.length;
       if (next < 0) next = categories.length + next;
       setCursor(next);
-
-      ref.current?.children[next]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
     },
     [cursor, categories],
   );
 
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.nativeEvent.isComposing) return;
+
+      setOpen(true);
+
+      if (e.key === "ArrowUp") {
+        moveCursor(-1);
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        moveCursor(+1);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+
+        if (!categories || categories.length === 0) return;
+
+        const index = categories.findIndex((item) =>
+          item.name.startsWith(query),
+        );
+        const next = (index + 1) % categories.length;
+        const selected = categories[next];
+
+        onChange(selected);
+        setQuery(selected.name);
+
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const current = categories?.[cursor];
+        if (!current) return;
+        if (current !== value) onChange(current);
+        setQuery(current.name);
+        setOpen(false);
+        return;
+      }
+    },
+    [categories, cursor, moveCursor, onChange, query, value],
+  );
+
+  const handleSelectCategory = React.useCallback(
+    (category: Category) => {
+      setQuery(category.name);
+      setOpen(false);
+      onChange(category);
+    },
+    [onChange],
+  );
+
   return (
     <div className="dropdown relative">
-      <label htmlFor="text" className="relative w-full h-24">
-        <div className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none ">
-          {value && <img src={value.box_art_url} alt={value.name} />}
-        </div>
-
-        <input
-          type="text"
-          placeholder="Pick a category"
-          value={query}
-          onFocus={() => setOpen(true)}
-          onBlur={() => {
-            setOpen(false);
-            setQuery(value?.name ?? "");
-          }}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            const found = categories?.find(
-              (item) => item.name === e.target.value,
-            );
-            if (!found) return;
-            onChange(found);
-          }}
-          onKeyDown={(e) => {
-            if (e.nativeEvent.isComposing) return;
-
-            setOpen(true);
-
-            if (e.key === "ArrowUp") {
-              moveCursor(-1);
-              return;
-            }
-
-            if (e.key === "ArrowDown") {
-              moveCursor(+1);
-              return;
-            }
-
-            if (e.key === "Tab") {
-              e.preventDefault();
-
-              if (!categories || categories.length === 0) return;
-
-              const index = categories.findIndex((item) =>
-                item.name.startsWith(query),
-              );
-              const next = (index + 1) % categories.length;
-              const selected = categories[next];
-
-              onChange(selected);
-              setQuery(selected.name);
-
-              return;
-            }
-
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const current = categories?.[cursor];
-              if (!current) return;
-              if (current !== value) onChange(current);
-              setQuery(current.name);
-              setOpen(false);
-              return;
-            }
-          }}
-          className={clsx(
-            "relative z-10",
-            "w-full h-24 ps-24",
-            "input input-bordered form-input",
-            "focus:outline-none",
-            open && "border-b-0 rounded-b-none",
-          )}
-        />
-      </label>
+      <CategoryInput
+        value={value}
+        query={query}
+        open={open}
+        setOpen={setOpen}
+        setQuery={setQuery}
+        onKeyDown={handleKeyDown}
+        onChange={onChange}
+        categories={categories}
+      />
 
       <div
         className={clsx(
@@ -143,34 +133,12 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
           "rounded",
         )}
       >
-        <ul
-          ref={ref}
-          className={clsx(
-            "menu",
-            "mt-24",
-            "w-full max-h-80 py-0 p-2",
-            "flex-nowrap overflow-auto",
-          )}
-        >
-          {categories?.map((item, index) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className={clsx(index === cursor && "bg-slate-100")}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setQuery(item.name);
-                  setOpen(false);
-                  onChange(item);
-                }}
-                onMouseEnter={() => setCursor(index)}
-              >
-                <img src={item.box_art_url} alt={item.name} />
-                {item.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <CategoryList
+          categories={categories}
+          cursor={cursor}
+          setCursor={setCursor}
+          onSelect={handleSelectCategory}
+        />
       </div>
     </div>
   );

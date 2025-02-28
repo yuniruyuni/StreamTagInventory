@@ -1,12 +1,6 @@
-import {
-  type Dispatch,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, useCallback, useEffect, useState } from "react";
 
-
-export const useStorage = <T,>(key: string, def: T): [T, Dispatch<T>] => {
+export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>] => {
   const [storage, setState] = useState<T>(def);
 
   useEffect(() => {

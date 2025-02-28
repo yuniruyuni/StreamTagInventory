@@ -1,0 +1,1 @@
+export { CategoryInput } from "./component";

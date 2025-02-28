@@ -1,5 +1,5 @@
-import { ulid } from 'ulid';
-import { type Category, newCategory } from '~/model/category';
+import { ulid } from "ulid";
+import { type Category, newCategory } from "~/model/category";
 
 export type Template = {
   id: string;
@@ -7,7 +7,6 @@ export type Template = {
   category: Category;
   tags: string[];
 };
-
 
 export function newTemplate(): Template {
   return {
@@ -19,9 +18,8 @@ export function newTemplate(): Template {
 }
 
 export function cloneTemplate(template: Template): Template {
-  return {...template, id: ulid() };
+  return { ...template, id: ulid() };
 }
-
 
 export function validateTemplate(template: Template): boolean {
   if (template.title === "") return false;

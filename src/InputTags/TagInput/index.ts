@@ -1,0 +1,1 @@
+export { TagInput } from "./component";

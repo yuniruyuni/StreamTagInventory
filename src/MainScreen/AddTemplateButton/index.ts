@@ -1,0 +1,1 @@
+export { AddTemplateButton } from "./component";

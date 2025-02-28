@@ -1,12 +1,12 @@
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import React from "react";
 import type { FC } from "react";
-import { type Template, validateTemplate } from "~/model/template";
+import type { Template } from "~/model/template";
 
-import { CategorySelector } from "~/CategorySelector";
-import { InputTags } from "~/InputTags";
-
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DragHandle } from "./DragHandle";
+import { TemplateActions } from "./TemplateActions";
+import { TemplateForm } from "./TemplateForm";
 
 type Props = {
   template: Template;
@@ -17,8 +17,15 @@ type Props = {
 };
 
 // TODO: refine UI design.
-export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, onSave }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: template.id });
+export const TemplateCard: FC<Props> = ({
+  template,
+  onRemove,
+  onApply,
+  onClone,
+  onSave,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: template.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -27,55 +34,28 @@ export const TemplateCard: FC<Props> = ({ template, onRemove, onApply, onClone, 
 
   const [temp, setTemp] = React.useState<Template>(template);
   const changed = JSON.stringify(template) !== JSON.stringify(temp);
-  const valid = validateTemplate(temp);
 
   return (
-    <div className="card w-96 bg-base-100 shadow-xl" ref={setNodeRef} {...attributes} style={style}>
+    <div
+      className="card w-96 bg-base-100 shadow-xl"
+      ref={setNodeRef}
+      {...attributes}
+      style={style}
+    >
       <div className="card-body">
-        <button {...listeners} className="absolute top-0 right-0 p-4 cursor-grab">
-          <svg viewBox="0 0 20 20" width="20">
-            <title>drag handle</title>
-            <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z">
-              drag
-            </path>
-          </svg>
-        </button>
-        <label>Title</label>
-        <input
-          type="text"
-          className="p-2 border border-slate-300 rounded"
-          onChange={(e) => setTemp({ ...temp, title: e.target.value })}
-          value={temp.title}
+        <DragHandle listeners={listeners} />
+
+        <TemplateForm template={temp} onChange={setTemp} />
+
+        <TemplateActions
+          template={temp}
+          changed={changed}
+          onRevert={() => setTemp(template)}
+          onSave={() => onSave(temp)}
+          onClone={onClone}
+          onRemove={onRemove}
+          onApply={onApply}
         />
-
-        <label>Category</label>
-        <CategorySelector value={temp.category} onChange={(category) => setTemp({ ...temp, category })} />
-
-        <label>Tags</label>
-        <InputTags tags={temp.tags ?? []} onChange={(tags) => setTemp({ ...temp, tags })} />
-
-        <div className="card-actions justify-end">
-          {
-            changed && (<>
-              <button type="button" className="btn btn-error" onClick={() => setTemp(template)}>Revert</button>
-              <button type="button" className="btn btn-primary" onClick={() => onSave(temp)}>Save</button>
-            </>)
-          }
-          {
-            !changed && (<>
-              <button type="button" className="btn btn-secondary" onClick={() => {
-                onClone(template);
-              }}>Clone</button>
-              <button type="button" className="btn btn-error" onClick={() => {
-                onRemove(template);
-              }}>Remove</button>
-              {!valid && <button type="button" className="btn btn-disabled">Apply</button>}
-              {valid && <button type="button" className="btn btn-primary" onClick={() => {
-                onApply(template);
-              }}>Apply</button>}
-            </>)
-          }
-        </div>
       </div>
     </div>
   );

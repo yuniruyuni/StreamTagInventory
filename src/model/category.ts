@@ -4,7 +4,7 @@ export type Category = {
   box_art_url: string;
 };
 
-export function newCategory() : Category {
+export function newCategory(): Category {
   return {
     id: "",
     name: "",
