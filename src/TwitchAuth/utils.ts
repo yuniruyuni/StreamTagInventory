@@ -13,12 +13,15 @@ export function generateURI(auth: Auth): string {
 }
 
 export function parseTokenFromHash(): string | null {
-  const param = Object.fromEntries(new URLSearchParams(window.location.hash));
-  return param["#access_token"] || null;
+  // #access_token=token の形式からトークンを抽出
+  const match = window.location.hash.match(/^#access_token=([^&]+)/);
+  return match ? match[1] : null;
 }
 
 export function clearHash(): void {
   if (window.location.hash) {
-    window.history.replaceState("", document.title, window.location.pathname);
+    // document.titleが定義されていない場合に備えて空文字列を使用
+    const title = document.title || "";
+    window.history.replaceState("", title, window.location.pathname);
   }
 }
