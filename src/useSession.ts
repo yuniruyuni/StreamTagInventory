@@ -6,12 +6,19 @@ export const useSession = <T>(key: string, def: T): [T, Dispatch<T>] => {
   useEffect(() => {
     const loaded = sessionStorage.getItem(key);
     if (loaded == null) return;
-    const parsed = JSON.parse(loaded);
-    if (!parsed) {
+
+    try {
+      const parsed = JSON.parse(loaded);
+      if (!parsed) {
+        sessionStorage.removeItem(key);
+        return;
+      }
+      setState(parsed);
+    } catch (e) {
+      // 無効なJSONの場合は、セッションストレージから削除
       sessionStorage.removeItem(key);
       return;
     }
-    setState(parsed);
   }, [key]);
 
   const setStorage = useCallback(
