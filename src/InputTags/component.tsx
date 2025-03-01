@@ -8,6 +8,36 @@ type Props = {
   onChange: (tags: string[]) => void;
 };
 
+// テスト用にエクスポート
+export function handleTagKeyDown(
+  e:
+    | React.KeyboardEvent<HTMLInputElement>
+    | {
+        key: string;
+        currentTarget: { value: string };
+        preventDefault: () => void;
+        nativeEvent: { isComposing: boolean };
+      },
+  tags: string[],
+  onChange: (tags: string[]) => void,
+) {
+  if (e.nativeEvent.isComposing) return;
+
+  const value = e.currentTarget.value;
+  if (e.key === "Backspace" && !value.length && tags.length > 0) {
+    const newTags = [...tags];
+    newTags.splice(tags.length - 1, 1);
+    onChange(newTags);
+    return;
+  }
+
+  if (e.key !== "Enter" || !value.trim()) return;
+  const newTags = [...tags, value];
+  onChange(newTags);
+  e.currentTarget.value = "";
+  e.preventDefault();
+}
+
 export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const [active, setActive] = React.useState(false);
 
@@ -18,19 +48,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.nativeEvent.isComposing) return;
-
-    const value = e.currentTarget.value;
-    if (e.key === "Backspace" && !value.length && tags.length > 0) {
-      onClose(tags.length - 1);
-      return;
-    }
-
-    if (e.key !== "Enter" || !value.trim()) return;
-    const newTags = [...tags, value];
-    onChange(newTags);
-    e.currentTarget.value = "";
-    e.preventDefault();
+    handleTagKeyDown(e, tags, onChange);
   }
 
   return (
