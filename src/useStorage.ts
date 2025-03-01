@@ -6,12 +6,19 @@ export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>] => {
   useEffect(() => {
     const loaded = localStorage.getItem(key);
     if (loaded == null) return;
-    const parsed = JSON.parse(loaded);
-    if (!parsed) {
+
+    try {
+      const parsed = JSON.parse(loaded);
+      if (!parsed) {
+        localStorage.removeItem(key);
+        return;
+      }
+      setState(parsed);
+    } catch (e) {
+      // 無効なJSONの場合は、ローカルストレージから削除
       localStorage.removeItem(key);
       return;
     }
-    setState(parsed);
   }, [key]);
 
   const setStorage = useCallback(
