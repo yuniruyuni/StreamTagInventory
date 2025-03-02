@@ -1,8 +1,8 @@
-import { expect, mock, test } from "bun:test";
-import React from "react";
+import { beforeEach, expect, mock, test } from "bun:test";
 import { type Category, EmptyCategory } from "../model/category";
-import { renderComponent, setupTestEnvironment } from "../test-utils";
+import { fireEvent, render, setupTestEnvironment } from "../test-utils";
 import { CategorySelector } from "./component";
+import React from "react";
 
 // テスト環境のセットアップ
 setupTestEnvironment();
@@ -61,32 +61,36 @@ function restoreUseSWR() {
   (require("swr") as any).default = originalUseSWR;
 }
 
-test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
-  // React.useContextをモック
-  const originalUseContext = React.useContext;
+// React.useContextのモック
+let originalUseContext: typeof React.useContext;
+
+beforeEach(() => {
+  originalUseContext = React.useContext;
   // biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
   (React as any).useContext = () => ({ token: "test-token" });
+});
 
+test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
   try {
     // モックコールバック
     const mockOnChange = mock((_: Category) => {});
 
     // コンポーネントをレンダリング
-    const root = renderComponent(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    const { container, getByPlaceholderText } = render(
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
     );
 
     // 入力フィールドが存在することを確認
-    const input = root.querySelector("input");
+    const input = getByPlaceholderText("Pick a category");
     expect(input).not.toBeNull();
-    expect(input?.getAttribute("placeholder")).toBe("Pick a category");
 
     // 初期状態ではドロップダウンが非表示であることを確認
-    const dropdown = root.querySelector(".dropdown");
+    const dropdown = container.querySelector(".dropdown");
     expect(dropdown).not.toBeNull();
-    const dropdownContent = root.querySelector(".absolute");
+
+    const dropdownContent = container.querySelector("[data-testid='dropdown-content']");
     expect(dropdownContent).not.toBeNull();
-    // クラス名の確認方法を変更
+    expect(dropdownContent?.classList.contains("invisible")).toBe(true);
     expect(dropdownContent?.classList.contains("visible")).toBe(false);
   } finally {
     // テスト後に元に戻す
@@ -97,33 +101,26 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
 });
 
 test("入力フィールドにフォーカスするとドロップダウンが表示される", () => {
-  // React.useContextをモック
-  const originalUseContext = React.useContext;
-  // biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
-  (React as any).useContext = () => ({ token: "test-token" });
-
   try {
     // モックコールバック
     const mockOnChange = mock((_: Category) => {});
 
     // コンポーネントをレンダリング
-    const root = renderComponent(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    const { container, getByPlaceholderText } = render(
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
     );
 
     // 入力フィールドを取得
-    const input = root.querySelector("input");
+    const input = getByPlaceholderText("Pick a category");
     expect(input).not.toBeNull();
 
     // フォーカスイベントをシミュレート
-    if (input) {
-      input.focus();
-    }
+    fireEvent.focus(input);
 
     // ドロップダウンが表示されることを確認
-    const dropdownContent = root.querySelector(".absolute");
+    const dropdownContent = container.querySelector("[data-testid='dropdown-content']");
     expect(dropdownContent).not.toBeNull();
-    // クラス名の確認方法を変更
+    expect(dropdownContent?.classList.contains("visible")).toBe(true);
     expect(dropdownContent?.classList.contains("invisible")).toBe(false);
   } finally {
     // テスト後に元に戻す
@@ -134,35 +131,24 @@ test("入力フィールドにフォーカスするとドロップダウンが�
 });
 
 test("検索クエリに基づいてカテゴリがフィルタリングされる", () => {
-  // React.useContextをモック
-  const originalUseContext = React.useContext;
-  // biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
-  (React as any).useContext = () => ({ token: "test-token" });
-
   try {
     // モックコールバック
     const mockOnChange = mock((_: Category) => {});
 
     // コンポーネントをレンダリング
-    const root = renderComponent(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    const { getByPlaceholderText } = render(
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
     );
 
     // 入力フィールドを取得
-    const input = root.querySelector("input");
+    const input = getByPlaceholderText("Pick a category");
     expect(input).not.toBeNull();
 
     // 入力値を変更
-    if (input) {
-      input.value = "Mine";
-      const changeEvent = new Event("change", { bubbles: true });
-      input.dispatchEvent(changeEvent);
-    }
+    fireEvent.change(input, { target: { value: "Mine" } });
 
-    // フィルタリングされたカテゴリが表示されることを確認
-    // 注: 実際のフィルタリングはuseSWRモックで行われるため、
-    // ここではイベントが正しく発火することだけを確認
-    expect(input?.value).toBe("Mine");
+    // 入力値が変更されたことを確認
+    expect((input as HTMLInputElement).value).toBe("Mine");
   } finally {
     // テスト後に元に戻す
     // biome-ignore lint/suspicious/noExplicitAny: テスト用のモック

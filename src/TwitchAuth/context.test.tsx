@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import React from "react";
-import { renderComponent, setupTestEnvironment } from "../test-utils";
+import { fireEvent, render, setupTestEnvironment } from "../test-utils";
 import { TwitchAuthContext } from "./context";
 
 // テスト環境のセットアップ
@@ -24,17 +24,19 @@ test("TwitchAuthContextが正しく初期化される", () => {
   };
 
   // コンポーネントをレンダリング
-  const root = renderComponent(<TestComponent />);
+  const { container } = render(<TestComponent />);
 
   // デフォルト値が正しいことを確認
-  const tokenElement = root.querySelector("[data-testid='token']");
+  const tokenElement = container.querySelector("[data-testid='token']");
   expect(tokenElement).not.toBeNull();
   expect(tokenElement?.textContent).toBe("");
 
   // ボタンが存在することを確認（logout関数が提供されていることを間接的に確認）
-  const button = root.querySelector("button");
+  const button = container.querySelector("button");
   expect(button).not.toBeNull();
 
   // ボタンをクリックしてもエラーが発生しないことを確認
-  expect(() => button?.click()).not.toThrow();
+  if (button) {
+    expect(() => fireEvent.click(button)).not.toThrow();
+  }
 });

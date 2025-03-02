@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { newTemplate } from "~/model/template";
-import { renderComponent, setupTestEnvironment } from "../test-utils";
+import { render, setupTestEnvironment } from "../test-utils";
 import { TemplateCard } from "./component";
 
 // テスト環境のセットアップ
@@ -15,22 +15,22 @@ test("TemplateCardコンポーネントが正しくレンダリングされる",
   const onClone = () => {};
   const onSave = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <TemplateCard
       template={template}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-    />,
+    />
   );
 
   // カードが表示されていることを確認
-  const card = root?.querySelector(".card");
+  const card = container.querySelector(".card");
   expect(card).not.toBeNull();
 
   // フォームが表示されていることを確認
-  const titleInput = root?.querySelector("input[type='text']");
+  const titleInput = container.querySelector("input[type='text']");
   expect(titleInput).not.toBeNull();
   expect(titleInput?.getAttribute("value")).toBe("テストタイトル");
 });
@@ -45,18 +45,18 @@ test("テンプレートの操作が正しく動作する", () => {
   const onClone = () => {};
   const onSave = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <TemplateCard
       template={template}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-    />,
+    />
   );
 
   // 各ボタンが存在することを確認
-  const buttons = Array.from(root?.querySelectorAll("button") || []);
+  const buttons = Array.from(container.querySelectorAll("button") || []);
   expect(buttons.length).toBeGreaterThan(0);
 
   // ボタンのテキストを確認

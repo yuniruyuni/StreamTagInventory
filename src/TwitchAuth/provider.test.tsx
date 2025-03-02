@@ -1,6 +1,6 @@
 import { expect, mock, test } from "bun:test";
 import React from "react";
-import { renderComponent, setupTestEnvironment } from "../test-utils";
+import { fireEvent, render, setupTestEnvironment } from "../test-utils";
 import { TwitchAuthProvider } from "./provider";
 import { clearHash } from "./utils";
 
@@ -162,14 +162,14 @@ test("TwitchAuthProviderがトークンがない場合に入口コンポーネ�
     ));
 
     // コンポーネントをレンダリング
-    const root = renderComponent(
+    const { container } = render(
       <TwitchAuthProvider scope={["user:read:email"]} entrance={mockEntrance}>
         <div>Child</div>
-      </TwitchAuthProvider>,
+      </TwitchAuthProvider>
     );
 
     // 入口コンポーネントが表示されていることを確認
-    expect(root.textContent).toBe("Entrance: https://example.com/auth");
+    expect(container.textContent).toBe("Entrance: https://example.com/auth");
 
     // entranceが正しいURIで呼び出されたことを確認
     expect(mockEntrance.mock.calls.length).toBe(1);

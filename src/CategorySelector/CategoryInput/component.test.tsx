@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Category } from "~/model/category";
-import { renderComponent, setupTestEnvironment } from "../../test-utils";
+import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
 import { CategoryInput } from "./component";
 
 // テスト環境のセットアップ
@@ -14,7 +14,7 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
   const onKeyDown = () => {};
   const onChange = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -22,11 +22,11 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />,
+    />
   );
 
   // ラベル要素が存在することを確認
-  const label = root?.querySelector("label");
+  const label = container.querySelector("label");
   expect(label).not.toBeNull();
 
   // 入力フィールドが存在することを確認
@@ -50,7 +50,7 @@ test("valueが指定されている場合、画像が表示される", () => {
   const onKeyDown = () => {};
   const onChange = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <CategoryInput
       value={value}
       query={query}
@@ -59,11 +59,11 @@ test("valueが指定されている場合、画像が表示される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />,
+    />
   );
 
   // 画像要素が存在することを確認
-  const image = root?.querySelector("img");
+  const image = container.querySelector("img");
   expect(image).not.toBeNull();
   expect(image?.getAttribute("src")).toBe("https://example.com/image.jpg");
   expect(image?.getAttribute("alt")).toBe("テストカテゴリ");
@@ -77,7 +77,7 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
   const onKeyDown = () => {};
   const onChange = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -85,10 +85,10 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />,
+    />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input?.className).toContain("border-b-0");
   expect(input?.className).toContain("rounded-b-none");
 });
@@ -104,7 +104,7 @@ test("フォーカス時にsetOpenが呼び出される", () => {
   const onKeyDown = () => {};
   const onChange = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -112,14 +112,16 @@ test("フォーカス時にsetOpenが呼び出される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />,
+    />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input).not.toBeNull();
 
   // フォーカスイベントをシミュレート
-  input?.focus();
+  if (input) {
+    fireEvent.focus(input);
+  }
 
   // setOpenが正しく呼び出されたか確認
   expect(openState).toBe(true);
@@ -144,7 +146,7 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", () => {
   const onKeyDown = () => {};
   const onChange = () => {};
 
-  const root = renderComponent(
+  const { container } = render(
     <CategoryInput
       value={value}
       query={query}
@@ -153,15 +155,17 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />,
+    />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input).not.toBeNull();
 
   // フォーカスしてからブラーイベントをシミュレート
-  input?.focus();
-  input?.blur();
+  if (input) {
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+  }
 
   // setOpenとsetQueryが正しく呼び出されたか確認
   expect(openState).toBe(false);

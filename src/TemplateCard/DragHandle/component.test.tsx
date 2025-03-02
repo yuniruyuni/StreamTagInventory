@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { renderComponent, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { DragHandle } from "./component";
 
 // テスト環境のセットアップ
@@ -12,10 +12,10 @@ test("DragHandleコンポーネントが正しくレンダリングされる", (
     onTouchStart: () => {},
   };
 
-  const root = renderComponent(<DragHandle listeners={listeners} />);
+  const { container } = render(<DragHandle listeners={listeners} />);
 
   // ボタン要素が存在することを確認
-  const button = root?.querySelector("button");
+  const button = container.querySelector("button");
   expect(button).not.toBeNull();
 
   // SVGアイコンが存在することを確認
@@ -39,10 +39,10 @@ test("リスナーが正しくボタンに渡される", () => {
     onTouchStart: () => {},
   };
 
-  const root = renderComponent(<DragHandle listeners={mockListeners} />);
+  const { container } = render(<DragHandle listeners={mockListeners} />);
 
   // ボタン要素を取得
-  const button = root?.querySelector("button");
+  const button = container.querySelector("button");
   expect(button).not.toBeNull();
 
   // リスナーがボタンの属性として設定されていることを確認
@@ -51,10 +51,10 @@ test("リスナーが正しくボタンに渡される", () => {
 });
 
 test("リスナーがundefinedの場合も正しくレンダリングされる", () => {
-  const root = renderComponent(<DragHandle listeners={undefined} />);
+  const { container } = render(<DragHandle listeners={undefined} />);
 
   // ボタン要素が存在することを確認
-  const button = root?.querySelector("button");
+  const button = container.querySelector("button");
   expect(button).not.toBeNull();
 
   // SVGアイコンが存在することを確認
