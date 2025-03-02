@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { renderComponent, setupTestEnvironment } from "../../test-utils";
+import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
 import { TagInput } from "./component";
 
 // テスト環境のセットアップ
@@ -10,11 +10,11 @@ test("TagInputコンポーネントが正しくレンダリングされる", () 
   const onFocus = () => {};
   const onBlur = () => {};
 
-  const root = renderComponent(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
+  const { container } = render(
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input).not.toBeNull();
   expect(input?.getAttribute("type")).toBe("text");
   expect(input?.className).toContain("flex-grow");
@@ -28,15 +28,17 @@ test("フォーカス時にonFocus関数が呼び出される", () => {
   };
   const onBlur = () => {};
 
-  const root = renderComponent(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
+  const { container } = render(
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input).not.toBeNull();
 
   // フォーカスイベントをシミュレート
-  input?.focus();
+  if (input) {
+    fireEvent.focus(input);
+  }
 
   expect(focusCalled).toBe(true);
 });
@@ -49,16 +51,18 @@ test("ブラー時にonBlur関数が呼び出される", () => {
     blurCalled = true;
   };
 
-  const root = renderComponent(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
+  const { container } = render(
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
   );
 
-  const input = root?.querySelector("input");
+  const input = container.querySelector("input");
   expect(input).not.toBeNull();
 
   // フォーカスしてからブラーイベントをシミュレート
-  input?.focus();
-  input?.blur();
+  if (input) {
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+  }
 
   expect(blurCalled).toBe(true);
 });

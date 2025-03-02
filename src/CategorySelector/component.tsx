@@ -46,6 +46,7 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
       />
 
       <div
+        data-testid="dropdown-content"
         className={clsx(
           open ? "visible" : "invisible",
           "absolute top-0",
