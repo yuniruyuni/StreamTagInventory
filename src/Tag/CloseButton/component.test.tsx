@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { CloseButton } from "./component";
 
 // テスト環境のセットアップ

@@ -1,8 +1,8 @@
 import { beforeEach, expect, mock, test } from "bun:test";
+import React from "react";
 import { type Category, EmptyCategory } from "../model/category";
 import { fireEvent, render, setupTestEnvironment } from "../test-utils";
 import { CategorySelector } from "./component";
-import React from "react";
 
 // テスト環境のセットアップ
 setupTestEnvironment();
@@ -77,7 +77,7 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
 
     // コンポーネントをレンダリング
     const { container, getByPlaceholderText } = render(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
     );
 
     // 入力フィールドが存在することを確認
@@ -88,7 +88,9 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
     const dropdown = container.querySelector(".dropdown");
     expect(dropdown).not.toBeNull();
 
-    const dropdownContent = container.querySelector("[data-testid='dropdown-content']");
+    const dropdownContent = container.querySelector(
+      "[data-testid='dropdown-content']",
+    );
     expect(dropdownContent).not.toBeNull();
     expect(dropdownContent?.classList.contains("invisible")).toBe(true);
     expect(dropdownContent?.classList.contains("visible")).toBe(false);
@@ -107,7 +109,7 @@ test("入力フィールドにフォーカスするとドロップダウンが�
 
     // コンポーネントをレンダリング
     const { container, getByPlaceholderText } = render(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
     );
 
     // 入力フィールドを取得
@@ -118,7 +120,9 @@ test("入力フィールドにフォーカスするとドロップダウンが�
     fireEvent.focus(input);
 
     // ドロップダウンが表示されることを確認
-    const dropdownContent = container.querySelector("[data-testid='dropdown-content']");
+    const dropdownContent = container.querySelector(
+      "[data-testid='dropdown-content']",
+    );
     expect(dropdownContent).not.toBeNull();
     expect(dropdownContent?.classList.contains("visible")).toBe(true);
     expect(dropdownContent?.classList.contains("invisible")).toBe(false);
@@ -137,7 +141,7 @@ test("検索クエリに基づいてカテゴリがフィルタリングされ�
 
     // コンポーネントをレンダリング
     const { getByPlaceholderText } = render(
-      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />
+      <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
     );
 
     // 入力フィールドを取得

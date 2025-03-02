@@ -11,7 +11,7 @@ test("TagInputコンポーネントが正しくレンダリングされる", () 
   const onBlur = () => {};
 
   const { container } = render(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
   const input = container.querySelector("input");
@@ -29,7 +29,7 @@ test("フォーカス時にonFocus関数が呼び出される", () => {
   const onBlur = () => {};
 
   const { container } = render(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
   const input = container.querySelector("input");
@@ -52,7 +52,7 @@ test("ブラー時にonBlur関数が呼び出される", () => {
   };
 
   const { container } = render(
-    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />
+    <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
   const input = container.querySelector("input");

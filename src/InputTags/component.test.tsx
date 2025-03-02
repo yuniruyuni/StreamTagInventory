@@ -14,7 +14,7 @@ test("InputTagsコンポーネントが初期タグを正しくレンダリン�
 
   // コンポーネントをレンダリング
   const { container } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />
+    <InputTags tags={initialTags} onChange={mockOnChange} />,
   );
 
   // タグが正しくレンダリングされていることを確認
@@ -84,11 +84,13 @@ test("閉じるボタンをクリックしてタグを削除できる", () => {
 
   // コンポーネントをレンダリング
   const { container } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />
+    <InputTags tags={initialTags} onChange={mockOnChange} />,
   );
 
   // 閉じるボタンを取得
-  const closeButtons = container.querySelectorAll("button[aria-label='Remove']");
+  const closeButtons = container.querySelectorAll(
+    "button[aria-label='Remove']",
+  );
   expect(closeButtons.length).toBe(initialTags.length);
 
   // 注: 実際の環境では、以下のコードでイベントをシミュレートできるはずですが、
@@ -112,7 +114,7 @@ test("フォーカス時にアクティブクラスが適用される", () => {
 
   // コンポーネントをレンダリング
   const { container } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />
+    <InputTags tags={initialTags} onChange={mockOnChange} />,
   );
 
   // コンテナ要素を取得
@@ -149,7 +151,7 @@ test("空の値ではタグが追加されない", () => {
 
   // コンポーネントをレンダリング
   const { container } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />
+    <InputTags tags={initialTags} onChange={mockOnChange} />,
   );
 
   // 入力フィールドを取得
@@ -206,7 +208,7 @@ test("IME入力中はキーイベントが処理されない", () => {
 
   // コンポーネントをレンダリング
   const { container } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />
+    <InputTags tags={initialTags} onChange={mockOnChange} />,
   );
 
   // 入力フィールドを取得

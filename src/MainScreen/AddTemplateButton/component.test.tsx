@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { type Template, newTemplate } from "~/model/template";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { AddTemplateButton } from "./component";
 
 // テスト環境のセットアップ
@@ -11,7 +11,7 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
   const setTemplates = () => {};
 
   const { container } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />
+    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素が存在することを確認
@@ -29,7 +29,7 @@ test("ボタンをクリックすると、新しいテンプレートが追加�
   };
 
   const { container } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />
+    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素を取得
@@ -61,7 +61,7 @@ test("既存のテンプレートがある場合、新しいテンプレート�
   };
 
   const { container } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />
+    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素を取得

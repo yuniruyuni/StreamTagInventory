@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test";
 import type { Category } from "~/model/category";
 import { type Template, newTemplate } from "~/model/template";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { TemplateForm } from "./component";
 
 // CategorySelectorとInputTagsコンポーネントをモック
@@ -66,7 +66,7 @@ test("TemplateFormコンポーネントが正しくレンダリングされる",
   const onChange = () => {};
 
   const { container } = render(
-    <TemplateForm template={template} onChange={onChange} />
+    <TemplateForm template={template} onChange={onChange} />,
   );
 
   // ラベルが正しく表示されていることを確認
@@ -78,14 +78,14 @@ test("TemplateFormコンポーネントが正しくレンダリングされる",
 
   // タイトル入力フィールドが正しく表示されていることを確認
   const titleInput = container.querySelector(
-    "input[type='text']"
+    "input[type='text']",
   ) as HTMLInputElement;
   expect(titleInput).not.toBeNull();
   expect(titleInput?.value).toBe("テストタイトル");
 
   // モックコンポーネントが正しく表示されていることを確認
   const categorySelector = container.querySelector(
-    "[data-testid='mock-category-selector']"
+    "[data-testid='mock-category-selector']",
   );
   expect(categorySelector).not.toBeNull();
 
@@ -102,12 +102,12 @@ test("タイトルが変更されたとき、onChangeが呼び出される", () 
   };
 
   const { container } = render(
-    <TemplateForm template={template} onChange={onChange} />
+    <TemplateForm template={template} onChange={onChange} />,
   );
 
   // タイトル入力フィールドを取得
   const titleInput = container.querySelector(
-    "input[type='text']"
+    "input[type='text']",
   ) as HTMLInputElement;
   expect(titleInput).not.toBeNull();
 
@@ -130,12 +130,12 @@ test("カテゴリが変更されたとき、onChangeが呼び出される", () 
   };
 
   const { container } = render(
-    <TemplateForm template={template} onChange={onChange} />
+    <TemplateForm template={template} onChange={onChange} />,
   );
 
   // カテゴリ変更ボタンを取得
   const categoryChangeButton = container.querySelector(
-    "[data-testid='mock-category-change']"
+    "[data-testid='mock-category-change']",
   ) as HTMLButtonElement;
   expect(categoryChangeButton).not.toBeNull();
 
@@ -166,12 +166,12 @@ test("タグが変更されたとき、onChangeが呼び出される", () => {
   };
 
   const { container } = render(
-    <TemplateForm template={template} onChange={onChange} />
+    <TemplateForm template={template} onChange={onChange} />,
   );
 
   // タグ変更ボタンを取得
   const tagsChangeButton = container.querySelector(
-    "[data-testid='mock-tags-change']"
+    "[data-testid='mock-tags-change']",
   ) as HTMLButtonElement;
   expect(tagsChangeButton).not.toBeNull();
 
@@ -195,7 +195,7 @@ test("template.tagsがnullの場合、空の配列として扱われる", () => 
   const onChange = () => {};
 
   const { container } = render(
-    <TemplateForm template={template} onChange={onChange} />
+    <TemplateForm template={template} onChange={onChange} />,
   );
 
   // InputTagsコンポーネントが表示されていることを確認
