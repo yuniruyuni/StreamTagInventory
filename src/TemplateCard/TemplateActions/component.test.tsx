@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { type Template, newTemplate } from "~/model/template";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { TemplateActions } from "./component";
 
 // テスト環境のセットアップ
@@ -39,7 +39,7 @@ test("変更がない状態で正しくレンダリングされる", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // ボタンが正しく表示されていることを確認
@@ -48,7 +48,7 @@ test("変更がない状態で正しくレンダリングされる", () => {
 
   // Clone, Remove, Applyボタンが表示されていることを確認
   const buttonTexts = Array.from(buttons || []).map((button) =>
-    button.textContent?.trim()
+    button.textContent?.trim(),
   );
   expect(buttonTexts).toContain("Clone");
   expect(buttonTexts).toContain("Remove");
@@ -78,7 +78,7 @@ test("変更がある状態で正しくレンダリングされる", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // ボタンが正しく表示されていることを確認
@@ -87,7 +87,7 @@ test("変更がある状態で正しくレンダリングされる", () => {
 
   // RevertとSaveボタンが表示されていることを確認
   const buttonTexts = Array.from(buttons || []).map((button) =>
-    button.textContent?.trim()
+    button.textContent?.trim(),
   );
   expect(buttonTexts).toContain("Revert");
   expect(buttonTexts).toContain("Save");
@@ -117,13 +117,13 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Applyボタンが無効化されていることを確認
-  const applyButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Apply"
-  );
+  const applyButton = Array.from(
+    container.querySelectorAll("button") || [],
+  ).find((button) => button.textContent?.trim() === "Apply");
   expect(applyButton).not.toBeNull();
   expect(applyButton?.className).toContain("btn-disabled");
 });
@@ -141,7 +141,7 @@ test("RevertボタンをクリックするとonRevertが呼び出される", () 
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -150,13 +150,10 @@ test("RevertボタンをクリックするとonRevertが呼び出される", () 
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Revertボタンをクリック
-  const revertButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Revert"
-  );
   // fireEvent.clickが正しく機能しないため、直接onRevert関数を呼び出す
   onRevert();
 
@@ -176,7 +173,7 @@ test("SaveボタンをクリックするとonSaveが呼び出される", () => {
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -185,13 +182,10 @@ test("SaveボタンをクリックするとonSaveが呼び出される", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Saveボタンをクリック
-  const saveButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Save"
-  );
   // fireEvent.clickが正しく機能しないため、直接onSave関数を呼び出す
   onSave(template);
 
@@ -211,7 +205,7 @@ test("CloneボタンをクリックするとonCloneが呼び出される", () =>
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -220,13 +214,10 @@ test("CloneボタンをクリックするとonCloneが呼び出される", () =>
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Cloneボタンをクリック
-  const cloneButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Clone"
-  );
   // fireEvent.clickが正しく機能しないため、直接onClone関数を呼び出す
   onClone(template);
 
@@ -246,7 +237,7 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
   };
   const onApply = () => {};
 
-  const { container } = render(
+  render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -255,13 +246,10 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Removeボタンをクリック
-  const removeButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Remove"
-  );
   // fireEvent.clickが正しく機能しないため、直接onRemove関数を呼び出す
   onRemove(template);
 
@@ -281,7 +269,7 @@ test("ApplyボタンをクリックするとonApplyが呼び出される", () =>
     appliedTemplate = t;
   };
 
-  const { container } = render(
+  render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -290,13 +278,10 @@ test("ApplyボタンをクリックするとonApplyが呼び出される", () =>
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
-    />
+    />,
   );
 
   // Applyボタンをクリック
-  const applyButton = Array.from(container.querySelectorAll("button") || []).find(
-    (button) => button.textContent?.trim() === "Apply"
-  );
   // fireEvent.clickが正しく機能しないため、直接onApply関数を呼び出す
   onApply(template);
 

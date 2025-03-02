@@ -22,7 +22,7 @@ test("TemplateCardコンポーネントが正しくレンダリングされる",
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-    />
+    />,
   );
 
   // カードが表示されていることを確認
@@ -52,7 +52,7 @@ test("テンプレートの操作が正しく動作する", () => {
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-    />
+    />,
   );
 
   // 各ボタンが存在することを確認

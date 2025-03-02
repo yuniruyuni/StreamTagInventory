@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Category } from "~/model/category";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { CategoryItem } from "./component";
 
 // テスト環境のセットアップ
@@ -21,7 +21,7 @@ test("CategoryItemコンポーネントが正しくレンダリングされる",
       isSelected={false}
       onSelect={onSelect}
       onMouseEnter={onMouseEnter}
-    />
+    />,
   );
 
   // リスト要素が存在することを確認
@@ -57,7 +57,7 @@ test("選択されている場合、適切なクラスが適用される", () =>
       isSelected={true}
       onSelect={onSelect}
       onMouseEnter={onMouseEnter}
-    />
+    />,
   );
 
   const button = container.querySelector("button");
@@ -79,7 +79,7 @@ test("選択されていない場合、選択クラスが適用されない", ()
       isSelected={false}
       onSelect={onSelect}
       onMouseEnter={onMouseEnter}
-    />
+    />,
   );
 
   const button = container.querySelector("button");
@@ -106,7 +106,7 @@ test("ボタンがクリックされたとき、onSelect関数が呼び出され
       isSelected={false}
       onSelect={mockOnSelect}
       onMouseEnter={onMouseEnter}
-    />
+    />,
   );
 
   const button = container.querySelector("button");

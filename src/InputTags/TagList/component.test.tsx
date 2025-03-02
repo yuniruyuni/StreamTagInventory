@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { render, setupTestEnvironment } from "../../test-utils";
 import { TagList } from "./component";
 
 // テスト環境のセットアップ
@@ -51,7 +51,9 @@ test("タグの閉じるボタンをクリックすると、onClose関数が呼�
   const { container } = render(<TagList tags={tags} onClose={mockOnClose} />);
 
   // タグの数を確認
-  const tagElements = container.querySelectorAll("span[id='badge-dismiss-default']");
+  const tagElements = container.querySelectorAll(
+    "span[id='badge-dismiss-default']",
+  );
   expect(tagElements?.length).toBe(3);
 
   // 2番目のタグの閉じるボタンを取得

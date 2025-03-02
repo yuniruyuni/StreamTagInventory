@@ -22,7 +22,7 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />
+    />,
   );
 
   // ラベル要素が存在することを確認
@@ -59,7 +59,7 @@ test("valueが指定されている場合、画像が表示される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />
+    />,
   );
 
   // 画像要素が存在することを確認
@@ -85,7 +85,7 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />
+    />,
   );
 
   const input = container.querySelector("input");
@@ -112,7 +112,7 @@ test("フォーカス時にsetOpenが呼び出される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />
+    />,
   );
 
   const input = container.querySelector("input");
@@ -155,7 +155,7 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", () => {
       setQuery={setQuery}
       onKeyDown={onKeyDown}
       onChange={onChange}
-    />
+    />,
   );
 
   const input = container.querySelector("input");

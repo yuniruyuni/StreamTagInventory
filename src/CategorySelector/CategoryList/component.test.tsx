@@ -18,7 +18,7 @@ test("カテゴリが空の場合、何も表示されない", () => {
       cursor={cursor}
       setCursor={setCursor}
       onSelect={onSelect}
-    />
+    />,
   );
 
   // リスト要素が存在しないことを確認
@@ -38,7 +38,7 @@ test("カテゴリがundefinedの場合、何も表示されない", () => {
       cursor={cursor}
       setCursor={setCursor}
       onSelect={onSelect}
-    />
+    />,
   );
 
   // リスト要素が存在しないことを確認
@@ -74,7 +74,7 @@ test("カテゴリがある場合、各カテゴリが表示される", () => {
       cursor={cursor}
       setCursor={setCursor}
       onSelect={onSelect}
-    />
+    />,
   );
 
   // リスト要素が存在することを確認
@@ -130,7 +130,7 @@ test("カーソル位置に対応するカテゴリが選択状態になる", ()
       cursor={cursor}
       setCursor={setCursor}
       onSelect={onSelect}
-    />
+    />,
   );
 
   // ボタン要素を取得
