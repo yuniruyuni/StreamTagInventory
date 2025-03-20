@@ -110,7 +110,7 @@ test("閉じるボタンをクリックしてタグを削除できる", async ()
 
   expect(onChange).toBeCalledWith([
     ...initialTags.slice(0, 1),
-    ...initialTags.slice(2)
+    ...initialTags.slice(2),
   ]);
 });
 

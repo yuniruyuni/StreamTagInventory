@@ -1,4 +1,4 @@
-import { expect, test, mock } from "bun:test";
+import { expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import type { Template } from "~/model/template";
@@ -24,7 +24,7 @@ const mockTemplates: Template[] = [
       box_art_url: "url-2",
     },
     tags: ["タグ3", "タグ4"],
-  }
+  },
 ];
 
 test("TemplateListコンポーネントが正しくレンダリングされる", () => {
@@ -85,14 +85,14 @@ test("onApplyが正しく呼び出される", async () => {
   // idだけ無視する方法があるならそのほうが望ましい
   expect(onApply).toBeCalled();
   expect(onApply.mock.calls[0][0]).toMatchObject({
-      title: "テンプレート2",
-      tags: ["タグ3", "タグ4"],
-      category: {
-        id: "category-2",
-        name: "カテゴリー2",
-        box_art_url: "url-2",
-      },
-    });
+    title: "テンプレート2",
+    tags: ["タグ3", "タグ4"],
+    category: {
+      id: "category-2",
+      name: "カテゴリー2",
+      box_art_url: "url-2",
+    },
+  });
 });
 
 test("onRemoveが正しく呼び出される", async () => {
@@ -122,14 +122,14 @@ test("onRemoveが正しく呼び出される", async () => {
   // onRemove が正しく呼び出されたことを確認
   expect(onRemove).toBeCalled();
   expect(onRemove.mock.calls[0][0]).toMatchObject({
-      title: "テンプレート2",
-      tags: ["タグ3", "タグ4"],
-      category: {
-        id: "category-2",
-        name: "カテゴリー2",
-        box_art_url: "url-2",
-      },
-    });
+    title: "テンプレート2",
+    tags: ["タグ3", "タグ4"],
+    category: {
+      id: "category-2",
+      name: "カテゴリー2",
+      box_art_url: "url-2",
+    },
+  });
 });
 
 test("onCloneが正しく呼び出される", async () => {
@@ -151,7 +151,6 @@ test("onCloneが正しく呼び出される", async () => {
     />,
   );
 
-
   const user = userEvent.setup();
   const cloneButtons = getAllByRole("button", { name: "clone template" });
   await user.click(cloneButtons[1]);
@@ -159,14 +158,14 @@ test("onCloneが正しく呼び出される", async () => {
   // onClone が正しく呼び出されたことを確認
   expect(onClone).toBeCalled();
   expect(onClone.mock.calls[0][0]).toMatchObject({
-      title: "テンプレート2",
-      tags: ["タグ3", "タグ4"],
-      category: {
-        id: "category-2",
-        name: "カテゴリー2",
-        box_art_url: "url-2",
-      },
-    });
+    title: "テンプレート2",
+    tags: ["タグ3", "タグ4"],
+    category: {
+      id: "category-2",
+      name: "カテゴリー2",
+      box_art_url: "url-2",
+    },
+  });
 });
 
 test("onSaveが正しく呼び出される", async () => {
@@ -199,14 +198,14 @@ test("onSaveが正しく呼び出される", async () => {
 
   expect(onSave).toBeCalled();
   expect(onSave.mock.calls[0][0]).toMatchObject({
-      title: "テンプレート2change",
-      tags: ["タグ3", "タグ4"],
-      category: {
-        id: "category-2",
-        name: "カテゴリー2",
-        box_art_url: "url-2",
-      },
-    });
+    title: "テンプレート2change",
+    tags: ["タグ3", "タグ4"],
+    category: {
+      id: "category-2",
+      name: "カテゴリー2",
+      box_art_url: "url-2",
+    },
+  });
 });
 
 test("空のテンプレートリストが正しくレンダリングされる", () => {
