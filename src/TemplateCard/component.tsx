@@ -37,6 +37,7 @@ export const TemplateCard: FC<Props> = ({
 
   return (
     <div
+      data-testid={`template-card-${template.id}`}
       className="card w-96 bg-base-100 shadow-xl"
       ref={setNodeRef}
       {...attributes}

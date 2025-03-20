@@ -25,10 +25,10 @@ const mockCategories: Category[] = [
 ];
 
 test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   const { getByPlaceholderText, getByTestId } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
@@ -44,10 +44,10 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
 });
 
 test("入力フィールドにフォーカスするとドロップダウンが表示される", () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   const { getByPlaceholderText, getByTestId } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
@@ -66,11 +66,11 @@ test("入力フィールドにフォーカスするとドロップダウンが�
 });
 
 test("検索クエリに基づいてカテゴリがフィルタリングされる", () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
@@ -85,11 +85,11 @@ test("検索クエリに基づいてカテゴリがフィルタリングされ�
 });
 
 test("Enterで選択中の項目を選ぶことができる", async () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
@@ -108,11 +108,11 @@ test("Enterで選択中の項目を選ぶことができる", async () => {
 });
 
 test("下キー入力で次の項目を選ぶことができる", async () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
@@ -131,11 +131,11 @@ test("下キー入力で次の項目を選ぶことができる", async () => {
 });
 
 test("前キー入力で一番下の項目を選ぶことができる", async () => {
-  const mockOnChange = mock();
+  const onChange = mock();
 
   // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
-    <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
+    <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 

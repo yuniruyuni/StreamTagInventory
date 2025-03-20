@@ -102,7 +102,7 @@ test("閉じるボタンをクリックしてタグを削除できる", async ()
     <InputTags tags={initialTags} onChange={onChange} />,
   );
 
-  const removeButtons = getAllByRole("button", { name: "Remove" });
+  const removeButtons = getAllByRole("button", { name: "remove tag" });
   expect(removeButtons.length).toBe(initialTags.length);
 
   const user = userEvent.setup();

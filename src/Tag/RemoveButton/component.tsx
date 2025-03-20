@@ -19,7 +19,7 @@ export const RemoveButton: React.FC<Props> = ({ onClick }) => {
         "dark:hover:bg-blue-800 dark:hover:text-blue-300",
       )}
       data-dismiss-target="#badge-dismiss-default"
-      aria-label="Remove"
+      aria-label="remove tag"
       onClick={onClick}
     >
       <svg

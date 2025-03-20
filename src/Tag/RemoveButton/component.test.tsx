@@ -2,13 +2,13 @@ import { expect, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { RemoveButton } from "./component";
 
-test("CloseButtonコンポーネントが正しくレンダリングされる", () => {
+test("RemoveButtonが正しくレンダリングされる", () => {
   const onClick = () => {};
 
   const { getByRole } = render(<RemoveButton onClick={onClick} />);
 
   // ボタン要素が存在することを確認
-  const button = getByRole("button", { name: "Remove" });
+  const button = getByRole("button", { name: "remove tag" });
   expect(button).not.toBeNull();
 
   // SVGアイコンが存在することを確認（SVGはgetByRoleでは取得できないため、DOMノードから確認）
@@ -25,7 +25,7 @@ test("ボタンがクリックされたとき、onClick関数が呼び出され�
   const { getByRole } = render(<RemoveButton onClick={onClick} />);
 
   // ボタン要素を取得
-  const button = getByRole("button", { name: "Remove" });
+  const button = getByRole("button", { name: "remove tag" });
   expect(button).not.toBeNull();
 
   // ボタンをクリック

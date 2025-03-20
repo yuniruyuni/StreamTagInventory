@@ -26,10 +26,16 @@ export const TemplateActions: React.FC<Props> = ({
     <div className="card-actions justify-end">
       {changed && (
         <>
-          <button type="button" className="btn btn-error" onClick={onRevert}>
+          <button
+            aria-label="revert template"
+            type="button"
+            className="btn btn-error"
+            onClick={onRevert}
+          >
             Revert
           </button>
           <button
+            aria-label="save template"
             type="button"
             className="btn btn-primary"
             onClick={() => onSave(template)}
@@ -41,6 +47,7 @@ export const TemplateActions: React.FC<Props> = ({
       {!changed && (
         <>
           <button
+            aria-label="clone template"
             type="button"
             className="btn btn-secondary"
             onClick={() => onClone(template)}
@@ -48,6 +55,7 @@ export const TemplateActions: React.FC<Props> = ({
             Clone
           </button>
           <button
+            aria-label="remove template"
             type="button"
             className="btn btn-error"
             onClick={() => onRemove(template)}
@@ -55,12 +63,17 @@ export const TemplateActions: React.FC<Props> = ({
             Remove
           </button>
           {!valid && (
-            <button type="button" className="btn btn-disabled">
+            <button
+              aria-label="apply template"
+              type="button"
+              className="btn btn-disabled"
+            >
               Apply
             </button>
           )}
           {valid && (
             <button
+              aria-label="apply template"
               type="button"
               className="btn btn-primary"
               onClick={() => onApply(template)}

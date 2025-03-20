@@ -116,7 +116,7 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
   );
 
   // Applyボタンが無効化されていることを確認
-  const applyButton = getByRole("button", { name: "Apply" });
+  const applyButton = getByRole("button", { name: "apply template" });
   expect(applyButton).not.toBeNull();
   expect(applyButton).toHaveClass("btn-disabled");
 });

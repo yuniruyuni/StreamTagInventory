@@ -21,7 +21,7 @@ test("onRemoveプロパティが指定されている場合、削除ボタンが
 
   const { getByLabelText } = render(<Tag onRemove={onRemove}>テストタグ</Tag>);
 
-  const closeButton = getByLabelText("Remove");
+  const closeButton = getByLabelText("remove tag");
   expect(closeButton).not.toBeNull();
 });
 
@@ -31,7 +31,7 @@ test("削除ボタンがクリックされたとき、onRemove関数が呼び出
   const { getByLabelText } = render(<Tag onRemove={onRemove}>テストタグ</Tag>);
 
   // 閉じるボタンを取得
-  const closeButton = getByLabelText("Remove");
+  const closeButton = getByLabelText("remove tag");
   expect(closeButton).not.toBeNull();
 
   const user = userEvent.setup();
