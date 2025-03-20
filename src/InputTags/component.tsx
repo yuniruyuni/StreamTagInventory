@@ -41,7 +41,7 @@ export function handleTagKeyDown(
 export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const [active, setActive] = React.useState(false);
 
-  function onClose(index: number) {
+  function onRemove(index: number) {
     const newTags = [...tags];
     newTags.splice(index, 1);
     onChange(newTags);
@@ -59,7 +59,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
         active && "outline outline-slate-200",
       )}
     >
-      <TagList tags={tags} onClose={onClose} />
+      <TagList tags={tags} onRemove={onRemove} />
       <TagInput
         onFocus={() => setActive(true)}
         onBlur={() => setActive(false)}

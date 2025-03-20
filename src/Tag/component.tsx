@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import type React from "react";
-import { CloseButton } from "./CloseButton";
+import { RemoveButton } from "./RemoveButton";
 
 type Props = {
-  onClose?: () => void;
+  onRemove?: () => void;
   children: React.ReactNode;
 };
 
-export const Tag: React.FC<Props> = ({ onClose, children }) => (
+export const Tag: React.FC<Props> = ({ onRemove, children }) => (
   <li
     className={clsx(
       "inline-flex items-center",
@@ -19,6 +19,6 @@ export const Tag: React.FC<Props> = ({ onClose, children }) => (
     )}
   >
     {children}
-    {onClose && <CloseButton onClick={onClose} />}
+    {onRemove && <RemoveButton onClick={onRemove} />}
   </li>
 );

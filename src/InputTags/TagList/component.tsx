@@ -3,14 +3,14 @@ import { Tag } from "~/Tag";
 
 type Props = {
   tags: string[];
-  onClose: (index: number) => void;
+  onRemove: (index: number) => void;
 };
 
-export const TagList: React.FC<Props> = ({ tags, onClose }) => {
+export const TagList: React.FC<Props> = ({ tags, onRemove }) => {
   return (
     <ul>
       {tags.map((tag, i) => (
-        <Tag key={tag} onClose={() => onClose(i)}>
+        <Tag key={tag} onRemove={() => onRemove(i)}>
           {tag}
         </Tag>
       ))}
