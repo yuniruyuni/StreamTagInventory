@@ -132,7 +132,7 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
   const onRemove = () => {};
   const onClone = () => {};
   const onSave = () => {};
-  const { container } = render(
+  const { getAllByTestId, getByTestId } = render(
     <MockTemplateList
       templates={templates}
       onApply={onApply}
@@ -143,18 +143,17 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
   );
 
   // テンプレートカードが正しい数だけレンダリングされていることを確認
-  const templateCards = container.querySelectorAll(".template-card-mock");
-  expect(templateCards?.length).toBe(2);
+  const templateCards = getAllByTestId(/^template-card-/);
+  expect(templateCards.length).toBe(2);
 
   // 各テンプレートカードが正しいデータを持っていることを確認
-  const card1 = container.querySelector(`[data-template-id="template-1"]`);
+  const card1 = getByTestId("template-card-template-1");
   expect(card1).not.toBeNull();
-  expect(card1?.getAttribute("data-template-title")).toBe("テンプレート1");
+  expect(card1.getAttribute("data-template-title")).toBe("テンプレート1");
 
-  const card2 = container.querySelector(`[data-template-id="template-2"]`);
+  const card2 = getByTestId("template-card-template-2");
   expect(card2).not.toBeNull();
-  expect(card2?.getAttribute("data-template-title")).toBe("テンプレート2");
-  expect(card2?.getAttribute("data-template-title")).toBe("テンプレート2");
+  expect(card2.getAttribute("data-template-title")).toBe("テンプレート2");
 });
 
 test("onApplyが正しく呼び出される", () => {
@@ -291,7 +290,7 @@ test("空のテンプレートリストが正しくレンダリングされる",
   const onClone = () => {};
   const onSave = () => {};
 
-  const { container } = render(
+  const { queryAllByTestId } = render(
     <MockTemplateList
       templates={templates}
       onApply={onApply}
@@ -302,6 +301,6 @@ test("空のテンプレートリストが正しくレンダリングされる",
   );
 
   // テンプレートカードが存在しないことを確認
-  const templateCards = container.querySelectorAll(".template-card-mock");
-  expect(templateCards?.length).toBe(0);
+  const templateCards = queryAllByTestId(/^template-card-/);
+  expect(templateCards.length).toBe(0);
 });

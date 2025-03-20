@@ -27,7 +27,7 @@ const mockCategories: Category[] = [
 test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
   const mockOnChange = mock();
 
-  const { container, getByPlaceholderText } = render(
+  const { getByPlaceholderText, getByTestId } = render(
     <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
@@ -37,21 +37,16 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
   expect(input).not.toBeNull();
 
   // 初期状態ではドロップダウンが非表示であることを確認
-  const dropdown = container.querySelector(".dropdown");
-  expect(dropdown).not.toBeNull();
-
-  const dropdownContent = container.querySelector(
-    "[data-testid='dropdown-content']",
-  );
+  const dropdownContent = getByTestId("dropdown-content");
   expect(dropdownContent).not.toBeNull();
-  expect(dropdownContent?.classList.contains("invisible")).toBe(true);
-  expect(dropdownContent?.classList.contains("visible")).toBe(false);
+  expect(dropdownContent).toHaveClass("invisible");
+  expect(dropdownContent).not.toHaveClass("visible");
 });
 
 test("入力フィールドにフォーカスするとドロップダウンが表示される", () => {
   const mockOnChange = mock();
 
-  const { container, getByPlaceholderText } = render(
+  const { getByPlaceholderText, getByTestId } = render(
     <CategorySelector value={EmptyCategory} onChange={mockOnChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
@@ -64,12 +59,10 @@ test("入力フィールドにフォーカスするとドロップダウンが�
   fireEvent.focus(input);
 
   // ドロップダウンが表示されることを確認
-  const dropdownContent = container.querySelector(
-    "[data-testid='dropdown-content']",
-  );
+  const dropdownContent = getByTestId("dropdown-content");
   expect(dropdownContent).not.toBeNull();
-  expect(dropdownContent?.classList.contains("visible")).toBe(true);
-  expect(dropdownContent?.classList.contains("invisible")).toBe(false);
+  expect(dropdownContent).toHaveClass("visible");
+  expect(dropdownContent).not.toHaveClass("invisible");
 });
 
 test("検索クエリに基づいてカテゴリがフィルタリングされる", () => {

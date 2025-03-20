@@ -21,15 +21,15 @@ test("TwitchAuthContextが正しく初期化される", () => {
   };
 
   // コンポーネントをレンダリング
-  const { container } = render(<TestComponent />);
+  const { getByTestId, getByRole } = render(<TestComponent />);
 
   // デフォルト値が正しいことを確認
-  const tokenElement = container.querySelector("[data-testid='token']");
+  const tokenElement = getByTestId("token");
   expect(tokenElement).not.toBeNull();
-  expect(tokenElement?.textContent).toBe("");
+  expect(tokenElement.textContent).toBe("");
 
   // ボタンが存在することを確認（logout関数が提供されていることを間接的に確認）
-  const button = container.querySelector("button");
+  const button = getByRole("button", { name: "Logout" });
   expect(button).not.toBeNull();
 
   // ボタンをクリックしてもエラーが発生しないことを確認

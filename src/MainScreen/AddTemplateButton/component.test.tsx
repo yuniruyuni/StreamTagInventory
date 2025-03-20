@@ -7,15 +7,15 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
   const templates: Template[] = [];
   const setTemplates = () => {};
 
-  const { container } = render(
+  const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素が存在することを確認
-  const button = container.querySelector("button");
+  const button = getByRole("button");
   expect(button).not.toBeNull();
-  expect(button?.textContent).toBe("Add");
-  expect(button?.className).toContain("btn-primary");
+  expect(button.textContent).toBe("Add");
+  expect(button).toHaveClass("btn-primary");
 });
 
 test("ボタンをクリックすると、新しいテンプレートが追加される", () => {
@@ -24,13 +24,13 @@ test("ボタンをクリックすると、新しいテンプレートが追加�
   const setTemplates = (updatedTemplates: Template[]) => {
     newTemplates = updatedTemplates;
   };
-
-  const { container } = render(
+  const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素を取得
-  const button = container.querySelector("button");
+  const button = getByRole("button");
+  expect(button).not.toBeNull();
   expect(button).not.toBeNull();
 
   // ボタンをクリック
@@ -56,13 +56,13 @@ test("既存のテンプレートがある場合、新しいテンプレート�
   const setTemplates = (updatedTemplates: Template[]) => {
     newTemplates = updatedTemplates;
   };
-
-  const { container } = render(
+  const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
   );
 
   // ボタン要素を取得
-  const button = container.querySelector("button");
+  const button = getByRole("button");
+  expect(button).not.toBeNull();
   expect(button).not.toBeNull();
 
   // ボタンをクリック

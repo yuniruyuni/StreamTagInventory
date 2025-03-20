@@ -62,31 +62,28 @@ test("TemplateFormコンポーネントが正しくレンダリングされる",
   template.title = "テストタイトル";
   const onChange = () => {};
 
-  const { container } = render(
+  const { getAllByText, getByRole, getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
   );
 
   // ラベルが正しく表示されていることを確認
-  const labels = Array.from(container.querySelectorAll("label") || []);
-  expect(labels.length).toBe(3);
-  expect(labels[0]?.textContent).toBe("Title");
-  expect(labels[1]?.textContent).toBe("Category");
-  expect(labels[2]?.textContent).toBe("Tags");
+  const titleLabel = getAllByText("Title");
+  const categoryLabel = getAllByText("Category");
+  const tagsLabel = getAllByText("Tags");
+  expect(titleLabel.length).toBeGreaterThan(0);
+  expect(categoryLabel.length).toBeGreaterThan(0);
+  expect(tagsLabel.length).toBeGreaterThan(0);
 
   // タイトル入力フィールドが正しく表示されていることを確認
-  const titleInput = container.querySelector(
-    "input[type='text']",
-  ) as HTMLInputElement;
+  const titleInput = getByRole("textbox");
   expect(titleInput).not.toBeNull();
-  expect(titleInput?.value).toBe("テストタイトル");
+  expect(titleInput).toHaveValue("テストタイトル");
 
   // モックコンポーネントが正しく表示されていることを確認
-  const categorySelector = container.querySelector(
-    "[data-testid='mock-category-selector']",
-  );
+  const categorySelector = getByTestId("mock-category-selector");
   expect(categorySelector).not.toBeNull();
 
-  const inputTags = container.querySelector("[data-testid='mock-input-tags']");
+  const inputTags = getByTestId("mock-input-tags");
   expect(inputTags).not.toBeNull();
 });
 
@@ -98,14 +95,12 @@ test("タイトルが変更されたとき、onChangeが呼び出される", () 
     changedTemplate = t;
   };
 
-  const { container } = render(
+  const { getByRole } = render(
     <TemplateForm template={template} onChange={onChange} />,
   );
 
   // タイトル入力フィールドを取得
-  const titleInput = container.querySelector(
-    "input[type='text']",
-  ) as HTMLInputElement;
+  const titleInput = getByRole("textbox");
   expect(titleInput).not.toBeNull();
 
   // 入力値を変更して直接onChangeを呼び出す
@@ -126,14 +121,12 @@ test("カテゴリが変更されたとき、onChangeが呼び出される", () 
     changedTemplate = t;
   };
 
-  const { container } = render(
+  const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
   );
 
   // カテゴリ変更ボタンを取得
-  const categoryChangeButton = container.querySelector(
-    "[data-testid='mock-category-change']",
-  ) as HTMLButtonElement;
+  const categoryChangeButton = getByTestId("mock-category-change");
   expect(categoryChangeButton).not.toBeNull();
 
   // ボタンをクリック
@@ -162,14 +155,12 @@ test("タグが変更されたとき、onChangeが呼び出される", () => {
     changedTemplate = t;
   };
 
-  const { container } = render(
+  const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
   );
 
   // タグ変更ボタンを取得
-  const tagsChangeButton = container.querySelector(
-    "[data-testid='mock-tags-change']",
-  ) as HTMLButtonElement;
+  const tagsChangeButton = getByTestId("mock-tags-change");
   expect(tagsChangeButton).not.toBeNull();
 
   // ボタンをクリック
@@ -191,15 +182,15 @@ test("template.tagsがnullの場合、空の配列として扱われる", () => 
   template.tags = null;
   const onChange = () => {};
 
-  const { container } = render(
+  const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
   );
 
   // InputTagsコンポーネントが表示されていることを確認
-  const inputTags = container.querySelector("[data-testid='mock-input-tags']");
+  const inputTags = getByTestId("mock-input-tags");
   expect(inputTags).not.toBeNull();
 
   // タグのカウントが0であることを確認
-  const tagsCount = container.querySelector("[data-testid='tags-count']");
-  expect(tagsCount?.textContent).toBe("0");
+  const tagsCount = getByTestId("tags-count");
+  expect(tagsCount.textContent).toBe("0");
 });
