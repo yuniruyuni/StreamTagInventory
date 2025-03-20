@@ -1,16 +1,13 @@
-import { expect, test } from "bun:test";
+import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
 import type { Category } from "~/model/category";
-import { render, setupTestEnvironment } from "../../test-utils";
 import { CategoryList } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("カテゴリが空の場合、何も表示されない", () => {
   const categories: Category[] = [];
   const cursor = 0;
-  const setCursor = () => {};
-  const onSelect = () => {};
+  const setCursor = mock();
+  const onSelect = mock();
 
   const { container } = render(
     <CategoryList
@@ -29,8 +26,8 @@ test("カテゴリが空の場合、何も表示されない", () => {
 test("カテゴリがundefinedの場合、何も表示されない", () => {
   const categories = undefined;
   const cursor = 0;
-  const setCursor = () => {};
-  const onSelect = () => {};
+  const setCursor = mock();
+  const onSelect = mock();
 
   const { container } = render(
     <CategoryList
@@ -65,8 +62,8 @@ test("カテゴリがある場合、各カテゴリが表示される", () => {
     },
   ];
   const cursor = 0;
-  const setCursor = () => {};
-  const onSelect = () => {};
+  const setCursor = mock();
+  const onSelect = mock();
 
   const { container } = render(
     <CategoryList
@@ -120,9 +117,9 @@ test("カーソル位置に対応するカテゴリが選択状態になる", ()
       box_art_url: "https://example.com/image3.jpg",
     },
   ];
-  const cursor = 1; // 2番目のカテゴリを選択
-  const setCursor = () => {};
-  const onSelect = () => {};
+  const cursor = 1; // 2番目のカテゴリを選択(0-origなため1)
+  const setCursor = mock();
+  const onSelect = mock();
 
   const { container } = render(
     <CategoryList

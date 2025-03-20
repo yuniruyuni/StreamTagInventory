@@ -1,10 +1,7 @@
 import { expect, test } from "bun:test";
+import { fireEvent, render } from "@testing-library/react";
 import React from "react";
-import { fireEvent, render, setupTestEnvironment } from "../test-utils";
 import { TwitchAuthContext } from "./context";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("TwitchAuthContextが正しく初期化される", () => {
   // コンテキストが存在することを確認

@@ -1,10 +1,7 @@
 import { expect, test } from "bun:test";
+import { render } from "@testing-library/react";
 import { type Template, newTemplate } from "~/model/template";
-import { render, setupTestEnvironment } from "../../test-utils";
 import { AddTemplateButton } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("AddTemplateButtonコンポーネントが正しくレンダリングされる", () => {
   const templates: Template[] = [];

@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test";
+import { render } from "@testing-library/react";
+import type React from "react";
 import { type Template, newTemplate } from "~/model/template";
-import { type React, render, setupTestEnvironment } from "../../test-utils";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 // モックデータの作成
 function createMockTemplates(): Template[] {

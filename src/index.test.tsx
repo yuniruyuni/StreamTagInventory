@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test";
-import { render, setupTestEnvironment } from "./test-utils";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
+import { render } from "@testing-library/react";
 
 // 簡単なテストコンポーネント
 const TestComponent = () => <div>テスト</div>;

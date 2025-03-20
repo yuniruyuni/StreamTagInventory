@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test";
-import { render, setupTestEnvironment } from "../../test-utils";
+import { render } from "@testing-library/react";
 import { CloseButton } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("CloseButtonコンポーネントが正しくレンダリングされる", () => {
   const onClick = () => {};

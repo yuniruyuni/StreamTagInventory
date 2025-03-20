@@ -1,10 +1,7 @@
 import { expect, test } from "bun:test";
+import { render } from "@testing-library/react";
 import { newTemplate } from "~/model/template";
-import { render, setupTestEnvironment } from "../test-utils";
 import { TemplateCard } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 // モックコンポーネントを使用せずにテスト
 test("TemplateCardコンポーネントが正しくレンダリングされる", () => {

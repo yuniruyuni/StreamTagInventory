@@ -24,12 +24,16 @@ export const CategoryInput: React.FC<Props> = ({
   categories,
 }) => {
   return (
-    <label htmlFor="text" className="relative w-full h-24">
-      <div className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none ">
+    <label className="relative w-full h-24">
+      <div
+        data-testid="thumbnail"
+        className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none "
+      >
         {value && <img src={value.box_art_url} alt={value.name} />}
       </div>
 
       <input
+        id="category"
         type="text"
         placeholder="Pick a category"
         value={query}

@@ -1,34 +1,43 @@
 import { type Dispatch, useCallback, useEffect, useState } from "react";
 
-export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>] => {
-  const [storage, setState] = useState<T>(def);
+export const genUseStorage = <T>(
+  storage: Storage,
+  key: string,
+  def: T,
+): [T, Dispatch<T>] => {
+  const [state, setState] = useState<T>(def);
 
   useEffect(() => {
-    const loaded = localStorage.getItem(key);
+    const loaded = storage.getItem(key);
     if (loaded == null) return;
 
     try {
       const parsed = JSON.parse(loaded);
       if (!parsed) {
-        localStorage.removeItem(key);
+        storage.removeItem(key);
         return;
       }
       setState(parsed);
     } catch (e) {
-      // 無効なJSONの場合は、ローカルストレージから削除
-      localStorage.removeItem(key);
+      // 無効なJSONの場合は、セッションストレージから削除
+      storage.removeItem(key);
       return;
     }
-  }, [key]);
+  }, [storage, key]);
 
   const setStorage = useCallback(
     (updated: T) => {
       const json = JSON.stringify(updated);
-      localStorage.setItem(key, json);
+      storage.setItem(key, json);
       setState(updated);
     },
-    [key],
+    [storage, key],
   );
 
-  return [storage, setStorage];
+  return [state, setStorage];
 };
+
+export const useSession = <T>(key: string, def: T): [T, Dispatch<T>] =>
+  genUseStorage(sessionStorage, key, def);
+export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>] =>
+  genUseStorage(localStorage, key, def);

@@ -2,7 +2,7 @@ import { type FC, type ReactNode, createContext } from "react";
 import { SWRConfig } from "swr";
 
 import { CLIENT_ID } from "~/constant";
-import { useSession } from "~/useSession";
+import { useSession } from "~/useStorage";
 
 export const TwitchAuthContext = createContext<AuthInfo>({
   token: "",

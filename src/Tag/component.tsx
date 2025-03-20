@@ -8,8 +8,7 @@ type Props = {
 };
 
 export const Tag: React.FC<Props> = ({ onClose, children }) => (
-  <span
-    id="badge-dismiss-default"
+  <li
     className={clsx(
       "inline-flex items-center",
       "rounded",
@@ -21,5 +20,5 @@ export const Tag: React.FC<Props> = ({ onClose, children }) => (
   >
     {children}
     {onClose && <CloseButton onClick={onClose} />}
-  </span>
+  </li>
 );

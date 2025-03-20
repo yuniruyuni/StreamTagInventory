@@ -1,68 +1,63 @@
-import { expect, test } from "bun:test";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
+import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { TagInput } from "./component";
 
-// テスト環境のセットアップ
-setupTestEnvironment();
-
 test("TagInputコンポーネントが正しくレンダリングされる", () => {
-  const onKeyDown = () => {};
-  const onFocus = () => {};
-  const onBlur = () => {};
+  const onKeyDown = mock();
+  const onFocus = mock();
+  const onBlur = mock();
 
-  const { container } = render(
+  const { getByRole } = render(
     <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
-  const input = container.querySelector("input");
+  const input = getByRole("textbox");
   expect(input).not.toBeNull();
-  expect(input?.getAttribute("type")).toBe("text");
-  expect(input?.className).toContain("flex-grow");
+  expect(input).toHaveAttribute("type", "text");
+  expect(input).toHaveClass("flex-grow");
+
+  expect(onFocus).not.toBeCalled();
+  expect(onBlur).not.toBeCalled();
 });
 
-test("フォーカス時にonFocus関数が呼び出される", () => {
-  const onKeyDown = () => {};
-  let focusCalled = false;
-  const onFocus = () => {
-    focusCalled = true;
-  };
-  const onBlur = () => {};
+test("フォーカス時にonFocus関数が呼び出される", async () => {
+  const onKeyDown = mock();
+  const onFocus = mock();
+  const onBlur = mock();
 
-  const { container } = render(
+  const { getByRole } = render(
     <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
-  const input = container.querySelector("input");
+  const user = userEvent.setup();
+
+  const input = getByRole("textbox");
   expect(input).not.toBeNull();
 
-  // フォーカスイベントをシミュレート
-  if (input) {
-    fireEvent.focus(input);
-  }
-
-  expect(focusCalled).toBe(true);
+  await user.click(input); // focus
+  expect(onFocus).toBeCalled();
+  expect(onBlur).not.toBeCalled();
 });
 
-test("ブラー時にonBlur関数が呼び出される", () => {
-  const onKeyDown = () => {};
-  const onFocus = () => {};
-  let blurCalled = false;
-  const onBlur = () => {
-    blurCalled = true;
-  };
+test("ブラー時にonBlur関数が呼び出される", async () => {
+  const onKeyDown = mock();
+  const onFocus = mock();
+  const onBlur = mock();
 
-  const { container } = render(
+  const { getByRole } = render(
     <TagInput onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} />,
   );
 
-  const input = container.querySelector("input");
+  const user = userEvent.setup();
+
+  const input = getByRole("textbox");
   expect(input).not.toBeNull();
 
-  // フォーカスしてからブラーイベントをシミュレート
-  if (input) {
-    fireEvent.focus(input);
-    fireEvent.blur(input);
-  }
+  await user.click(input); // focus
+  expect(onFocus).toBeCalled();
+  expect(onBlur).not.toBeCalled();
 
-  expect(blurCalled).toBe(true);
+  await user.click(document.body); // unfocus
+  expect(onBlur).toBeCalled();
 });
