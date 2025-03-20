@@ -32,7 +32,7 @@ export function handleTagKeyDown(
   }
 
   if (e.key !== "Enter" || !value.trim()) return;
-  const newTags = [...tags, value];
+  const newTags = [...tags, value.trim()];
   onChange(newTags);
   e.currentTarget.value = "";
   e.preventDefault();
