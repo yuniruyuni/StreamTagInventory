@@ -1,20 +1,16 @@
-import { expect, test } from "bun:test";
-import { render, setupTestEnvironment } from "../../test-utils";
+import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { TagList } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("TagListコンポーネントが空の配列の場合、何も表示しない", () => {
   const tags: string[] = [];
-  const onClose = () => {};
+  const onClose = mock();
 
-  const { container } = render(<TagList tags={tags} onClose={onClose} />);
+  const { queryAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
 
-  // タグ要素が存在しないことを確認
-  const tagElements = container.querySelectorAll(
-    "span[id='badge-dismiss-default']",
-  );
+  // リストのアイテムが存在しないことを確認
+  const tagElements = queryAllByRole("listitem");
   expect(tagElements?.length).toBe(0);
 });
 
@@ -22,12 +18,10 @@ test("TagListコンポーネントがタグを正しくレンダリングする"
   const tags = ["タグ1", "タグ2", "タグ3"];
   const onClose = () => {};
 
-  const { container } = render(<TagList tags={tags} onClose={onClose} />);
+  const { getAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
 
   // タグの数を確認
-  const tagElements = container.querySelectorAll(
-    "span[id='badge-dismiss-default']",
-  );
+  const tagElements = getAllByRole("listitem");
   expect(tagElements?.length).toBe(3);
 
   // タグのテキストを確認
@@ -36,35 +30,27 @@ test("TagListコンポーネントがタグを正しくレンダリングする"
   expect(tagElements?.[2].textContent).toContain("タグ3");
 });
 
-test("タグの閉じるボタンをクリックすると、onClose関数が呼び出される", () => {
-  // このテストは、実際のDOMイベントをシミュレートするのではなく、
-  // コンポーネントの機能を直接テストします
-
+test("タグの閉じるボタンをクリックすると、onClose関数が呼び出される", async () => {
   // モック関数を使用
   const tags = ["タグ1", "タグ2", "タグ3"];
-  const mockOnClose = (index: number) => {
-    // インデックスが正しいことを確認
-    expect(index).toBe(1);
-  };
+  const onClose = mock();
 
   // コンポーネントをレンダリング
-  const { container } = render(<TagList tags={tags} onClose={mockOnClose} />);
+  const { getAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
 
   // タグの数を確認
-  const tagElements = container.querySelectorAll(
-    "span[id='badge-dismiss-default']",
-  );
-  expect(tagElements?.length).toBe(3);
+  const tagElements = getAllByRole("listitem");
+  expect(tagElements.length).toBe(3);
+
+  const removeButtons = getAllByRole("button");
+  expect(removeButtons.length).toBe(3);
 
   // 2番目のタグの閉じるボタンを取得
-  const closeButton = tagElements[1].querySelector("button");
+  const closeButton = removeButtons[1];
   expect(closeButton).not.toBeNull();
 
-  // 注: 実際の環境では、以下のコードでイベントをシミュレートできるはずですが、
-  // テスト環境の制約により、ここではスキップします
-  /*
-  if (closeButton) {
-    fireEvent.click(closeButton);
-  }
-  */
+  const user = userEvent.setup();
+  await user.click(closeButton);
+
+  expect(onClose).toBeCalledWith(1);
 });

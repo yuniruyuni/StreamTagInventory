@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
 import type { Category } from "~/model/category";
 import { type Template, newTemplate } from "~/model/template";
-import { render, setupTestEnvironment } from "../../test-utils";
 import { TemplateForm } from "./component";
 
 // CategorySelectorとInputTagsコンポーネントをモック
@@ -56,9 +56,6 @@ mock.module("~/InputTags", () => {
     ),
   };
 });
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("TemplateFormコンポーネントが正しくレンダリングされる", () => {
   const template = newTemplate();

@@ -1,20 +1,18 @@
-import { expect, test } from "bun:test";
+import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import type { Category } from "~/model/category";
-import { fireEvent, render, setupTestEnvironment } from "../../test-utils";
 import { CategoryInput } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 test("CategoryInputコンポーネントが正しくレンダリングされる", () => {
   const query = "";
   const open = false;
-  const setOpen = () => {};
-  const setQuery = () => {};
-  const onKeyDown = () => {};
-  const onChange = () => {};
+  const setOpen = mock();
+  const setQuery = mock();
+  const onKeyDown = mock();
+  const onChange = mock();
 
-  const { container } = render(
+  const { getByRole, getByTestId } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -25,16 +23,14 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
     />,
   );
 
-  // ラベル要素が存在することを確認
-  const label = container.querySelector("label");
+  const label = getByTestId("thumbnail");
   expect(label).not.toBeNull();
 
-  // 入力フィールドが存在することを確認
-  const input = label?.querySelector("input");
+  const input = getByRole("textbox");
   expect(input).not.toBeNull();
-  expect(input?.getAttribute("type")).toBe("text");
-  expect(input?.getAttribute("placeholder")).toBe("Pick a category");
-  expect(input?.value).toBe("");
+  expect(input).toHaveAttribute("type", "text");
+  expect(input).toHaveAttribute("placeholder", "Pick a category");
+  expect(input).toHaveValue("");
 });
 
 test("valueが指定されている場合、画像が表示される", () => {
@@ -45,12 +41,12 @@ test("valueが指定されている場合、画像が表示される", () => {
   };
   const query = "テストカテゴリ";
   const open = false;
-  const setOpen = () => {};
-  const setQuery = () => {};
-  const onKeyDown = () => {};
-  const onChange = () => {};
+  const setOpen = mock();
+  const setQuery = mock();
+  const onKeyDown = mock();
+  const onChange = mock();
 
-  const { container } = render(
+  const { getByRole } = render(
     <CategoryInput
       value={value}
       query={query}
@@ -63,21 +59,21 @@ test("valueが指定されている場合、画像が表示される", () => {
   );
 
   // 画像要素が存在することを確認
-  const image = container.querySelector("img");
+  const image = getByRole("img");
   expect(image).not.toBeNull();
-  expect(image?.getAttribute("src")).toBe("https://example.com/image.jpg");
-  expect(image?.getAttribute("alt")).toBe("テストカテゴリ");
+  expect(image).toHaveAttribute("src", "https://example.com/image.jpg");
+  expect(image).toHaveAttribute("alt", "テストカテゴリ");
 });
 
 test("openがtrueの場合、適切なクラスが適用される", () => {
   const query = "";
   const open = true;
-  const setOpen = () => {};
-  const setQuery = () => {};
-  const onKeyDown = () => {};
-  const onChange = () => {};
+  const setOpen = mock();
+  const setQuery = mock();
+  const onKeyDown = mock();
+  const onChange = mock();
 
-  const { container } = render(
+  const { getByRole } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -88,23 +84,20 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
     />,
   );
 
-  const input = container.querySelector("input");
-  expect(input?.className).toContain("border-b-0");
-  expect(input?.className).toContain("rounded-b-none");
+  const input = getByRole("textbox");
+  expect(input).toHaveClass("border-b-0");
+  expect(input).toHaveClass("rounded-b-none");
 });
 
-test("フォーカス時にsetOpenが呼び出される", () => {
+test("フォーカス時にsetOpenが呼び出される", async () => {
   const query = "";
   const open = false;
-  let openState = false;
-  const setOpen = (value: boolean) => {
-    openState = value;
-  };
-  const setQuery = () => {};
-  const onKeyDown = () => {};
-  const onChange = () => {};
+  const setOpen = mock();
+  const setQuery = mock();
+  const onKeyDown = mock();
+  const onChange = mock();
 
-  const { container } = render(
+  const { getByPlaceholderText } = render(
     <CategoryInput
       query={query}
       open={open}
@@ -115,38 +108,28 @@ test("フォーカス時にsetOpenが呼び出される", () => {
     />,
   );
 
-  const input = container.querySelector("input");
-  expect(input).not.toBeNull();
+  const user = userEvent.setup();
 
-  // フォーカスイベントをシミュレート
-  if (input) {
-    fireEvent.focus(input);
-  }
+  const input = getByPlaceholderText("Pick a category");
+  await user.click(input);
 
-  // setOpenが正しく呼び出されたか確認
-  expect(openState).toBe(true);
+  expect(setOpen).toBeCalledWith(true);
 });
 
-test("ブラー時にsetOpenとsetQueryが呼び出される", () => {
+test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
   const value: Category = {
     id: "123",
     name: "テストカテゴリ",
     box_art_url: "https://example.com/image.jpg",
   };
   const query = "テスト";
-  const open = true;
-  let openState = true;
-  let queryState = "テスト";
-  const setOpen = (value: boolean) => {
-    openState = value;
-  };
-  const setQuery = (value: string) => {
-    queryState = value;
-  };
-  const onKeyDown = () => {};
-  const onChange = () => {};
+  const open = false;
+  const setOpen = mock();
+  const setQuery = mock();
+  const onKeyDown = mock();
+  const onChange = mock();
 
-  const { container } = render(
+  const { getByPlaceholderText } = render(
     <CategoryInput
       value={value}
       query={query}
@@ -158,16 +141,14 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", () => {
     />,
   );
 
-  const input = container.querySelector("input");
+  const user = userEvent.setup();
+
+  const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // フォーカスしてからブラーイベントをシミュレート
-  if (input) {
-    fireEvent.focus(input);
-    fireEvent.blur(input);
-  }
+  await user.click(input); // focus.
+  await user.click(document.body); // unfocus.
 
-  // setOpenとsetQueryが正しく呼び出されたか確認
-  expect(openState).toBe(false);
-  expect(queryState).toBe("テストカテゴリ");
+  expect(setOpen).toBeCalledWith(false);
+  expect(setQuery).toBeCalledWith("テストカテゴリ");
 });

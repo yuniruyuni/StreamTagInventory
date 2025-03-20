@@ -1,55 +1,42 @@
-import { expect, test } from "bun:test";
-import { render, setupTestEnvironment } from "../test-utils";
+import { expect, mock, test } from "bun:test";
+import { render } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { Tag } from "./component";
 
-// テスト環境のセットアップ
-setupTestEnvironment();
-
 test("Tagコンポーネントが子要素を正しくレンダリングする", () => {
-  const { container } = render(<Tag>テストタグ</Tag>);
+  const { getByRole } = render(<Tag>テストタグ</Tag>);
 
-  // タグ要素が存在することを確認
-  const tag = container.querySelector("span[id='badge-dismiss-default']");
-  expect(tag).not.toBeNull();
-
-  // 子要素のテキストが表示されていることを確認
-  expect(tag?.textContent).toContain("テストタグ");
+  const tag = getByRole("listitem");
+  expect(tag).toHaveTextContent("テストタグ");
 });
 
-test("onCloseプロパティが指定されていない場合、閉じるボタンが表示されない", () => {
+test("onCloseプロパティが指定されていない場合、削除ボタンが表示されない", () => {
   const { container } = render(<Tag>テストタグ</Tag>);
 
-  // 閉じるボタンが存在しないことを確認
-  const closeButton = container.querySelector("button");
-  expect(closeButton).toBeNull();
+  expect(container).not.toHaveTextContent("Remove");
 });
 
-test("onCloseプロパティが指定されている場合、閉じるボタンが表示される", () => {
-  const onClose = () => {};
+test("onCloseプロパティが指定されている場合、削除ボタンが表示される", () => {
+  const onClose = mock();
 
-  const { container } = render(<Tag onClose={onClose}>テストタグ</Tag>);
+  const { getByLabelText } = render(<Tag onClose={onClose}>テストタグ</Tag>);
 
-  // 閉じるボタンが存在することを確認
-  const closeButton = container.querySelector("button");
+  const closeButton = getByLabelText("Remove");
   expect(closeButton).not.toBeNull();
 });
 
-test("閉じるボタンがクリックされたとき、onClose関数が呼び出される", () => {
-  let clicked = false;
-  const onClose = () => {
-    clicked = true;
-  };
+test("削除ボタンがクリックされたとき、onClose関数が呼び出される", async () => {
+  const onClose = mock();
 
-  const { container } = render(<Tag onClose={onClose}>テストタグ</Tag>);
+  const { getByLabelText } = render(<Tag onClose={onClose}>テストタグ</Tag>);
 
   // 閉じるボタンを取得
-  const closeButton = container.querySelector("button");
+  const closeButton = getByLabelText("Remove");
   expect(closeButton).not.toBeNull();
 
-  // 閉じるボタンをクリック
-  // fireEvent.clickが正しく機能しないため、直接onClose関数を呼び出す
-  onClose();
+  const user = userEvent.setup();
+  await user.click(closeButton);
 
   // onCloseが呼び出されたか確認
-  expect(clicked).toBe(true);
+  expect(onClose).toBeCalled();
 });

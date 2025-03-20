@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from "react";
 import { SWRConfig } from "swr";
-import { useSession } from "~/useSession";
+import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
 import { type Auth, clearHash, generateURI, parseTokenFromHash } from "./utils";
 

@@ -1,11 +1,7 @@
 import { expect, mock, test } from "bun:test";
 import React from "react";
 import { TwitchAuthContext } from "~/TwitchAuth";
-import { setupTestEnvironment } from "../test-utils";
 import { Menu } from "./component";
-
-// テスト環境のセットアップ
-setupTestEnvironment();
 
 // モックユーザーデータ
 const mockUser = {

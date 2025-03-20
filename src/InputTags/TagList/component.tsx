@@ -8,12 +8,12 @@ type Props = {
 
 export const TagList: React.FC<Props> = ({ tags, onClose }) => {
   return (
-    <>
+    <ul>
       {tags.map((tag, i) => (
         <Tag key={tag} onClose={() => onClose(i)}>
           {tag}
         </Tag>
       ))}
-    </>
+    </ul>
   );
 };
