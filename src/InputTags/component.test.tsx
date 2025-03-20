@@ -7,19 +7,15 @@ import { InputTags } from "./component";
 const initialTags = ["React", "TypeScript", "Tailwind"];
 
 test("InputTagsコンポーネントが初期タグを正しくレンダリングする", () => {
-  // モックコールバック
   const onChange = mock();
 
-  // コンポーネントをレンダリング
   const { getByRole, getAllByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
   );
 
-  // タグが正しくレンダリングされていることを確認
   const tagElements = getAllByRole("listitem");
   expect(tagElements.length).toBe(initialTags.length);
 
-  // 各タグのテキストを確認
   initialTags.forEach((tag, index) => {
     expect(tagElements[index]).toHaveTextContent(tag);
   });
@@ -42,6 +38,47 @@ test("Enterキーでタグを追加できる", async () => {
   await user.keyboard("[Enter]");
 
   expect(onChange).toBeCalledWith([...initialTags, "New Tag"]);
+});
+
+test("タグの前後の空白は削除されて登録される", async () => {
+  const onChange = mock();
+
+  const { getByRole } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+  );
+
+  const input = getByRole("textbox");
+  expect(input).not.toBeNull();
+
+  const user = userEvent.setup();
+
+  await user.click(input);
+  await user.keyboard("  Hoge Fuga ");
+  await user.keyboard("[Enter]");
+
+  expect(onChange).toBeCalledWith([
+    ...initialTags,
+    "Hoge Fuga", // trimed spaces.
+  ]);
+});
+
+test("空の値ではタグが追加されない", async () => {
+  const onChange = mock();
+
+  const { getByRole } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+  );
+
+  const input = getByRole("textbox");
+  expect(input).not.toBeNull();
+
+  const user = userEvent.setup();
+
+  await user.click(input);
+  await user.keyboard("    ");
+  await user.keyboard("[Enter]");
+
+  expect(onChange).not.toHaveBeenCalled();
 });
 
 test("Backspaceキーで最後のタグを削除できる", async () => {
@@ -105,28 +142,4 @@ test("フォーカス時にアクティブクラスが適用される", async ()
 
   // アクティブクラスが削除されることを確認
   expect(list).not.toHaveClass("outline-slate-200");
-});
-
-test("空の値ではタグが追加されない", async () => {
-  // モックコールバック
-  const mockOnChange = mock((_: string[]) => {});
-
-  // コンポーネントをレンダリング
-  const { getByRole } = render(
-    <InputTags tags={initialTags} onChange={mockOnChange} />,
-  );
-
-  // 入力フィールドを取得
-  const input = getByRole("textbox");
-  expect(input).not.toBeNull();
-
-  const user = userEvent.setup();
-
-  // 入力値を空白に設定
-  await user.click(input);
-  await user.keyboard("    ");
-  await user.keyboard("[Enter]");
-
-  // onChangeが呼び出されないことを確認
-  expect(mockOnChange).not.toHaveBeenCalled();
 });
