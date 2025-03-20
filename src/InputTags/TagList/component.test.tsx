@@ -24,12 +24,12 @@ test("TagListコンポーネントがタグを正しくレンダリングする"
 
   // タグの数を確認
   const tagElements = getAllByRole("listitem");
-  expect(tagElements?.length).toBe(3);
+  expect(tagElements.length).toBe(3);
 
   // タグのテキストを確認
-  expect(tagElements?.[0].textContent).toContain("タグ1");
-  expect(tagElements?.[1].textContent).toContain("タグ2");
-  expect(tagElements?.[2].textContent).toContain("タグ3");
+  expect(tagElements[0]).toHaveTextContent("タグ1");
+  expect(tagElements[1]).toHaveTextContent("タグ2");
+  expect(tagElements[2]).toHaveTextContent("タグ3");
 });
 
 test("タグの閉じるボタンをクリックすると、onRemove関数が呼び出される", async () => {
@@ -48,11 +48,11 @@ test("タグの閉じるボタンをクリックすると、onRemove関数が呼
   expect(removeButtons.length).toBe(3);
 
   // 2番目のタグの閉じるボタンを取得
-  const closeButton = removeButtons[1];
-  expect(closeButton).not.toBeNull();
+  const removeButton = removeButtons[1];
+  expect(removeButton).not.toBeNull();
 
   const user = userEvent.setup();
-  await user.click(closeButton);
+  await user.click(removeButton);
 
   expect(onRemove).toBeCalledWith(1);
 });

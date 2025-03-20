@@ -1,302 +1,230 @@
-import { expect, test } from "bun:test";
+import { expect, test, mock } from "bun:test";
 import { render } from "@testing-library/react";
-import type React from "react";
-import { type Template, newTemplate } from "~/model/template";
+import { userEvent } from "@testing-library/user-event";
+import type { Template } from "~/model/template";
+import { TemplateList } from "./component";
 
-// モックデータの作成
-function createMockTemplates(): Template[] {
-  const template1 = newTemplate();
-  template1.id = "template-1";
-  template1.title = "テンプレート1";
-  template1.category = {
-    id: "category-1",
-    name: "カテゴリー1",
-    box_art_url: "url-1",
-  };
-  template1.tags = ["タグ1", "タグ2"];
-
-  const template2 = newTemplate();
-  template2.id = "template-2";
-  template2.title = "テンプレート2";
-  template2.category = {
-    id: "category-2",
-    name: "カテゴリー2",
-    box_art_url: "url-2",
-  };
-  template2.tags = ["タグ3", "タグ4"];
-
-  return [template1, template2];
-}
-
-// TemplateCardコンポーネントをモックする代わりに、
-// DndContextとSortableContextをモックして、テンプレートカードの代わりにモック要素を直接レンダリングする
-
-// DndContextのモック
-function MockDndContext({ children }: { children: React.ReactNode }) {
-  return <div className="mock-dnd-context">{children}</div>;
-}
-
-// SortableContextのモック
-function MockSortableContext({ children }: { children: React.ReactNode }) {
-  return <div className="mock-sortable-context">{children}</div>;
-}
-
-// TemplateCardのモック
-function MockTemplateCard({
-  template,
-  onApply,
-  onRemove,
-  onClone,
-  onSave,
-}: {
-  template: Template;
-  onApply: (template: Template) => void;
-  onRemove: (template: Template) => void;
-  onClone: (template: Template) => void;
-  onSave: (template: Template) => void;
-}) {
-  return (
-    <div
-      data-testid={`template-card-${template.id}`}
-      data-template-id={template.id}
-      data-template-title={template.title}
-      className="template-card-mock"
-    >
-      <button
-        type="button"
-        data-testid={`apply-button-${template.id}`}
-        onClick={() => onApply(template)}
-      >
-        Apply
-      </button>
-      <button
-        type="button"
-        data-testid={`remove-button-${template.id}`}
-        onClick={() => onRemove(template)}
-      >
-        Remove
-      </button>
-      <button
-        type="button"
-        data-testid={`clone-button-${template.id}`}
-        onClick={() => onClone(template)}
-      >
-        Clone
-      </button>
-      <button
-        type="button"
-        data-testid={`save-button-${template.id}`}
-        onClick={() => onSave(template)}
-      >
-        Save
-      </button>
-    </div>
-  );
-}
-
-// モック版のTemplateListコンポーネント
-function MockTemplateList({
-  templates,
-  onApply,
-  onRemove,
-  onClone,
-  onSave,
-}: {
-  templates: Template[];
-  onApply: (template: Template) => void;
-  onRemove: (template: Template) => void;
-  onClone: (template: Template) => void;
-  onSave: (template: Template) => void;
-}) {
-  return (
-    <MockDndContext>
-      <MockSortableContext>
-        {templates.map((template) => (
-          <MockTemplateCard
-            key={template.id}
-            template={template}
-            onApply={onApply}
-            onRemove={onRemove}
-            onClone={onClone}
-            onSave={onSave}
-          />
-        ))}
-      </MockSortableContext>
-    </MockDndContext>
-  );
-}
+const mockTemplates: Template[] = [
+  {
+    id: "template-1",
+    title: "テンプレート1",
+    category: {
+      id: "category-1",
+      name: "カテゴリー1",
+      box_art_url: "url-1",
+    },
+    tags: ["タグ1", "タグ2"],
+  },
+  {
+    id: "template-2",
+    title: "テンプレート2",
+    category: {
+      id: "category-2",
+      name: "カテゴリー2",
+      box_art_url: "url-2",
+    },
+    tags: ["タグ3", "タグ4"],
+  }
+];
 
 test("TemplateListコンポーネントが正しくレンダリングされる", () => {
-  const templates = createMockTemplates();
-  const onApply = () => {};
-  const onRemove = () => {};
-  const onClone = () => {};
-  const onSave = () => {};
+  const templates = mockTemplates;
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
   const { getAllByTestId, getByTestId } = render(
-    <MockTemplateList
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 
   // テンプレートカードが正しい数だけレンダリングされていることを確認
-  const templateCards = getAllByTestId(/^template-card-/);
+  const templateCards = getAllByTestId(/template-card-.*/);
   expect(templateCards.length).toBe(2);
 
   // 各テンプレートカードが正しいデータを持っていることを確認
   const card1 = getByTestId("template-card-template-1");
   expect(card1).not.toBeNull();
-  expect(card1.getAttribute("data-template-title")).toBe("テンプレート1");
 
   const card2 = getByTestId("template-card-template-2");
   expect(card2).not.toBeNull();
-  expect(card2.getAttribute("data-template-title")).toBe("テンプレート2");
 });
 
-test("onApplyが正しく呼び出される", () => {
-  const templates = createMockTemplates();
-  let appliedTemplate: Template | null = null;
-  const onApply = (template: Template) => {
-    appliedTemplate = template;
-  };
-  const onRemove = () => {};
-  const onClone = () => {};
-  const onSave = () => {};
-  render(
-    <MockTemplateList
+test("onApplyが正しく呼び出される", async () => {
+  const templates = mockTemplates;
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
+  const { getAllByRole } = render(
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 
-  // Apply ボタンをクリック
-  // fireEvent.clickが正しく機能しないため、直接onApply関数を呼び出す
-  onApply(templates[0]);
+  const user = userEvent.setup();
+  const applyButtons = getAllByRole("button", { name: "apply template" });
+  await user.click(applyButtons[1]);
 
-  // onApply が正しく呼び出されたことを確認
-  expect(appliedTemplate).not.toBeNull();
-  // TypeScriptの型エラーを回避するために型アサーションを使用
-  const template = appliedTemplate as unknown as Template;
-  expect(template.id).toBe("template-1");
-  expect(template.title).toBe("テンプレート1");
+  // onApply が正しく呼び出されたことだけを確認
+  // idの生成が毎回異なる乱数によっている関係で
+  // 生成されるオブジェクトを設定できないという事情による。
+  // idだけ無視する方法があるならそのほうが望ましい
+  expect(onApply).toBeCalled();
+  expect(onApply.mock.calls[0][0]).toMatchObject({
+      title: "テンプレート2",
+      tags: ["タグ3", "タグ4"],
+      category: {
+        id: "category-2",
+        name: "カテゴリー2",
+        box_art_url: "url-2",
+      },
+    });
 });
 
-test("onRemoveが正しく呼び出される", () => {
-  const templates = createMockTemplates();
-  const onApply = () => {};
-  let removedTemplate: Template | null = null;
-  const onRemove = (template: Template) => {
-    removedTemplate = template;
-  };
-  const onClone = () => {};
-  const onSave = () => {};
+test("onRemoveが正しく呼び出される", async () => {
+  const templates = mockTemplates;
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
 
-  render(
-    <MockTemplateList
+  const { getAllByRole } = render(
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 
   // Remove ボタンをクリック
-  // fireEvent.clickが正しく機能しないため、直接onRemove関数を呼び出す
-  onRemove(templates[1]);
+  const user = userEvent.setup();
+  const applyButtons = getAllByRole("button", { name: "remove template" });
+  await user.click(applyButtons[1]);
 
   // onRemove が正しく呼び出されたことを確認
-  expect(removedTemplate).not.toBeNull();
-  // TypeScriptの型エラーを回避するために型アサーションを使用
-  const template = removedTemplate as unknown as Template;
-  expect(template.id).toBe("template-2");
-  expect(template.title).toBe("テンプレート2");
+  expect(onRemove).toBeCalled();
+  expect(onRemove.mock.calls[0][0]).toMatchObject({
+      title: "テンプレート2",
+      tags: ["タグ3", "タグ4"],
+      category: {
+        id: "category-2",
+        name: "カテゴリー2",
+        box_art_url: "url-2",
+      },
+    });
 });
 
-test("onCloneが正しく呼び出される", () => {
-  const templates = createMockTemplates();
-  const onApply = () => {};
-  const onRemove = () => {};
-  let clonedTemplate: Template | null = null;
-  const onClone = (template: Template) => {
-    clonedTemplate = template;
-  };
-  const onSave = () => {};
+test("onCloneが正しく呼び出される", async () => {
+  const templates = mockTemplates;
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
 
-  render(
-    <MockTemplateList
+  const { getAllByRole } = render(
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 
-  // Clone ボタンをクリック
-  // fireEvent.clickが正しく機能しないため、直接onClone関数を呼び出す
-  onClone(templates[0]);
+
+  const user = userEvent.setup();
+  const cloneButtons = getAllByRole("button", { name: "clone template" });
+  await user.click(cloneButtons[1]);
 
   // onClone が正しく呼び出されたことを確認
-  expect(clonedTemplate).not.toBeNull();
-  // TypeScriptの型エラーを回避するために型アサーションを使用
-  const template = clonedTemplate as unknown as Template;
-  expect(template.id).toBe("template-1");
-  expect(template.title).toBe("テンプレート1");
+  expect(onClone).toBeCalled();
+  expect(onClone.mock.calls[0][0]).toMatchObject({
+      title: "テンプレート2",
+      tags: ["タグ3", "タグ4"],
+      category: {
+        id: "category-2",
+        name: "カテゴリー2",
+        box_art_url: "url-2",
+      },
+    });
 });
 
-test("onSaveが正しく呼び出される", () => {
-  const templates = createMockTemplates();
-  const onApply = () => {};
-  const onRemove = () => {};
-  const onClone = () => {};
-  let savedTemplate: Template | null = null;
-  const onSave = (template: Template) => {
-    savedTemplate = template;
-  };
+test("onSaveが正しく呼び出される", async () => {
+  const templates = mockTemplates;
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
 
-  render(
-    <MockTemplateList
+  const { getByRole, getByDisplayValue } = render(
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 
-  // Save ボタンをクリック
-  // fireEvent.clickが正しく機能しないため、直接onSave関数を呼び出す
-  onSave(templates[1]);
+  const user = userEvent.setup();
+  const titleInput = getByDisplayValue(templates[1].title);
+  await user.click(titleInput);
+  await user.keyboard("change");
+  await user.click(document.body);
 
-  // onSave が正しく呼び出されたことを確認
-  expect(savedTemplate).not.toBeNull();
-  // TypeScriptの型エラーを回避するために型アサーションを使用
-  const template = savedTemplate as unknown as Template;
-  expect(template.id).toBe("template-2");
-  expect(template.title).toBe("テンプレート2");
+  const saveButton = getByRole("button", { name: "save template" });
+  await user.click(saveButton);
+
+  expect(onSave).toBeCalled();
+  expect(onSave.mock.calls[0][0]).toMatchObject({
+      title: "テンプレート2change",
+      tags: ["タグ3", "タグ4"],
+      category: {
+        id: "category-2",
+        name: "カテゴリー2",
+        box_art_url: "url-2",
+      },
+    });
 });
 
 test("空のテンプレートリストが正しくレンダリングされる", () => {
   const templates: Template[] = [];
-  const onApply = () => {};
-  const onRemove = () => {};
-  const onClone = () => {};
-  const onSave = () => {};
+  const onApply = mock();
+  const onRemove = mock();
+  const onClone = mock();
+  const onSave = mock();
+  const onDragEnd = mock();
 
   const { queryAllByTestId } = render(
-    <MockTemplateList
+    <TemplateList
       templates={templates}
       onApply={onApply}
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
+      onDragEnd={onDragEnd}
     />,
   );
 

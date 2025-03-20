@@ -11,15 +11,16 @@ type Props = {
 export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
   return (
     <>
-      <label>Title</label>
+      <label htmlFor="title">Title</label>
       <input
+        name="title"
         type="text"
         className="p-2 border border-slate-300 rounded"
         onChange={(e) => onChange({ ...template, title: e.target.value })}
         value={template.title}
       />
 
-      <label>Category</label>
+      <label htmlFor="">Category</label>
       <CategorySelector
         value={template.category}
         onChange={(category) => onChange({ ...template, category })}

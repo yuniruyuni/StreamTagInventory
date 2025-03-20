@@ -19,20 +19,3 @@ test("EmptyCategoryが空のカテゴリオブジェクトである", () => {
   expect(EmptyCategory.name).toBe("");
   expect(EmptyCategory.box_art_url).toBe("");
 });
-
-test("Category型が正しいプロパティを持つ", () => {
-  // カスタムカテゴリオブジェクトを作成
-  const customCategory = {
-    id: "123",
-    name: "テストカテゴリ",
-    box_art_url: "https://example.com/image.jpg",
-  };
-
-  // 型が正しいことを確認（構造的に互換性があるか）
-  const category: typeof EmptyCategory = customCategory;
-
-  // 各プロパティが正しく設定されていることを確認
-  expect(category.id).toBe("123");
-  expect(category.name).toBe("テストカテゴリ");
-  expect(category.box_art_url).toBe("https://example.com/image.jpg");
-});
