@@ -5,9 +5,11 @@ import { TagList } from "./component";
 
 test("TagListコンポーネントが空の配列の場合、何も表示しない", () => {
   const tags: string[] = [];
-  const onClose = mock();
+  const onRemove = mock();
 
-  const { queryAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
+  const { queryAllByRole } = render(
+    <TagList tags={tags} onRemove={onRemove} />,
+  );
 
   // リストのアイテムが存在しないことを確認
   const tagElements = queryAllByRole("listitem");
@@ -16,9 +18,9 @@ test("TagListコンポーネントが空の配列の場合、何も表示しな�
 
 test("TagListコンポーネントがタグを正しくレンダリングする", () => {
   const tags = ["タグ1", "タグ2", "タグ3"];
-  const onClose = () => {};
+  const onRemove = () => {};
 
-  const { getAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
+  const { getAllByRole } = render(<TagList tags={tags} onRemove={onRemove} />);
 
   // タグの数を確認
   const tagElements = getAllByRole("listitem");
@@ -30,13 +32,13 @@ test("TagListコンポーネントがタグを正しくレンダリングする"
   expect(tagElements?.[2].textContent).toContain("タグ3");
 });
 
-test("タグの閉じるボタンをクリックすると、onClose関数が呼び出される", async () => {
+test("タグの閉じるボタンをクリックすると、onRemove関数が呼び出される", async () => {
   // モック関数を使用
   const tags = ["タグ1", "タグ2", "タグ3"];
-  const onClose = mock();
+  const onRemove = mock();
 
   // コンポーネントをレンダリング
-  const { getAllByRole } = render(<TagList tags={tags} onClose={onClose} />);
+  const { getAllByRole } = render(<TagList tags={tags} onRemove={onRemove} />);
 
   // タグの数を確認
   const tagElements = getAllByRole("listitem");
@@ -52,5 +54,5 @@ test("タグの閉じるボタンをクリックすると、onClose関数が呼�
   const user = userEvent.setup();
   await user.click(closeButton);
 
-  expect(onClose).toBeCalledWith(1);
+  expect(onRemove).toBeCalledWith(1);
 });

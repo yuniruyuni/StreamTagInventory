@@ -5,7 +5,7 @@ type Props = {
   onClick: () => void;
 };
 
-export const CloseButton: React.FC<Props> = ({ onClick }) => {
+export const RemoveButton: React.FC<Props> = ({ onClick }) => {
   return (
     <button
       type="button"

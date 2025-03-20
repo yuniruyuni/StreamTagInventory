@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { render } from "@testing-library/react";
-import { CloseButton } from "./component";
+import { RemoveButton } from "./component";
 
 test("CloseButtonコンポーネントが正しくレンダリングされる", () => {
   const onClick = () => {};
 
-  const { getByRole } = render(<CloseButton onClick={onClick} />);
+  const { getByRole } = render(<RemoveButton onClick={onClick} />);
 
   // ボタン要素が存在することを確認
   const button = getByRole("button", { name: "Remove" });
@@ -22,7 +22,7 @@ test("ボタンがクリックされたとき、onClick関数が呼び出され�
     clicked = true;
   };
 
-  const { getByRole } = render(<CloseButton onClick={onClick} />);
+  const { getByRole } = render(<RemoveButton onClick={onClick} />);
 
   // ボタン要素を取得
   const button = getByRole("button", { name: "Remove" });
