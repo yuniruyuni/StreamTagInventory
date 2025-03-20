@@ -5,14 +5,14 @@ import { CloseButton } from "./component";
 test("CloseButtonコンポーネントが正しくレンダリングされる", () => {
   const onClick = () => {};
 
-  const { container } = render(<CloseButton onClick={onClick} />);
+  const { getByRole } = render(<CloseButton onClick={onClick} />);
 
   // ボタン要素が存在することを確認
-  const button = container.querySelector("button");
+  const button = getByRole("button", { name: "Remove" });
   expect(button).not.toBeNull();
 
-  // SVGアイコンが存在することを確認
-  const svg = button?.querySelector("svg");
+  // SVGアイコンが存在することを確認（SVGはgetByRoleでは取得できないため、DOMノードから確認）
+  const svg = button.querySelector("svg");
   expect(svg).not.toBeNull();
 });
 
@@ -22,10 +22,10 @@ test("ボタンがクリックされたとき、onClick関数が呼び出され�
     clicked = true;
   };
 
-  const { container } = render(<CloseButton onClick={onClick} />);
+  const { getByRole } = render(<CloseButton onClick={onClick} />);
 
   // ボタン要素を取得
-  const button = container.querySelector("button");
+  const button = getByRole("button", { name: "Remove" });
   expect(button).not.toBeNull();
 
   // ボタンをクリック

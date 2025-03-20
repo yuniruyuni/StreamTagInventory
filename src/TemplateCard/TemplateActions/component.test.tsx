@@ -27,7 +27,7 @@ test("変更がない状態で正しくレンダリングされる", () => {
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  const { getAllByRole } = render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -40,20 +40,19 @@ test("変更がない状態で正しくレンダリングされる", () => {
   );
 
   // ボタンが正しく表示されていることを確認
-  const buttons = container.querySelectorAll("button");
-  expect(buttons?.length).toBe(3);
+  const buttons = getAllByRole("button");
+  expect(buttons.length).toBe(3);
 
   // Clone, Remove, Applyボタンが表示されていることを確認
-  const buttonTexts = Array.from(buttons || []).map((button) =>
-    button.textContent?.trim(),
-  );
-  expect(buttonTexts).toContain("Clone");
-  expect(buttonTexts).toContain("Remove");
-  expect(buttonTexts).toContain("Apply");
+  expect(buttons[0]).toHaveTextContent("Clone");
+  expect(buttons[1]).toHaveTextContent("Remove");
+  expect(buttons[2]).toHaveTextContent("Apply");
 
-  // Revertボタンと変更時のSaveボタンが表示されていないことを確認
-  expect(buttonTexts).not.toContain("Revert");
-  expect(buttonTexts).not.toContain("Save");
+  // Revert, Saveボタンが表示されていないことを確認
+  for (const button of buttons) {
+    expect(button).not.toHaveTextContent("Revert");
+    expect(button).not.toHaveTextContent("Save");
+  }
 });
 
 // 変更がある状態のテスト
@@ -66,7 +65,7 @@ test("変更がある状態で正しくレンダリングされる", () => {
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  const { getAllByRole } = render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -79,20 +78,19 @@ test("変更がある状態で正しくレンダリングされる", () => {
   );
 
   // ボタンが正しく表示されていることを確認
-  const buttons = container.querySelectorAll("button");
-  expect(buttons?.length).toBe(2);
+  const buttons = getAllByRole("button");
+  expect(buttons.length).toBe(2);
 
   // RevertとSaveボタンが表示されていることを確認
-  const buttonTexts = Array.from(buttons || []).map((button) =>
-    button.textContent?.trim(),
-  );
-  expect(buttonTexts).toContain("Revert");
-  expect(buttonTexts).toContain("Save");
+  expect(buttons[0]).toHaveTextContent("Revert");
+  expect(buttons[1]).toHaveTextContent("Save");
 
   // Clone, Remove, Applyボタンが表示されていないことを確認
-  expect(buttonTexts).not.toContain("Clone");
-  expect(buttonTexts).not.toContain("Remove");
-  expect(buttonTexts).not.toContain("Apply");
+  for (const button of buttons) {
+    expect(button).not.toHaveTextContent("Clone");
+    expect(button).not.toHaveTextContent("Remove");
+    expect(button).not.toHaveTextContent("Remove");
+  }
 });
 
 // 無効なテンプレートのテスト
@@ -105,7 +103,7 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
   const onRemove = () => {};
   const onApply = () => {};
 
-  const { container } = render(
+  const { getByRole } = render(
     <TemplateActions
       template={template}
       changed={changed}
@@ -118,11 +116,9 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
   );
 
   // Applyボタンが無効化されていることを確認
-  const applyButton = Array.from(
-    container.querySelectorAll("button") || [],
-  ).find((button) => button.textContent?.trim() === "Apply");
+  const applyButton = getByRole("button", { name: "Apply" });
   expect(applyButton).not.toBeNull();
-  expect(applyButton?.className).toContain("btn-disabled");
+  expect(applyButton).toHaveClass("btn-disabled");
 });
 
 // イベントハンドラのテスト

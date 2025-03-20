@@ -9,24 +9,21 @@ test("DragHandleコンポーネントが正しくレンダリングされる", (
     onTouchStart: () => {},
   };
 
-  const { container } = render(<DragHandle listeners={listeners} />);
+  const { getByRole, getByTitle } = render(
+    <DragHandle listeners={listeners} />,
+  );
 
   // ボタン要素が存在することを確認
-  const button = container.querySelector("button");
+  const button = getByRole("button");
   expect(button).not.toBeNull();
 
-  // SVGアイコンが存在することを確認
-  const svg = button?.querySelector("svg");
+  // SVGアイコンが存在することを確認（タイトルで特定）
+  const svg = getByTitle("drag handle");
   expect(svg).not.toBeNull();
 
-  // タイトルが正しく設定されていることを確認
-  const title = svg?.querySelector("title");
-  expect(title).not.toBeNull();
-  expect(title?.textContent).toBe("drag handle");
-
   // クラスが正しく設定されていることを確認
-  expect(button?.className).toContain("cursor-grab");
-  expect(button?.className).toContain("absolute");
+  expect(button).toHaveClass("cursor-grab");
+  expect(button).toHaveClass("absolute");
 });
 
 test("リスナーが正しくボタンに渡される", () => {
@@ -36,10 +33,10 @@ test("リスナーが正しくボタンに渡される", () => {
     onTouchStart: () => {},
   };
 
-  const { container } = render(<DragHandle listeners={mockListeners} />);
+  const { getByRole } = render(<DragHandle listeners={mockListeners} />);
 
   // ボタン要素を取得
-  const button = container.querySelector("button");
+  const button = getByRole("button");
   expect(button).not.toBeNull();
 
   // リスナーがボタンの属性として設定されていることを確認
@@ -48,13 +45,15 @@ test("リスナーが正しくボタンに渡される", () => {
 });
 
 test("リスナーがundefinedの場合も正しくレンダリングされる", () => {
-  const { container } = render(<DragHandle listeners={undefined} />);
+  const { getByRole, getByTitle } = render(
+    <DragHandle listeners={undefined} />,
+  );
 
   // ボタン要素が存在することを確認
-  const button = container.querySelector("button");
+  const button = getByRole("button");
   expect(button).not.toBeNull();
 
   // SVGアイコンが存在することを確認
-  const svg = button?.querySelector("svg");
+  const svg = getByTitle("drag handle");
   expect(svg).not.toBeNull();
 });

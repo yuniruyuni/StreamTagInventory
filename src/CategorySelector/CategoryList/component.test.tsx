@@ -9,7 +9,7 @@ test("カテゴリが空の場合、何も表示されない", () => {
   const setCursor = mock();
   const onSelect = mock();
 
-  const { container } = render(
+  const { queryByRole } = render(
     <CategoryList
       categories={categories}
       cursor={cursor}
@@ -19,7 +19,7 @@ test("カテゴリが空の場合、何も表示されない", () => {
   );
 
   // リスト要素が存在しないことを確認
-  const list = container.querySelector("ul");
+  const list = queryByRole("list");
   expect(list).toBeNull();
 });
 
@@ -29,7 +29,7 @@ test("カテゴリがundefinedの場合、何も表示されない", () => {
   const setCursor = mock();
   const onSelect = mock();
 
-  const { container } = render(
+  const { queryByRole } = render(
     <CategoryList
       categories={categories}
       cursor={cursor}
@@ -39,7 +39,7 @@ test("カテゴリがundefinedの場合、何も表示されない", () => {
   );
 
   // リスト要素が存在しないことを確認
-  const list = container.querySelector("ul");
+  const list = queryByRole("list");
   expect(list).toBeNull();
 });
 
@@ -65,7 +65,7 @@ test("カテゴリがある場合、各カテゴリが表示される", () => {
   const setCursor = mock();
   const onSelect = mock();
 
-  const { container } = render(
+  const { getByRole, getAllByRole } = render(
     <CategoryList
       categories={categories}
       cursor={cursor}
@@ -75,28 +75,22 @@ test("カテゴリがある場合、各カテゴリが表示される", () => {
   );
 
   // リスト要素が存在することを確認
-  const list = container.querySelector("ul");
+  const list = getByRole("list");
   expect(list).not.toBeNull();
 
   // リスト項目の数を確認
-  const items = list?.querySelectorAll("li");
-  expect(items?.length).toBe(3);
+  const items = getAllByRole("listitem");
+  expect(items.length).toBe(3);
 
   // 各カテゴリの内容を確認
-  const images = list?.querySelectorAll("img");
-  expect(images?.length).toBe(3);
-  expect(images?.[0].getAttribute("src")).toBe(
-    "https://example.com/image1.jpg",
-  );
-  expect(images?.[1].getAttribute("src")).toBe(
-    "https://example.com/image2.jpg",
-  );
-  expect(images?.[2].getAttribute("src")).toBe(
-    "https://example.com/image3.jpg",
-  );
-  expect(images?.[0].getAttribute("alt")).toBe("カテゴリ1");
-  expect(images?.[1].getAttribute("alt")).toBe("カテゴリ2");
-  expect(images?.[2].getAttribute("alt")).toBe("カテゴリ3");
+  const images = getAllByRole("img");
+  expect(images.length).toBe(3);
+  expect(images[0]).toHaveAttribute("src", "https://example.com/image1.jpg");
+  expect(images[1]).toHaveAttribute("src", "https://example.com/image2.jpg");
+  expect(images[2]).toHaveAttribute("src", "https://example.com/image3.jpg");
+  expect(images[0]).toHaveAttribute("alt", "カテゴリ1");
+  expect(images[1]).toHaveAttribute("alt", "カテゴリ2");
+  expect(images[2]).toHaveAttribute("alt", "カテゴリ3");
 });
 
 test("カーソル位置に対応するカテゴリが選択状態になる", () => {
@@ -121,7 +115,7 @@ test("カーソル位置に対応するカテゴリが選択状態になる", ()
   const setCursor = mock();
   const onSelect = mock();
 
-  const { container } = render(
+  const { getAllByRole } = render(
     <CategoryList
       categories={categories}
       cursor={cursor}
@@ -131,11 +125,11 @@ test("カーソル位置に対応するカテゴリが選択状態になる", ()
   );
 
   // ボタン要素を取得
-  const buttons = container.querySelectorAll("button");
-  expect(buttons?.length).toBe(3);
+  const buttons = getAllByRole("button");
+  expect(buttons.length).toBe(3);
 
   // 2番目のボタンが選択状態になっていることを確認
-  expect(buttons?.[0].className).not.toContain("bg-slate-100");
-  expect(buttons?.[1].className).toContain("bg-slate-100");
-  expect(buttons?.[2].className).not.toContain("bg-slate-100");
+  expect(buttons[0]).not.toHaveClass("bg-slate-100");
+  expect(buttons[1]).toHaveClass("bg-slate-100");
+  expect(buttons[2]).not.toHaveClass("bg-slate-100");
 });
