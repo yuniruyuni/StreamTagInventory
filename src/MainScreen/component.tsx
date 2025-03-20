@@ -99,7 +99,10 @@ export const MainScreen: React.FC = () => {
 
   const handleCloneTemplate = React.useCallback(
     (cloned: Template) => {
-      const newTemplates = [...templates, { ...cloned, id: ulid() }];
+      const clone = { ...cloned, id: ulid() };
+      const newTemplates = [...templates];
+      const index = newTemplates.findIndex((t) => t.id === cloned.id);
+      newTemplates.splice(index + 1, 0, clone);
       setTemplates(newTemplates);
     },
     [templates, setTemplates],
