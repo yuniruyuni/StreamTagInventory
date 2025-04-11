@@ -1,0 +1,38 @@
+{
+  "language": "日本語",
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "revert": "元に戻す",
+    "close": "閉じる",
+    "apply": "適用",
+    "delete": "削除",
+    "clone": "複製",
+    "edit": "編集",
+    "add": "追加"
+  },
+  "auth": {
+    "login": "Twitchでログイン",
+    "logout": "ログアウト"
+  },
+  "template": {
+    "title": "タイトル",
+    "category": "カテゴリ",
+    "tags": "タグ",
+    "addTemplate": "テンプレートを追加",
+    "deleteConfirm": "このテンプレートを削除してもよろしいですか？",
+    "pickCategory": "カテゴリを選択",
+    "maxTagsError": "タグは最大10個までです",
+    "applySuccess": "テンプレートを適用しました",
+    "applyError": "Twitchでエラーが発生しました"
+  },
+  "errors": {
+    "twitchError": "Twitchでエラーが生じたようです",
+    "requiredField": "この項目は必須です"
+  },
+  "broadcast": {
+    "language": "日本語"
+  }
+}

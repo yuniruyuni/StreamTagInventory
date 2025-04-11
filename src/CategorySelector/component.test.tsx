@@ -1,6 +1,7 @@
-import { expect, mock, test } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import i18n from "~/i18n/config";
 import { SWRConfigWrapper } from "~/test-utils";
 import { type Category, EmptyCategory } from "../model/category";
 import { CategorySelector } from "./component";
@@ -23,6 +24,11 @@ const mockCategories: Category[] = [
     box_art_url: "https://example.com/lol.jpg",
   },
 ];
+
+// テスト実行前にi18nを英語に設定
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
   const onChange = mock();

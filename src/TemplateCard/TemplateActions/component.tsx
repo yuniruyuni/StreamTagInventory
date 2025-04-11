@@ -1,4 +1,5 @@
 import type React from "react";
+import { useTranslation } from "~/i18n";
 import { type Template, validateTemplate } from "~/model/template";
 
 type Props = {
@@ -20,6 +21,7 @@ export const TemplateActions: React.FC<Props> = ({
   onRemove,
   onApply,
 }) => {
+  const { t } = useTranslation();
   const valid = validateTemplate(template);
 
   return (
@@ -32,7 +34,7 @@ export const TemplateActions: React.FC<Props> = ({
             className="btn btn-error"
             onClick={onRevert}
           >
-            Revert
+            {t("common.revert")}
           </button>
           <button
             aria-label="save template"
@@ -40,7 +42,7 @@ export const TemplateActions: React.FC<Props> = ({
             className="btn btn-primary"
             onClick={() => onSave(template)}
           >
-            Save
+            {t("common.save")}
           </button>
         </>
       )}
@@ -52,7 +54,7 @@ export const TemplateActions: React.FC<Props> = ({
             className="btn btn-secondary"
             onClick={() => onClone(template)}
           >
-            Clone
+            {t("common.clone")}
           </button>
           <button
             aria-label="remove template"
@@ -60,7 +62,7 @@ export const TemplateActions: React.FC<Props> = ({
             className="btn btn-error"
             onClick={() => onRemove(template)}
           >
-            Remove
+            {t("common.delete")}
           </button>
           {!valid && (
             <button
@@ -68,7 +70,7 @@ export const TemplateActions: React.FC<Props> = ({
               type="button"
               className="btn btn-disabled"
             >
-              Apply
+              {t("common.apply")}
             </button>
           )}
           {valid && (
@@ -78,7 +80,7 @@ export const TemplateActions: React.FC<Props> = ({
               className="btn btn-primary"
               onClick={() => onApply(template)}
             >
-              Apply
+              {t("common.apply")}
             </button>
           )}
         </>

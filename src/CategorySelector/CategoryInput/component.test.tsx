@@ -1,8 +1,21 @@
-import { expect, mock, test } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import type React from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
 import type { Category } from "~/model/category";
 import { CategoryInput } from "./component";
+
+// テストのためのラッパーコンポーネント
+const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+);
+
+// テスト実行前にi18nを英語に設定
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 test("CategoryInputコンポーネントが正しくレンダリングされる", () => {
   const query = "";
@@ -21,6 +34,7 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
+    { wrapper: Wrapper },
   );
 
   const label = getByTestId("thumbnail");
@@ -56,6 +70,7 @@ test("valueが指定されている場合、画像が表示される", () => {
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
+    { wrapper: Wrapper },
   );
 
   // 画像要素が存在することを確認
@@ -82,6 +97,7 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
+    { wrapper: Wrapper },
   );
 
   const input = getByRole("textbox");
@@ -106,6 +122,7 @@ test("フォーカス時にsetOpenが呼び出される", async () => {
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
+    { wrapper: Wrapper },
   );
 
   const user = userEvent.setup();
@@ -139,6 +156,7 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
+    { wrapper: Wrapper },
   );
 
   const user = userEvent.setup();

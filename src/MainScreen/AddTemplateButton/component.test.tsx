@@ -1,8 +1,21 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import type React from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
 import { type Template, newTemplate } from "~/model/template";
 import { AddTemplateButton } from "./component";
+
+// テスト用のラッパーコンポーネント
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+);
+
+// テスト実行前にi18nを英語に設定
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 test("AddTemplateButtonコンポーネントが正しくレンダリングされる", () => {
   const templates: Template[] = [];
@@ -10,6 +23,7 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
 
   const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
+    { wrapper: TestWrapper },
   );
 
   // ボタン要素が存在することを確認
@@ -27,6 +41,7 @@ test("ボタンをクリックすると、新しいテンプレートが追加�
   };
   const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
+    { wrapper: TestWrapper },
   );
 
   // ボタン要素を取得
@@ -61,6 +76,7 @@ test("既存のテンプレートがある場合、新しいテンプレート�
   };
   const { getByRole } = render(
     <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
+    { wrapper: TestWrapper },
   );
 
   const button = getByRole("button");

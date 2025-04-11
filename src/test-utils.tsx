@@ -1,5 +1,13 @@
 import type React from "react";
+import { I18nextProvider } from "react-i18next";
 import { type Middleware, SWRConfig, type SWRResponse } from "swr";
+import i18n from "./i18n/config";
+
+export const I18nWrapper: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
+  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+};
 
 export const SWRConfigWrapper: (
   // biome-ignore lint/suspicious/noExplicitAny: this any type is for testing mocks.
@@ -20,5 +28,9 @@ export const SWRConfigWrapper: (
       });
     };
 
-    return <SWRConfig value={{ use: [middleware] }}>{children}</SWRConfig>;
+    return (
+      <I18nWrapper>
+        <SWRConfig value={{ use: [middleware] }}>{children}</SWRConfig>
+      </I18nWrapper>
+    );
   };

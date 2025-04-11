@@ -1,5 +1,8 @@
-import { expect, mock, test } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
+import type React from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
 import type { Category } from "~/model/category";
 import { type Template, newTemplate } from "~/model/template";
 import { TemplateForm } from "./component";
@@ -57,22 +60,33 @@ mock.module("~/InputTags", () => {
   };
 });
 
+// テスト用のラッパーコンポーネント
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+);
+
+// テスト実行前にi18nを英語に設定
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
+
 test("TemplateFormコンポーネントが正しくレンダリングされる", () => {
   const template = newTemplate();
   template.title = "テストタイトル";
   const onChange = () => {};
 
-  const { getAllByText, getByRole, getByTestId } = render(
+  const { getByText, getByRole, getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
+    { wrapper: TestWrapper },
   );
 
   // ラベルが正しく表示されていることを確認
-  const titleLabel = getAllByText("Title");
-  const categoryLabel = getAllByText("Category");
-  const tagsLabel = getAllByText("Tags");
-  expect(titleLabel.length).toBeGreaterThan(0);
-  expect(categoryLabel.length).toBeGreaterThan(0);
-  expect(tagsLabel.length).toBeGreaterThan(0);
+  const titleLabel = getByText("Title");
+  const categoryLabel = getByText("Category");
+  const tagsLabel = getByText("Tags");
+  expect(titleLabel).not.toBeNull();
+  expect(categoryLabel).not.toBeNull();
+  expect(tagsLabel).not.toBeNull();
 
   // タイトル入力フィールドが正しく表示されていることを確認
   const titleInput = getByRole("textbox");
@@ -97,6 +111,7 @@ test("タイトルが変更されたとき、onChangeが呼び出される", () 
 
   const { getByRole } = render(
     <TemplateForm template={template} onChange={onChange} />,
+    { wrapper: TestWrapper },
   );
 
   // タイトル入力フィールドを取得
@@ -123,6 +138,7 @@ test("カテゴリが変更されたとき、onChangeが呼び出される", () 
 
   const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
+    { wrapper: TestWrapper },
   );
 
   // カテゴリ変更ボタンを取得
@@ -157,6 +173,7 @@ test("タグが変更されたとき、onChangeが呼び出される", () => {
 
   const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
+    { wrapper: TestWrapper },
   );
 
   // タグ変更ボタンを取得
@@ -184,6 +201,7 @@ test("template.tagsがnullの場合、空の配列として扱われる", () => 
 
   const { getByTestId } = render(
     <TemplateForm template={template} onChange={onChange} />,
+    { wrapper: TestWrapper },
   );
 
   // InputTagsコンポーネントが表示されていることを確認

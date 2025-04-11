@@ -1,5 +1,8 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
+import type React from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
 import { type Template, newTemplate } from "~/model/template";
 import { TemplateActions } from "./component";
 
@@ -16,6 +19,16 @@ function createMockTemplate(valid = true): Template {
   template.tags = valid ? ["タグ1", "タグ2"] : [];
   return template;
 }
+
+// テスト用のラッパーコンポーネント
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+);
+
+// テスト実行前にi18nを英語に設定
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 // 変更がない状態のテスト
 test("変更がない状態で正しくレンダリングされる", () => {
@@ -37,6 +50,7 @@ test("変更がない状態で正しくレンダリングされる", () => {
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // ボタンが正しく表示されていることを確認
@@ -45,12 +59,12 @@ test("変更がない状態で正しくレンダリングされる", () => {
 
   // Clone, Remove, Applyボタンが表示されていることを確認
   expect(buttons[0]).toHaveTextContent("Clone");
-  expect(buttons[1]).toHaveTextContent("Remove");
+  expect(buttons[1]).toHaveTextContent("Delete");
   expect(buttons[2]).toHaveTextContent("Apply");
 
-  // Revert, Saveボタンが表示されていないことを確認
+  // Cancel, Saveボタンが表示されていないことを確認
   for (const button of buttons) {
-    expect(button).not.toHaveTextContent("Revert");
+    expect(button).not.toHaveTextContent("Cancel");
     expect(button).not.toHaveTextContent("Save");
   }
 });
@@ -75,21 +89,22 @@ test("変更がある状態で正しくレンダリングされる", () => {
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // ボタンが正しく表示されていることを確認
   const buttons = getAllByRole("button");
   expect(buttons.length).toBe(2);
 
-  // RevertとSaveボタンが表示されていることを確認
+  // CancelとSaveボタンが表示されていることを確認
   expect(buttons[0]).toHaveTextContent("Revert");
   expect(buttons[1]).toHaveTextContent("Save");
 
   // Clone, Remove, Applyボタンが表示されていないことを確認
   for (const button of buttons) {
     expect(button).not.toHaveTextContent("Clone");
-    expect(button).not.toHaveTextContent("Remove");
-    expect(button).not.toHaveTextContent("Remove");
+    expect(button).not.toHaveTextContent("Delete");
+    expect(button).not.toHaveTextContent("Apply");
   }
 });
 
@@ -113,6 +128,7 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Applyボタンが無効化されていることを確認
@@ -144,6 +160,7 @@ test("RevertボタンをクリックするとonRevertが呼び出される", () 
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Revertボタンをクリック
@@ -176,6 +193,7 @@ test("SaveボタンをクリックするとonSaveが呼び出される", () => {
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Saveボタンをクリック
@@ -208,6 +226,7 @@ test("CloneボタンをクリックするとonCloneが呼び出される", () =>
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Cloneボタンをクリック
@@ -240,6 +259,7 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Removeボタンをクリック
@@ -272,6 +292,7 @@ test("ApplyボタンをクリックするとonApplyが呼び出される", () =>
       onRemove={onRemove}
       onApply={onApply}
     />,
+    { wrapper: TestWrapper },
   );
 
   // Applyボタンをクリック
