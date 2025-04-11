@@ -1,0 +1,38 @@
+{
+  "language": "English",
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "revert": "Revert",
+    "close": "Close",
+    "apply": "Apply",
+    "delete": "Delete",
+    "clone": "Clone",
+    "edit": "Edit",
+    "add": "Add"
+  },
+  "auth": {
+    "login": "Login with Twitch",
+    "logout": "Logout"
+  },
+  "template": {
+    "title": "Title",
+    "category": "Category",
+    "tags": "Tags",
+    "addTemplate": "Add Template",
+    "deleteConfirm": "Are you sure you want to delete this template?",
+    "pickCategory": "Pick a category",
+    "maxTagsError": "Maximum 10 tags allowed",
+    "applySuccess": "Template applied successfully",
+    "applyError": "Error occurred with Twitch"
+  },
+  "errors": {
+    "twitchError": "An error occurred with Twitch",
+    "requiredField": "This field is required"
+  },
+  "broadcast": {
+    "language": "English"
+  }
+}

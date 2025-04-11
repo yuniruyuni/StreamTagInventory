@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import type React from "react";
+import { useTranslation } from "~/i18n";
 import type { Category } from "~/model/category";
 
 type Props = {
@@ -23,6 +24,8 @@ export const CategoryInput: React.FC<Props> = ({
   onChange,
   categories,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <label className="relative w-full h-24">
       <div
@@ -35,7 +38,7 @@ export const CategoryInput: React.FC<Props> = ({
       <input
         id="category"
         type="text"
-        placeholder="Pick a category"
+        placeholder={t("template.pickCategory")}
         value={query}
         onFocus={() => setOpen(true)}
         onBlur={() => {

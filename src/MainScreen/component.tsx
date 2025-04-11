@@ -8,6 +8,7 @@ import { ErrorNotification } from "~/ErrorNotification";
 import { Menu } from "~/Menu";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { dep, twitch } from "~/fetcher";
+import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
 import { useStorage } from "~/useStorage";
 import { AddTemplateButton } from "./AddTemplateButton";
@@ -20,6 +21,7 @@ type User = {
 };
 
 export const MainScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
@@ -37,8 +39,7 @@ export const MainScreen: React.FC = () => {
     {
       onError: async (error) => {
         await ErrorNotification.call({
-          // TODO: make it i18n.
-          title: "Twitchでエラーが生じたようです",
+          title: t("errors.twitchError"),
           message: error.message,
         });
       },
@@ -72,8 +73,7 @@ export const MainScreen: React.FC = () => {
   const handleApplyTemplate = React.useCallback(
     async (template: Template) => {
       applyTemplate({
-        // TODO: make it i18n.
-        broadcaster_language: "ja",
+        broadcaster_language: i18n.language,
         game_id: template.category.id,
         title: template.title,
         tags: template.tags,
@@ -84,7 +84,7 @@ export const MainScreen: React.FC = () => {
         description: template.title,
       });
     },
-    [applyTemplate, createMarker, users],
+    [applyTemplate, createMarker, users, i18n],
   );
 
   const handleRemoveTemplate = React.useCallback(
@@ -120,7 +120,7 @@ export const MainScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      {isLoading && <div className="skelton" />}
+      {isLoading && <div className="skelton">{t("common.loading")}</div>}
       {users && <Menu user={users[0]} />}
       <div className="p-16 flex flex-wrap gap-4">
         <TemplateList
