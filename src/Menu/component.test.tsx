@@ -2,6 +2,30 @@ import { expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { Menu } from "./component";
+import { type Template, newTemplate } from "~/model/template";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
+
+// Mock the dynamic imports
+mock.module("~/utils/templateIO", () => {
+  return {
+    exportTemplates: mock((_templates: Template[], _filename?: string) => {}),
+    importTemplates: mock(async () => {
+      const mockTemplate = newTemplate();
+      mockTemplate.id = "mock-id";
+      return [mockTemplate];
+    }),
+    validateImportedTemplates: mock((_data: unknown) => true),
+  };
+});
+
+mock.module("~/ErrorNotification", () => {
+  return {
+    ErrorNotification: {
+      call: mock(async () => {}),
+    },
+  };
+});
 
 // モックユーザーの作成
 function createMockUser() {
@@ -11,6 +35,20 @@ function createMockUser() {
     profile_image_url: "https://example.com/profile.jpg",
   };
 }
+
+// Test wrapper component with i18n provider and TwitchAuthContext
+const TestWrapper: React.FC<{ children: React.ReactNode; logout?: () => void }> = ({
+  children,
+  logout = mock()
+}) => {
+  return (
+    <I18nextProvider i18n={i18n}>
+      <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+        {children}
+      </TwitchAuthContext.Provider>
+    </I18nextProvider>
+  );
+};
 
 // 基本的なレンダリングのテスト
 test("Menuコンポーネントが正しくレンダリングされる", () => {
@@ -102,4 +140,41 @@ test("ユーザーアバターが正しく表示される", () => {
   // 正しい属性を持っていることを確認
   expect(userIcon.getAttribute("src")).toBe(user.profile_image_url);
   expect(userIcon.closest(".avatar")).not.toBeNull();
+});
+
+// インポート/エクスポートメニューアイテムのテスト
+test("onImportTemplatesが提供されるとインポート/エクスポートメニューが表示される", () => {
+  const user = createMockUser();
+  const templates = [newTemplate()];
+  const onImportTemplates = mock((_templates: Template[]) => {});
+
+  const { queryByTestId } = render(
+    <Menu
+      user={user}
+      templates={templates}
+      onImportTemplates={onImportTemplates}
+    />,
+    { wrapper: TestWrapper }
+  );
+
+  const importMenuItem = queryByTestId("import-templates-menu-item");
+  const exportMenuItem = queryByTestId("export-templates-menu-item");
+
+  expect(importMenuItem).not.toBeNull();
+  expect(exportMenuItem).not.toBeNull();
+});
+
+test("onImportTemplatesが提供されないとインポート/エクスポートメニューが表示されない", () => {
+  const user = createMockUser();
+
+  const { queryByTestId } = render(
+    <Menu user={user} />,
+    { wrapper: TestWrapper }
+  );
+
+  const importMenuItem = queryByTestId("import-templates-menu-item");
+  const exportMenuItem = queryByTestId("export-templates-menu-item");
+
+  expect(importMenuItem).toBeNull();
+  expect(exportMenuItem).toBeNull();
 });
