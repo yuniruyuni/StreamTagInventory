@@ -11,7 +11,10 @@
     "delete": "削除",
     "clone": "複製",
     "edit": "編集",
-    "add": "追加"
+    "add": "追加",
+    "search": "検索",
+    "import": "インポート",
+    "export": "エクスポート"
   },
   "auth": {
     "login": "Twitchでログイン",
@@ -21,16 +24,22 @@
     "title": "タイトル",
     "category": "カテゴリ",
     "tags": "タグ",
-    "addTemplate": "テンプレートを追加",
-    "deleteConfirm": "このテンプレートを削除してもよろしいですか？",
+    "addTemplate": "追加",
+    "deleteConfirm": "削除してもよろしいですか？",
     "pickCategory": "カテゴリを選択",
     "maxTagsError": "タグは最大10個までです",
-    "applySuccess": "テンプレートを適用しました",
-    "applyError": "Twitchでエラーが発生しました"
+    "applySuccess": "適用しました",
+    "applyError": "Twitchでエラーが発生しました",
+    "search": "検索...",
+    "searchBy": "タイトル、カテゴリ、タグで検索",
+    "noResults": "見つかりません",
+    "importTemplates": "インポート",
+    "exportTemplates": "エクスポート"
   },
   "errors": {
     "twitchError": "Twitchでエラーが生じたようです",
-    "requiredField": "この項目は必須です"
+    "requiredField": "この項目は必須です",
+    "importError": "インポートエラー"
   },
   "broadcast": {
     "language": "日本語"

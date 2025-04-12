@@ -11,7 +11,10 @@
     "delete": "Delete",
     "clone": "Clone",
     "edit": "Edit",
-    "add": "Add"
+    "add": "Add",
+    "search": "Search",
+    "import": "Import",
+    "export": "Export"
   },
   "auth": {
     "login": "Login with Twitch",
@@ -21,16 +24,22 @@
     "title": "Title",
     "category": "Category",
     "tags": "Tags",
-    "addTemplate": "Add Template",
-    "deleteConfirm": "Are you sure you want to delete this template?",
+    "addTemplate": "Add",
+    "deleteConfirm": "Are you sure you want to delete this?",
     "pickCategory": "Pick a category",
     "maxTagsError": "Maximum 10 tags allowed",
-    "applySuccess": "Template applied successfully",
-    "applyError": "Error occurred with Twitch"
+    "applySuccess": "Applied successfully",
+    "applyError": "Error occurred with Twitch",
+    "search": "Search...",
+    "searchBy": "Search by title, category, or tags",
+    "noResults": "No results found",
+    "importTemplates": "Import",
+    "exportTemplates": "Export"
   },
   "errors": {
     "twitchError": "An error occurred with Twitch",
-    "requiredField": "This field is required"
+    "requiredField": "This field is required",
+    "importError": "Import Error"
   },
   "broadcast": {
     "language": "English"

@@ -1,6 +1,6 @@
 import type { DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import React from "react";
+import React, { useState, useMemo } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { ulid } from "ulid";
@@ -24,6 +24,7 @@ export const MainScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: users, isLoading } = useSWR(
     ["https://api.twitch.tv/helix/users", token],
@@ -53,6 +54,24 @@ export const MainScreen: React.FC = () => {
     () => [dep`https://api.twitch.tv/helix/streams/markers`, token],
     twitch.post,
   );
+
+  const filteredTemplates = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return templates;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return templates.filter(
+      (template) =>
+        template.title.toLowerCase().includes(query) ||
+        template.category.name.toLowerCase().includes(query) ||
+        template.tags.some((tag) => tag.toLowerCase().includes(query)),
+    );
+  }, [templates, searchQuery]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
 
   const handleDragEnd = React.useCallback(
     (event: DragEndEvent) => {
@@ -118,20 +137,53 @@ export const MainScreen: React.FC = () => {
     [templates, setTemplates],
   );
 
+  const handleImportTemplates = React.useCallback(
+    (importedTemplates: Template[]) => {
+      // Avoid duplicates by checking IDs
+      const existingIds = new Set(templates.map(t => t.id));
+      const newTemplates = importedTemplates.filter(t => !existingIds.has(t.id));
+
+      if (newTemplates.length > 0) {
+        setTemplates([...templates, ...newTemplates]);
+      }
+    },
+    [templates, setTemplates],
+  );
+
   return (
     <div className="container mx-auto">
       {isLoading && <div className="skelton">{t("common.loading")}</div>}
-      {users && <Menu user={users[0]} />}
-      <div className="p-16 flex flex-wrap gap-4">
-        <TemplateList
+      {users && (
+        <Menu
+          user={users[0]}
+          onSearch={handleSearch}
           templates={templates}
-          onDragEnd={handleDragEnd}
-          onApply={handleApplyTemplate}
-          onRemove={handleRemoveTemplate}
-          onClone={handleCloneTemplate}
-          onSave={handleSaveTemplate}
+          onImportTemplates={handleImportTemplates}
         />
-        <AddTemplateButton templates={templates} setTemplates={setTemplates} />
+      )}
+      <div className="p-16">
+        <div className="flex flex-wrap gap-4">
+          {filteredTemplates.length > 0 ? (
+            <TemplateList
+              templates={filteredTemplates}
+              onDragEnd={handleDragEnd}
+              onApply={handleApplyTemplate}
+              onRemove={handleRemoveTemplate}
+              onClone={handleCloneTemplate}
+              onSave={handleSaveTemplate}
+            />
+          ) : (
+            searchQuery.trim() && (
+              <div className="w-full text-center py-8 text-gray-500">
+                {t("template.noResults")}
+              </div>
+            )
+          )}
+          <AddTemplateButton
+            templates={templates}
+            setTemplates={setTemplates}
+          />
+        </div>
       </div>
     </div>
   );
