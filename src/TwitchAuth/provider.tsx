@@ -4,10 +4,6 @@ import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
 import { type Auth, clearHash, generateURI, parseTokenFromHash } from "./utils";
 
-export type EntranceProps = {
-  uri: string;
-};
-
 type Props = {
   scope: string[];
   entrance: (uri: string) => ReactNode;
