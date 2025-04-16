@@ -1,10 +1,10 @@
-import { beforeAll, expect, test } from "bun:test";
+import { beforeAll, expect, test, mock } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import type React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "~/i18n/config";
-import { type Template, newTemplate } from "~/model/template";
+import type { Template } from "~/model/template";
 import { AddTemplateButton } from "./component";
 
 // テスト用のラッパーコンポーネント
@@ -18,11 +18,10 @@ beforeAll(async () => {
 });
 
 test("AddTemplateButtonコンポーネントが正しくレンダリングされる", () => {
-  const templates: Template[] = [];
-  const setTemplates = () => {};
+  const onAdd = mock(() => {});
 
   const { getByRole } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
+    <AddTemplateButton onAdd={onAdd} />,
     { wrapper: TestWrapper },
   );
 
@@ -33,14 +32,11 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
   expect(button).toHaveClass("btn-primary");
 });
 
-test("ボタンをクリックすると、新しいテンプレートが追加される", async () => {
-  const templates: Template[] = [];
-  let newTemplates: Template[] = [];
-  const setTemplates = (updatedTemplates: Template[]) => {
-    newTemplates = updatedTemplates;
-  };
+test("ボタンをクリックすると、新しいテンプレートを作成してonAddコールバックに渡す", async () => {
+  const onAdd = mock((_: Template) => {});
+
   const { getByRole } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
+    <AddTemplateButton onAdd={onAdd} />,
     { wrapper: TestWrapper },
   );
 
@@ -51,9 +47,15 @@ test("ボタンをクリックすると、新しいテンプレートが追加�
   const user = userEvent.setup();
   await user.click(button);
 
-  expect(newTemplates.length).toBe(1);
-  expect(newTemplates[0]).toEqual({
-    id: newTemplates[0].id, // ignore for random id generation.
+  // onAddが呼び出されたことを確認
+  expect(onAdd).toHaveBeenCalledTimes(1);
+
+  // 呼び出し時の引数を検証
+  const callArg = onAdd.mock.calls[0][0];
+
+  // テンプレートの構造を検証
+  expect(callArg).toEqual({
+    id: callArg.id, // ignore for random id generation.
     title: "",
     tags: [],
     category: {
@@ -62,31 +64,8 @@ test("ボタンをクリックすると、新しいテンプレートが追加�
       box_art_url: "",
     },
   });
-});
 
-test("既存のテンプレートがある場合、新しいテンプレートは後ろに追加される", async () => {
-  const existingTemplate = newTemplate();
-  existingTemplate.id = "existing-id";
-  existingTemplate.title = "既存のテンプレート";
-
-  const templates: Template[] = [existingTemplate];
-  let newTemplates: Template[] = [];
-  const setTemplates = (updatedTemplates: Template[]) => {
-    newTemplates = updatedTemplates;
-  };
-  const { getByRole } = render(
-    <AddTemplateButton templates={templates} setTemplates={setTemplates} />,
-    { wrapper: TestWrapper },
-  );
-
-  const button = getByRole("button");
-  expect(button).not.toBeNull();
-
-  const user = userEvent.setup();
-  await user.click(button);
-
-  expect(newTemplates.length).toBe(2);
-  expect(newTemplates[0]).toEqual(existingTemplate);
-  expect(newTemplates[1].title).toBe("");
-  expect(newTemplates[1].tags).toEqual([]);
+  // 新しいテンプレートであることを確認
+  expect(typeof callArg.id).toBe("string");
+  expect(callArg.id.length).toBeGreaterThan(0);
 });

@@ -3,13 +3,11 @@ import { useTranslation } from "~/i18n";
 import { type Template, newTemplate } from "~/model/template";
 
 type Props = {
-  templates: Template[];
-  setTemplates: (templates: Template[]) => void;
+  onAdd: (template: Template) => void;
 };
 
 export const AddTemplateButton: React.FC<Props> = ({
-  templates,
-  setTemplates,
+  onAdd,
 }) => {
   const { t } = useTranslation();
 
@@ -18,7 +16,7 @@ export const AddTemplateButton: React.FC<Props> = ({
       <button
         type="button"
         className="btn btn-primary"
-        onClick={() => setTemplates([...templates, newTemplate()])}
+        onClick={() => onAdd(newTemplate())}
       >
         {t("template.addTemplate")}
       </button>

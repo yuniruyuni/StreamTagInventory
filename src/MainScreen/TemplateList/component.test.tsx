@@ -33,7 +33,7 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
   const { getAllByTestId, getByTestId } = render(
     <TemplateList
       templates={templates}
@@ -41,7 +41,7 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 
@@ -63,7 +63,7 @@ test("onApplyが正しく呼び出される", async () => {
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
   const { getAllByRole } = render(
     <TemplateList
       templates={templates}
@@ -71,7 +71,7 @@ test("onApplyが正しく呼び出される", async () => {
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 
@@ -101,7 +101,7 @@ test("onRemoveが正しく呼び出される", async () => {
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
 
   const { getAllByRole } = render(
     <TemplateList
@@ -110,7 +110,7 @@ test("onRemoveが正しく呼び出される", async () => {
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 
@@ -138,7 +138,7 @@ test("onCloneが正しく呼び出される", async () => {
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
 
   const { getAllByRole } = render(
     <TemplateList
@@ -147,7 +147,7 @@ test("onCloneが正しく呼び出される", async () => {
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 
@@ -174,7 +174,7 @@ test("onSaveが正しく呼び出される", async () => {
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
 
   const { getByRole, getByDisplayValue } = render(
     <TemplateList
@@ -183,7 +183,7 @@ test("onSaveが正しく呼び出される", async () => {
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 
@@ -214,7 +214,7 @@ test("空のテンプレートリストが正しくレンダリングされる",
   const onRemove = mock();
   const onClone = mock();
   const onSave = mock();
-  const onDragEnd = mock();
+  const onMove = mock();
 
   const { queryAllByTestId } = render(
     <TemplateList
@@ -223,7 +223,7 @@ test("空のテンプレートリストが正しくレンダリングされる",
       onRemove={onRemove}
       onClone={onClone}
       onSave={onSave}
-      onDragEnd={onDragEnd}
+      onMove={onMove}
     />,
   );
 

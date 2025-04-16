@@ -41,6 +41,28 @@
     "requiredField": "この項目は必須です",
     "importError": "インポートエラー"
   },
+  "error": {
+    "template": {
+      "apply": {
+        "title": "テンプレート適用エラー",
+        "message": "Twitchチャンネルにテンプレートを適用できませんでした: {{error}}"
+      },
+      "import": {
+        "title": "テンプレートインポートエラー",
+        "message": "テンプレートをインポートできませんでした: {{error}}"
+      },
+      "export": {
+        "title": "テンプレートエクスポートエラー",
+        "message": "テンプレートをエクスポートできませんでした: {{error}}"
+      }
+    },
+    "marker": {
+      "create": {
+        "title": "ストリームマーカーエラー",
+        "message": "ストリームマーカーを作成できませんでした: {{error}}"
+      }
+    }
+  },
   "broadcast": {
     "language": "日本語"
   }
