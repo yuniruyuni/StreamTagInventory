@@ -50,27 +50,24 @@ export const MainScreen: React.FC = () => {
           onExport={onExportTemplates}
         />
       )}
-      {/* Added pt-16 to account for the navbar height */}
-      <div className="p-16 pt-24">
-        <div className="flex flex-wrap gap-4">
-          {filteredTemplates.length > 0 ? (
-            <TemplateList
-              templates={filteredTemplates}
-              onMove={onMoveTemplate}
-              onApply={onApplyTemplate}
-              onRemove={onRemoveTemplate}
-              onClone={onCloneTemplate}
-              onSave={onSaveTemplate}
-            />
-          ) : (
-            searchQuery.trim() && (
-              <div className="w-full text-center py-8 text-gray-500">
-                {t("template.noResults")}
-              </div>
-            )
-          )}
-          <AddTemplateButton onAdd={onAddTemplate} />
-        </div>
+      <div className="flex flex-wrap gap-4 p-16 pt-24">
+        {filteredTemplates.length > 0 ? (
+          <TemplateList
+            templates={filteredTemplates}
+            onMove={onMoveTemplate}
+            onApply={onApplyTemplate}
+            onRemove={onRemoveTemplate}
+            onClone={onCloneTemplate}
+            onSave={onSaveTemplate}
+          />
+        ) : (
+          searchQuery.trim() && (
+            <div className="w-full text-center py-8 text-gray-500">
+              {t("template.noResults")}
+            </div>
+          )
+        )}
+        <AddTemplateButton onAdd={onAddTemplate} />
       </div>
     </div>
   );
