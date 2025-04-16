@@ -13,7 +13,9 @@ type UseTemplateSearchResult = {
  * @param templates 検索対象のテンプレート配列
  * @returns 検索クエリ、検索クエリ設定関数、フィルター済みテンプレート配列
  */
-export const useTemplateSearch = (templates: Template[]): UseTemplateSearchResult => {
+export const useTemplateSearch = (
+  templates: Template[],
+): UseTemplateSearchResult => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTemplates = useMemo(() => {

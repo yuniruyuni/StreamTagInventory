@@ -6,9 +6,7 @@ type Props = {
   onAdd: (template: Template) => void;
 };
 
-export const AddTemplateButton: React.FC<Props> = ({
-  onAdd,
-}) => {
+export const AddTemplateButton: React.FC<Props> = ({ onAdd }) => {
   const { t } = useTranslation();
 
   return (

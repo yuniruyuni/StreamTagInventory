@@ -1,10 +1,10 @@
 import { expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
-import { TwitchAuthContext } from "~/TwitchAuth";
-import { Menu } from "./component";
-import { newTemplate, type Template } from "~/model/template";
 import { I18nextProvider } from "react-i18next";
+import { TwitchAuthContext } from "~/TwitchAuth";
 import i18n from "~/i18n/config";
+import { type Template, newTemplate } from "~/model/template";
+import { Menu } from "./component";
 
 // Mock the dynamic imports
 mock.module("~/utils/templateIO", () => {
@@ -37,9 +37,7 @@ function createMockUser() {
 }
 
 // Test wrapper component with i18n provider and TwitchAuthContext
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({
-  children
-}) => {
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const logout = mock();
   return (
     <I18nextProvider i18n={i18n}>
@@ -66,7 +64,7 @@ test("Menuコンポーネントが正しくレンダリングされる", () => {
         onImport={onImport}
         onExport={onExport}
       />
-    </TwitchAuthContext.Provider>
+    </TwitchAuthContext.Provider>,
   );
 
   // アプリ名が表示されていることを確認
@@ -95,7 +93,7 @@ test("ドロップダウンメニューにLogoutボタンが含まれている",
         onImport={onImport}
         onExport={onExport}
       />
-    </TwitchAuthContext.Provider>
+    </TwitchAuthContext.Provider>,
   );
 
   // Logoutボタンが存在することを確認
@@ -119,7 +117,7 @@ test("Logoutボタンをクリックするとlogout関数が呼び出される",
         onImport={onImport}
         onExport={onExport}
       />
-    </TwitchAuthContext.Provider>
+    </TwitchAuthContext.Provider>,
   );
 
   // fireEvent.clickが正しく機能しないため、直接logout関数を呼び出す
@@ -145,7 +143,7 @@ test("アプリ名がホームページへのリンクになっている", () =>
         onImport={onImport}
         onExport={onExport}
       />
-    </TwitchAuthContext.Provider>
+    </TwitchAuthContext.Provider>,
   );
 
   // アプリ名のリンクを取得
@@ -168,7 +166,7 @@ test("ユーザーアバターが正しく表示される", () => {
       onImport={onImport}
       onExport={onExport}
     />,
-    { wrapper: TestWrapper }
+    { wrapper: TestWrapper },
   );
 
   // ユーザーアイコンを取得
@@ -194,7 +192,7 @@ test("onImportが提供されるとインポート/エクスポートメニュ�
       onImport={onImport}
       onExport={onExport}
     />,
-    { wrapper: TestWrapper }
+    { wrapper: TestWrapper },
   );
 
   const importMenuItem = queryByTestId("import-templates-menu-item");
@@ -217,7 +215,7 @@ test("表示・非表示の制御が正しく機能する", () => {
       onImport={onImport}
       onExport={onExport}
     />,
-    { wrapper: TestWrapper }
+    { wrapper: TestWrapper },
   );
 
   const importMenuItem = queryByTestId("import-templates-menu-item");

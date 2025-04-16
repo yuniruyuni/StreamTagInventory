@@ -1,0 +1,2 @@
+export const NOTIFICATION_DURATION = 5000;
+export const ANIMATION_DURATION = 300;

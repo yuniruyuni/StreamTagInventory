@@ -3,11 +3,11 @@ import useSWR from "swr";
 import { Menu } from "~/Menu";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { twitch } from "~/fetcher";
+import { useTemplateOperations, useTemplateSearch } from "~/hooks";
 import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useStorage } from "~/useStorage";
-import { useTemplateOperations, useTemplateSearch } from "~/hooks";
 import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";
 
@@ -21,7 +21,8 @@ export const MainScreen: React.FC = () => {
     twitch.get<User[]>,
   );
 
-  const { searchQuery, setSearchQuery, filteredTemplates } = useTemplateSearch(templates);
+  const { searchQuery, setSearchQuery, filteredTemplates } =
+    useTemplateSearch(templates);
 
   const {
     onMoveTemplate,
@@ -67,9 +68,7 @@ export const MainScreen: React.FC = () => {
               </div>
             )
           )}
-          <AddTemplateButton
-            onAdd={onAddTemplate}
-          />
+          <AddTemplateButton onAdd={onAddTemplate} />
         </div>
       </div>
     </div>

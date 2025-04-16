@@ -5,7 +5,10 @@ import type { Template } from "~/model/template";
  * @param templates - Array of templates to export
  * @param filename - Optional filename for the downloaded file
  */
-export function exportTemplates(templates: Template[], filename = "templates.json"): void {
+export function exportTemplates(
+  templates: Template[],
+  filename = "templates.json",
+): void {
   // Prepare the JSON data with proper formatting
   const data = JSON.stringify(templates, null, 2);
 
@@ -47,8 +50,10 @@ export function validateImportedTemplates(data: unknown): data is Template[] {
       typeof (item as { category: unknown }).category === "object" &&
       (item as { category: unknown }).category !== null &&
       typeof (item as { category: { id: unknown } }).category.id === "string" &&
-      typeof (item as { category: { name: unknown } }).category.name === "string" &&
-      typeof (item as { category: { box_art_url: unknown } }).category.box_art_url === "string" &&
+      typeof (item as { category: { name: unknown } }).category.name ===
+        "string" &&
+      typeof (item as { category: { box_art_url: unknown } }).category
+        .box_art_url === "string" &&
       Array.isArray((item as { tags: unknown }).tags) &&
       (item as { tags: unknown[] }).tags.every((tag) => typeof tag === "string")
     );
