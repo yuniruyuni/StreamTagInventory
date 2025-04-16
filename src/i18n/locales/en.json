@@ -41,6 +41,28 @@
     "requiredField": "This field is required",
     "importError": "Import Error"
   },
+  "error": {
+    "template": {
+      "apply": {
+        "title": "Template Application Error",
+        "message": "Failed to apply template to Twitch channel: {{error}}"
+      },
+      "import": {
+        "title": "Template Import Error",
+        "message": "Failed to import templates: {{error}}"
+      },
+      "export": {
+        "title": "Template Export Error",
+        "message": "Failed to export templates: {{error}}"
+      }
+    },
+    "marker": {
+      "create": {
+        "title": "Stream Marker Error",
+        "message": "Failed to create stream marker: {{error}}"
+      }
+    }
+  },
   "broadcast": {
     "language": "English"
   }

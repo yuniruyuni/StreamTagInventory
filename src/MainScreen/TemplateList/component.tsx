@@ -16,7 +16,7 @@ import type { Template } from "~/model/template";
 
 type Props = {
   templates: Template[];
-  onDragEnd: (event: DragEndEvent) => void;
+  onMove: (sourceId: string, destinationId: string) => void;
   onApply: (template: Template) => void;
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
@@ -25,7 +25,7 @@ type Props = {
 
 export const TemplateList: React.FC<Props> = ({
   templates,
-  onDragEnd,
+  onMove,
   onApply,
   onRemove,
   onClone,
@@ -38,8 +38,16 @@ export const TemplateList: React.FC<Props> = ({
     }),
   );
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      onMove(active.id.toString(), over.id.toString());
+    }
+  };
+
   return (
-    <DndContext onDragEnd={onDragEnd} sensors={sensors}>
+    <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
       <SortableContext items={templates}>
         {templates.map((template) => (
           <TemplateCard
