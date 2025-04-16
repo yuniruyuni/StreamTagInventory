@@ -1,15 +1,15 @@
-import { useCallback, useContext, type Dispatch } from "react";
-import { ulid } from "ulid";
-import useSWRMutation from "swr/mutation";
 import { arrayMove } from "@dnd-kit/sortable";
+import { type Dispatch, useCallback, useContext } from "react";
+import useSWRMutation from "swr/mutation";
+import { ulid } from "ulid";
 
+import { useNotification } from "~/Notification";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { dep, twitch } from "~/fetcher";
 import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { exportTemplates, importTemplates } from "~/utils/templateIO";
-import { ErrorNotification } from "~/ErrorNotification";
 
 type UseTemplateOperationsProps = {
   templates: Template[];
@@ -41,6 +41,7 @@ export const useTemplateOperations = ({
 }: UseTemplateOperationsProps): UseTemplateOperationsResult => {
   const { i18n, t } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
+  const { addNotification } = useNotification();
 
   const { trigger: applyTemplate } = useSWRMutation(
     () => [
@@ -49,13 +50,15 @@ export const useTemplateOperations = ({
     ],
     twitch.patch,
     {
-      onError: async (error) => {
-        await ErrorNotification.call({
+      onError: (error) => {
+        addNotification({
+          type: "error",
           title: t("error.template.apply.title"),
           message: t("error.template.apply.message", { error: error.message }),
+          autoClose: true,
         });
       },
-    }
+    },
   );
 
   const { trigger: createMarker } = useSWRMutation(
@@ -67,10 +70,16 @@ export const useTemplateOperations = ({
     (sourceId: string, destinationId: string) => {
       // Find the corresponding indices in the templates array
       const sourceIndex = templates.findIndex((t) => t.id === sourceId);
-      const destinationIndex = templates.findIndex((t) => t.id === destinationId);
+      const destinationIndex = templates.findIndex(
+        (t) => t.id === destinationId,
+      );
 
       // Only proceed if both templates were found
-      if (sourceIndex !== -1 && destinationIndex !== -1 && sourceIndex !== destinationIndex) {
+      if (
+        sourceIndex !== -1 &&
+        destinationIndex !== -1 &&
+        sourceIndex !== destinationIndex
+      ) {
         const moved = arrayMove(templates, sourceIndex, destinationIndex);
         setTemplates(moved);
       }
@@ -92,8 +101,15 @@ export const useTemplateOperations = ({
         user_id: users?.[0]?.id,
         description: template.title,
       });
+
+      addNotification({
+        type: "success",
+        title: t("template.applySuccess"),
+        message: `${template.title} - ${template.category.name}`,
+        autoClose: true,
+      });
     },
-    [applyTemplate, createMarker, users, i18n],
+    [applyTemplate, createMarker, users, addNotification, i18n, t],
   );
 
   const onRemoveTemplate = useCallback(
@@ -130,15 +146,25 @@ export const useTemplateOperations = ({
   const processImportedTemplates = useCallback(
     (importedTemplates: Template[]) => {
       // Avoid duplicates by checking IDs
-      const existingIds = new Set(templates.map(t => t.id));
-      const newTemplates = importedTemplates.filter(t => !existingIds.has(t.id));
+      const existingIds = new Set(templates.map((t) => t.id));
+      const newTemplates = importedTemplates.filter(
+        (t) => !existingIds.has(t.id),
+      );
 
       if (newTemplates.length > 0) {
         setTemplates([...templates, ...newTemplates]);
+
+        // Show a notification when templates are imported
+        addNotification({
+          type: "success",
+          title: t("template.importTemplates"),
+          message: `${t("template.importTemplates")}: ${newTemplates.length} templates`,
+          autoClose: true,
+        });
       }
       return importedTemplates;
     },
-    [templates, setTemplates],
+    [templates, setTemplates, addNotification, t],
   );
 
   const onExportTemplates = useCallback(() => {
@@ -146,9 +172,21 @@ export const useTemplateOperations = ({
   }, [templates]);
 
   const onImportTemplates = useCallback(async () => {
-    const importedTemplates = await importTemplates();
-    processImportedTemplates(importedTemplates);
-  }, [processImportedTemplates]);
+    try {
+      const importedTemplates = await importTemplates();
+      processImportedTemplates(importedTemplates);
+    } catch (error) {
+      // Show error notification if import fails
+      addNotification({
+        type: "error",
+        title: t("error.template.import.title"),
+        message: t("error.template.import.message", {
+          error: (error as Error).message,
+        }),
+        autoClose: true,
+      });
+    }
+  }, [processImportedTemplates, addNotification, t]);
 
   const onAddTemplate = useCallback(
     (template: Template) => {

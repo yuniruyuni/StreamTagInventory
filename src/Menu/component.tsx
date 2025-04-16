@@ -15,7 +15,7 @@ export const Menu: React.FC<Props> = ({
   user,
   onSearch,
   onImport,
-  onExport
+  onExport,
 }) => {
   const { t } = useTranslation();
   const { logout } = React.useContext(TwitchAuthContext);
@@ -74,18 +74,12 @@ export const Menu: React.FC<Props> = ({
           </div>
           <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
             <li data-testid="import-templates-menu-item">
-              <button
-                type="button"
-                onClick={onImport}
-              >
+              <button type="button" onClick={onImport}>
                 {t("template.importTemplates")}
               </button>
             </li>
             <li data-testid="export-templates-menu-item">
-              <button
-                type="button"
-                onClick={onExport}
-              >
+              <button type="button" onClick={onExport}>
                 {t("template.exportTemplates")}
               </button>
             </li>

@@ -1,4 +1,4 @@
-import { beforeAll, expect, test, mock } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import type React from "react";
@@ -20,10 +20,9 @@ beforeAll(async () => {
 test("AddTemplateButtonコンポーネントが正しくレンダリングされる", () => {
   const onAdd = mock(() => {});
 
-  const { getByRole } = render(
-    <AddTemplateButton onAdd={onAdd} />,
-    { wrapper: TestWrapper },
-  );
+  const { getByRole } = render(<AddTemplateButton onAdd={onAdd} />, {
+    wrapper: TestWrapper,
+  });
 
   // ボタン要素が存在することを確認
   const button = getByRole("button");
@@ -35,10 +34,9 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
 test("ボタンをクリックすると、新しいテンプレートを作成してonAddコールバックに渡す", async () => {
   const onAdd = mock((_: Template) => {});
 
-  const { getByRole } = render(
-    <AddTemplateButton onAdd={onAdd} />,
-    { wrapper: TestWrapper },
-  );
+  const { getByRole } = render(<AddTemplateButton onAdd={onAdd} />, {
+    wrapper: TestWrapper,
+  });
 
   // ボタン要素を取得
   const button = getByRole("button");
