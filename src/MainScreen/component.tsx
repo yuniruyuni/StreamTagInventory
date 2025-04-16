@@ -41,7 +41,7 @@ export const MainScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      {isLoading && <div className="skelton">{t("common.loading")}</div>}
+      {isLoading && <div className="skelton pt-16">{t("common.loading")}</div>}
       {users && (
         <Menu
           user={users[0]}
@@ -50,7 +50,8 @@ export const MainScreen: React.FC = () => {
           onExport={onExportTemplates}
         />
       )}
-      <div className="p-16">
+      {/* Added pt-16 to account for the navbar height */}
+      <div className="p-16 pt-24">
         <div className="flex flex-wrap gap-4">
           {filteredTemplates.length > 0 ? (
             <TemplateList

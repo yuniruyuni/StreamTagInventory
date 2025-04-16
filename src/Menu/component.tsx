@@ -25,7 +25,7 @@ export const Menu: React.FC<Props> = ({
   };
 
   return (
-    <div className="navbar bg-base-100">
+    <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-10 shadow-md">
       <div className="flex-1 flex items-center">
         <a href="/" className="btn btn-ghost text-xl whitespace-nowrap">
           Stream Tag Inventory
