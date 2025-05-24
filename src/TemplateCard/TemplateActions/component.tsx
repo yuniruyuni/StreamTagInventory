@@ -68,7 +68,8 @@ export const TemplateActions: React.FC<Props> = ({
             <button
               aria-label="apply template"
               type="button"
-              className="btn btn-disabled"
+              className="btn"
+              disabled
             >
               {t("common.apply")}
             </button>
