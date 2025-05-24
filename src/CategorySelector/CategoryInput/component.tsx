@@ -57,7 +57,7 @@ export const CategoryInput: React.FC<Props> = ({
         className={clsx(
           "relative z-10",
           "w-full h-24 ps-24",
-          "input input-bordered form-input",
+          "input form-input",
           "focus:outline-none",
           open && "border-b-0 rounded-b-none",
         )}

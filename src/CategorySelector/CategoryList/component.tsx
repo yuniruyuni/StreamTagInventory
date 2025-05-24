@@ -35,9 +35,9 @@ export const CategoryList: React.FC<Props> = ({
     <ul
       ref={ref}
       className={clsx(
-        "menu",
+        "menu w-full",
         "mt-24",
-        "w-full max-h-80 py-0 p-2",
+        "max-h-80 py-0 p-2",
         "flex-nowrap overflow-auto",
       )}
     >

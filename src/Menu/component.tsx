@@ -34,7 +34,7 @@ export const Menu: React.FC<Props> = ({
           <input
             type="text"
             placeholder={t("template.search")}
-            className="input input-bordered h-10 w-full pr-10"
+            className="input h-10 w-full pr-10"
             onChange={handleSearchChange}
             aria-label={t("template.search")}
           />
@@ -57,7 +57,7 @@ export const Menu: React.FC<Props> = ({
           </div>
         </div>
       </div>
-      <div className="flex-none gap-4">
+      <div className="flex-none flex gap-4">
         <LanguageSwitcher />
         <div className="dropdown dropdown-end">
           <div
