@@ -29,7 +29,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         onChange={(category) => onChange({ ...template, category })}
       />
 
-      <label>{t("template.tags")}</label>
+      <label htmlFor="tags">{t("template.tags")}</label>
       <InputTags
         tags={template.tags ?? []}
         onChange={(tags) => onChange({ ...template, tags })}

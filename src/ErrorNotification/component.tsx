@@ -12,8 +12,8 @@ export const ErrorNotification = createCallable<Props, Response>(
   ({ call, title, message }) => {
     const { t } = useTranslation();
     return (
-      <div
-        role="dialog"
+      <dialog
+        open
         className={clsx(
           "z-40 fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center",
         )}
@@ -29,7 +29,7 @@ export const ErrorNotification = createCallable<Props, Response>(
             {t("common.close")}
           </button>
         </div>
-      </div>
+      </dialog>
     );
   },
 );
