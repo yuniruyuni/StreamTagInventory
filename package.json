@@ -66,5 +66,8 @@
     "typescript": "^5.8.3",
     "bun-bagel": "^1.2.0"
   },
-  "trustedDependencies": ["@biomejs/biome", "bun"]
+  "trustedDependencies": ["@biomejs/biome", "bun"],
+  "resolutions": {
+    "@babel/runtime": "^7.26.10"
+  }
 }
