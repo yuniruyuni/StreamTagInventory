@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
 import { clearMocks, mock } from "bun-bagel";
 import { TwitchError, dep, twitch } from "./fetcher";
+import { CLIENT_ID } from "./constant";
 
 type Res = {
   hoge: string;
@@ -9,6 +10,13 @@ type Res = {
 afterEach(() => {
   clearMocks();
 });
+
+const headers = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+  Authorization: "Bearer token",
+  "Client-Id": CLIENT_ID,
+};
 
 test("TwitchError exports status code", () => {
   const val = new TwitchError("error", 401, "message");
@@ -20,7 +28,7 @@ test("twtich.get makes requests with GET method", async () => {
     data: { data: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "GET", response });
+  mock("https://example.com/", { method: "GET", headers, response });
 
   const res = await twitch.get<Res>(["https://example.com/", "token"]);
   expect(res).toEqual({ hoge: "hoge" });
@@ -31,7 +39,7 @@ test("error response on fetchers throws TwitchError", async () => {
     data: { error: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "GET", response });
+  mock("https://example.com/", { method: "GET", headers, response });
 
   expect(
     async () => await twitch.get<Res>(["https://example.com/", "token"]),
@@ -43,7 +51,7 @@ test("error status on fetchers throws TwitchError", async () => {
     data: { data: { hoge: "hoge" } },
     status: 401,
   };
-  mock("https://example.com/", { method: "GET", response });
+  mock("https://example.com/", { method: "GET", headers, response });
 
   expect(
     async () => await twitch.get<Res>(["https://example.com/", "token"]),
@@ -55,7 +63,7 @@ test("twtich.post makes requests with POST method", async () => {
     data: { data: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "POST", response });
+  mock("https://example.com/", { method: "POST", headers, response });
 
   const res = await twitch.post<string, Res>(
     ["https://example.com/", "token"],
@@ -69,7 +77,7 @@ test("twtich.put makes requests with PUT method", async () => {
     data: { data: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "PUT", response });
+  mock("https://example.com/", { method: "PUT", headers, response });
 
   const res = await twitch.put<string, Res>(["https://example.com/", "token"], {
     arg: "",
@@ -82,7 +90,7 @@ test("twtich.patch makes requests with PATCH method", async () => {
     data: { data: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "PATCH", response });
+  mock("https://example.com/", { method: "PATCH", headers, response });
 
   const res = await twitch.patch<string, Res>(
     ["https://example.com/", "token"],
@@ -96,7 +104,7 @@ test("twtich.delete makes requests with DELETE method", async () => {
     data: { data: { hoge: "hoge" } },
     status: 200,
   };
-  mock("https://example.com/", { method: "DELETE", response });
+  mock("https://example.com/", { method: "DELETE", headers, response });
 
   const res = await twitch.delete<string, Res>(
     ["https://example.com/", "token"],
