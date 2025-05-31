@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { type FC, useState } from "react";
+import { type FC, memo, useState } from "react";
 
 import type { Category } from "~/model/category";
 import { CategoryInput } from "./CategoryInput";
@@ -12,7 +12,7 @@ type Props = {
   onChange: (category: Category) => void;
 };
 
-export const CategorySelector: FC<Props> = ({ value, onChange }) => {
+export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
   const [open, setOpen] = useState(false);
 
   const { query, setQuery, categories, cursor, setCursor, moveCursor } =
@@ -66,4 +66,4 @@ export const CategorySelector: FC<Props> = ({ value, onChange }) => {
       </div>
     </div>
   );
-};
+});
