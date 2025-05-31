@@ -47,7 +47,6 @@
     "react-i18next": "^15.4.1",
     "swr": "^2.3.3",
     "ulid": "^2.4.0",
-    "uuid": "^11.1.0",
     "wouter": "^3.7.0"
   },
   "devDependencies": {
@@ -62,7 +61,6 @@
     "@types/node": "^20.17.30",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
-    "@types/uuid": "^10.0.0",
     "@types/web": "^0.0.151",
     "bun": "^1.2.10",
     "daisyui": "^5.0.37",
