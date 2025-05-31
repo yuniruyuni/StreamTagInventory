@@ -1,9 +1,9 @@
 import clsx from "clsx";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
+import { ANIMATION_DURATION, NOTIFICATION_DURATION } from "./constants";
 import { useNotification } from "./context";
 import type { NotificationProps } from "./types";
-import { NOTIFICATION_DURATION, ANIMATION_DURATION } from "./constants";
 
 interface NotificationBannerProps {
   notification: NotificationProps;
@@ -194,7 +194,7 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
               notification.type === "info" && "bg-blue-500",
             )}
             style={{
-              animationDuration: `${NOTIFICATION_DURATION-ANIMATION_DURATION}ms`,
+              animationDuration: `${NOTIFICATION_DURATION - ANIMATION_DURATION}ms`,
             }}
           />
         </div>
