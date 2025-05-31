@@ -1,8 +1,8 @@
 import type React from "react";
 import { createContext, useCallback, useContext, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import type { NotificationContextType, NotificationProps } from "./types";
+import { ulid } from "ulid";
 import { NOTIFICATION_DURATION } from "./constants";
+import type { NotificationContextType, NotificationProps } from "./types";
 
 // Create the notification context with default values
 const NotificationContext = createContext<NotificationContextType>({
@@ -25,7 +25,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   const addNotification = useCallback(
     (notification: Omit<NotificationProps, "id">) => {
-      const id = uuidv4();
+      const id = ulid();
       const newNotification: NotificationProps = {
         ...notification,
         id,
@@ -39,10 +39,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
       // Auto-close notification if enabled
       if (newNotification.autoClose) {
-        setTimeout(
-          () => { removeNotification(id); },
-          NOTIFICATION_DURATION,
-        );
+        setTimeout(() => {
+          removeNotification(id);
+        }, NOTIFICATION_DURATION);
       }
 
       return id;
