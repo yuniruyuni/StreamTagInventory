@@ -60,9 +60,9 @@ export const Menu: React.FC<Props> = ({
       <div className="flex-none flex gap-4">
         <LanguageSwitcher />
         <div className="dropdown dropdown-end">
-          <div
+          <button
+            type="button"
             tabIndex={0}
-            role="button"
             className="btn btn-ghost btn-circle avatar"
           >
             <div className="w-10 rounded-full">
@@ -71,7 +71,7 @@ export const Menu: React.FC<Props> = ({
                 src={user.profile_image_url}
               />
             </div>
-          </div>
+          </button>
           <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
             <li data-testid="import-templates-menu-item">
               <button type="button" onClick={onImport}>

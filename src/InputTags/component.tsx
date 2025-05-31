@@ -52,8 +52,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   }
 
   return (
-    <div
-      role="group"
+    <fieldset
       className={clsx(
         "flex flex-wrap text-gray-700 border leading-tight pt-3 pb-2 px-4 rounded",
         active && "outline outline-slate-200",
@@ -65,6 +64,6 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
         onBlur={() => setActive(false)}
         onKeyDown={handleKeyDown}
       />
-    </div>
+    </fieldset>
   );
 };
