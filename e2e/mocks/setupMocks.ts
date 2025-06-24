@@ -1,8 +1,11 @@
 import type { Page } from "@playwright/test";
 
 export async function setupMocks(page: Page) {
-  // Set up mock templates in localStorage
+  // Set up authentication and mock templates in localStorage
   await page.addInitScript(() => {
+    // Set authentication token
+    (window as any).__mockAuthToken = "test-token";
+    
     const mockTemplates = [
       {
         id: "test-template-1",
