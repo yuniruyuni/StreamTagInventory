@@ -33,5 +33,8 @@ export default defineConfig({
     command: 'bun run e2e:start',
     port: 3000,
     reuseExistingServer: !process.env.CI,
+    env: {
+      E2E_TEST: 'true',
+    },
   },
 });

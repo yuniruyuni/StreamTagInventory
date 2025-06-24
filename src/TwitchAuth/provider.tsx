@@ -25,6 +25,17 @@ export const TwitchAuthProvider: FC<Props> = ({
     return <>reloading...</>;
   }
 
+  // E2E test mode: bypass authentication
+  if (typeof window !== "undefined" && window.E2E_TEST_MODE) {
+    const testToken = window.E2E_TEST_TOKEN || "test-token";
+    
+    // Set token in state if not already set
+    if (!token && testToken) {
+      setToken(testToken);
+      return <>Setting up test environment...</>;
+    }
+  }
+
   if (token && token !== "") {
     const logout = () => {
       setToken("");
