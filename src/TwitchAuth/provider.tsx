@@ -16,8 +16,11 @@ export const TwitchAuthProvider: FC<Props> = ({
   entrance,
   children,
 }) => {
-  const [token, setToken, removeToken] = useSession<AuthToken>("twitch-auth", "");
-  
+  const [token, setToken, removeToken] = useSession<AuthToken>(
+    "twitch-auth",
+    "",
+  );
+
   const authProvider = getAuthProvider({
     get: () => token,
     set: setToken,

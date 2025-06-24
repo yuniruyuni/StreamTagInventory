@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
 import { clearMocks, mock } from "bun-bagel";
-import { TwitchError, dep, twitch } from "./fetcher";
 import { CLIENT_ID } from "./constant";
+import { TwitchError, dep, twitch } from "./fetcher";
 
 type Res = {
   hoge: string;

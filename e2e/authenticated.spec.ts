@@ -1,102 +1,114 @@
-import { test, expect } from '@playwright/test';
-import { setupMocks } from './mocks/setupMocks';
+import { expect, test } from "@playwright/test";
+import { setupMocks } from "./mocks/setupMocks";
 
 test.beforeEach(async ({ page }) => {
   // Setup mocks before navigation
   await setupMocks(page);
-  
+
   // Navigate to the page (E2E build already has mocks enabled)
-  await page.goto('/');
-  
+  await page.goto("/");
+
   // Wait for authentication to complete and main page to load
   await page.waitForTimeout(1000);
-  
+
   // Wait for avatar to be visible (indicates successful auth)
-  await page.locator('.avatar').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator(".avatar").waitFor({ state: "visible", timeout: 5000 });
 });
 
-test.describe('Authenticated User Flow', () => {
-  test('should show main inventory page when authenticated', async ({ page }) => {
+test.describe("Authenticated User Flow", () => {
+  test("should show main inventory page when authenticated", async ({
+    page,
+  }) => {
     // Should not show login page entrance
-    await expect(page.getByText('Stream Tag Inventory').first()).toBeVisible();
-    
+    await expect(page.getByText("Stream Tag Inventory").first()).toBeVisible();
+
     // Should show user avatar button in navbar
-    await expect(page.locator('button.avatar')).toBeVisible();
+    await expect(page.locator("button.avatar")).toBeVisible();
   });
 
-  test('should show current channel information', async ({ page }) => {
+  test("should show current channel information", async ({ page }) => {
     // Wait for channel data to load
-    await page.waitForLoadState('networkidle');
-    
+    await page.waitForLoadState("networkidle");
+
     // Check if category input shows current game (in first template card)
-    const categoryInput = page.locator('.card #category').first();
-    await expect(categoryInput).toHaveValue('Just Chatting');
-    
+    const categoryInput = page.locator(".card #category").first();
+    await expect(categoryInput).toHaveValue("Just Chatting");
+
     // Check if title input shows current title
     const titleInput = page.locator('.card input[name="title"]').first();
-    await expect(titleInput).toHaveValue('Test Stream Title');
+    await expect(titleInput).toHaveValue("Test Stream Title");
   });
 
-  test('should allow searching for categories', async ({ page }) => {
+  test("should allow searching for categories", async ({ page }) => {
     // Find and click on category search input in first card
-    const categoryInput = page.locator('.card #category').first();
+    const categoryInput = page.locator(".card #category").first();
     await categoryInput.click();
     await categoryInput.clear();
-    await categoryInput.fill('League');
-    
+    await categoryInput.fill("League");
+
     // Wait for search results dropdown
     await page.waitForTimeout(500); // Debounce delay
-    
+
     // Should show search results in dropdown
     const dropdown = page.locator('[data-testid="dropdown-content"]');
     await expect(dropdown).toBeVisible();
-    await expect(dropdown.getByText('League of Legends')).toBeVisible();
+    await expect(dropdown.getByText("League of Legends")).toBeVisible();
   });
 
-  test('should allow updating channel information', async ({ page }) => {
+  test("should allow updating channel information", async ({ page }) => {
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
-    
+    await page.waitForLoadState("networkidle");
+
     // Find and update title in first template card
     const titleInput = page.locator('.card input[name="title"]').first();
-    
+
     await titleInput.click();
     await titleInput.clear();
-    await titleInput.fill('New Stream Title');
-    
+    await titleInput.fill("New Stream Title");
+
     // First save the changes
-    const saveButton = page.locator('.card').first().getByRole('button', { name: 'save template' });
+    const saveButton = page
+      .locator(".card")
+      .first()
+      .getByRole("button", { name: "save template" });
     await saveButton.click();
-    
+
     // Then apply the template
-    const applyButton = page.locator('.card').first().getByRole('button', { name: 'apply template' });
+    const applyButton = page
+      .locator(".card")
+      .first()
+      .getByRole("button", { name: "apply template" });
     await applyButton.click();
-    
+
     // Should keep the new title
-    await expect(titleInput).toHaveValue('New Stream Title');
+    await expect(titleInput).toHaveValue("New Stream Title");
   });
 
-  test('should display tags in template cards', async ({ page }) => {
+  test("should display tags in template cards", async ({ page }) => {
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
-    
+    await page.waitForLoadState("networkidle");
+
     // Check if tags are displayed in the template cards
-    const tagElements = page.locator('.inline-flex.items-center.rounded.px-2.py-1.me-2.text-sm.font-medium.text-blue-800.bg-blue-100');
-    
+    const tagElements = page.locator(
+      ".inline-flex.items-center.rounded.px-2.py-1.me-2.text-sm.font-medium.text-blue-800.bg-blue-100",
+    );
+
     // Should show at least one tag
     await expect(tagElements.first()).toBeVisible();
   });
 
-  test('should allow logout', async ({ page }) => {
+  test("should allow logout", async ({ page }) => {
     // Click on user avatar to open dropdown
-    const avatarButton = page.locator('button.avatar');
+    const avatarButton = page.locator("button.avatar");
     await avatarButton.click();
-    
+
     // Click logout button in dropdown
-    const logoutButton = page.getByRole('button').filter({ hasText: /logout|ログアウト/i });
+    const logoutButton = page
+      .getByRole("button")
+      .filter({ hasText: /logout|ログアウト/i });
     await logoutButton.click();
-    
+
     // Should redirect back to login page
-    await expect(page.getByRole('link')).toBeVisible();
+    await expect(page.getByRole("link")).toBeVisible();
   });
 });

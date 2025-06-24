@@ -42,7 +42,11 @@ export const genUseStorage = <T>(
   return [state, setStorage, removeStorage];
 };
 
-export const useSession = <T>(key: string, def: T): [T, Dispatch<T>, () => void] =>
-  genUseStorage(sessionStorage, key, def);
-export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>, () => void] =>
-  genUseStorage(localStorage, key, def);
+export const useSession = <T>(
+  key: string,
+  def: T,
+): [T, Dispatch<T>, () => void] => genUseStorage(sessionStorage, key, def);
+export const useStorage = <T>(
+  key: string,
+  def: T,
+): [T, Dispatch<T>, () => void] => genUseStorage(localStorage, key, def);
