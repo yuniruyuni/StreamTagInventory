@@ -7,7 +7,7 @@ export class TwitchAuthProvider implements AuthProvider {
       get: () => AuthToken | null;
       set: (token: AuthToken) => void;
       remove: () => void;
-    }
+    },
   ) {}
 
   getToken(): AuthToken | null {
@@ -22,7 +22,10 @@ export class TwitchAuthProvider implements AuthProvider {
     this.storage.remove();
   }
 
-  shouldShowEntrance(paramToken: string | null, currentToken: AuthToken | null): boolean {
+  shouldShowEntrance(
+    paramToken: string | null,
+    currentToken: AuthToken | null,
+  ): boolean {
     // If we have a token from URL params, we're in the process of authenticating
     if (paramToken) {
       return false;

@@ -1,5 +1,5 @@
-import type { AuthProvider } from "./types";
 import { TwitchAuthProvider } from "./twitch";
+import type { AuthProvider } from "./types";
 
 let authProvider: AuthProvider | null = null;
 

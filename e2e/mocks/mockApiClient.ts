@@ -1,5 +1,10 @@
 import type { ApiClient } from "../../src/api/types";
-import { mockUser, mockChannel, mockCategories, mockTags } from "../fixtures/mockData";
+import {
+  mockCategories,
+  mockChannel,
+  mockTags,
+  mockUser,
+} from "../fixtures/mockData";
 
 export class MockApiClient implements ApiClient {
   async get<T>([url]: [string, string]): Promise<T> {
@@ -11,7 +16,7 @@ export class MockApiClient implements ApiClient {
       return [mockUser] as T;
     }
 
-    // Mock channels endpoint  
+    // Mock channels endpoint
     if (path.includes("/helix/channels")) {
       return [mockChannel] as T;
     }
@@ -30,7 +35,10 @@ export class MockApiClient implements ApiClient {
     return [] as T;
   }
 
-  async post<Arg, T>([url]: [string, string], _params: { arg: Arg }): Promise<T> {
+  async post<Arg, T>(
+    [url]: [string, string],
+    _params: { arg: Arg },
+  ): Promise<T> {
     const urlObj = new URL(url);
     const path = urlObj.pathname;
 

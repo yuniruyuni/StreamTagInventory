@@ -1,5 +1,5 @@
-import type { ApiClient } from "./types";
 import { createTwitchApiClient } from "./twitch";
+import type { ApiClient } from "./types";
 
 let apiClient: ApiClient | null = null;
 
