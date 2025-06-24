@@ -4,7 +4,7 @@ export const genUseStorage = <T>(
   storage: Storage,
   key: string,
   def: T,
-): [T, Dispatch<T>] => {
+): [T, Dispatch<T>, () => void] => {
   const [state, setState] = useState<T>(def);
 
   useEffect(() => {
@@ -34,10 +34,15 @@ export const genUseStorage = <T>(
     [storage, key],
   );
 
-  return [state, setStorage];
+  const removeStorage = useCallback(() => {
+    storage.removeItem(key);
+    setState(def);
+  }, [storage, key, def]);
+
+  return [state, setStorage, removeStorage];
 };
 
-export const useSession = <T>(key: string, def: T): [T, Dispatch<T>] =>
+export const useSession = <T>(key: string, def: T): [T, Dispatch<T>, () => void] =>
   genUseStorage(sessionStorage, key, def);
-export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>] =>
+export const useStorage = <T>(key: string, def: T): [T, Dispatch<T>, () => void] =>
   genUseStorage(localStorage, key, def);

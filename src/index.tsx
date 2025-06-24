@@ -11,20 +11,20 @@ import { TwitchAuthProvider } from "./TwitchAuth";
 const root = document.getElementById("root");
 if (root) {
   ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-      <NotificationProvider>
-        <NotificationContainer />
-        <TwitchAuthProvider
-          scope={[
-            "user:edit:broadcast",
-            "channel:manage:broadcast",
-            "channel_editor",
-          ]}
-          entrance={(uri) => <Entrance uri={uri} />}
-        >
-          <MainScreen />
-        </TwitchAuthProvider>
-      </NotificationProvider>
-    </React.StrictMode>,
+  <React.StrictMode>
+    <NotificationProvider>
+      <NotificationContainer />
+      <TwitchAuthProvider
+        scope={[
+          "user:edit:broadcast",
+          "channel:manage:broadcast",
+          "channel_editor",
+        ]}
+        entrance={(uri) => <Entrance uri={uri} />}
+      >
+        <MainScreen />
+      </TwitchAuthProvider>
+    </NotificationProvider>
+  </React.StrictMode>,
   );
 }

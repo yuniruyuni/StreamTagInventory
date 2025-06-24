@@ -1,6 +1,5 @@
-import { CLIENT_ID } from "./constant";
-
-const HTTP_STATUS_NO_CONTENT = 204;
+import { getApiClient } from "./api";
+export { TwitchError } from "./api";
 
 export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
   for (const expr of exprs) {
@@ -17,115 +16,11 @@ export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {
   return res;
 }
 
-export class TwitchError extends Error {
-  constructor(
-    public error: string,
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-type TwitchErrorResponse = {
-  error: string;
-  status: number;
-  message: string;
-};
-
-const fetchForTwitch = async <T>(
-  url: string,
-  init: RequestInit,
-): Promise<T> => {
-  // E2E test mode: intercept API calls
-  if (typeof window !== "undefined" && window.E2E_TEST_MODE) {
-    // Return mock data for E2E tests
-    const mockData = window.E2E_MOCK_API?.(url, init);
-    return (mockData !== undefined ? mockData : {}) as T;
-  }
-
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      // this method defautly send json data so we can safely add this header.
-      // some usecase(ex: multipart request) may need to remove this header,
-      // in such case, user code can specify "Content-Type" in init.headers.
-      "Content-Type": "application/json",
-      ...init.headers,
-      // this method only accept json response so we can safely add this header.
-      Accept: "application/json",
-    },
-  });
-
-  type Resp = { data: T; error?: string } | TwitchErrorResponse;
-
-  function isTwitchErrorResponse(arg: Resp): arg is TwitchErrorResponse {
-    return arg.error !== undefined;
-  }
-
-  // special case for no content response,
-  // twitch api sometimes return 204 no content response
-  // in this case, we should return undefined anyway.
-  if (res.status === HTTP_STATUS_NO_CONTENT) {
-    return undefined as T;
-  }
-
-  let json: Resp;
-  try {
-    json = await res.json();
-  } catch {
-    throw new TwitchError(
-      "parse error",
-      500,
-      "invalid json payload was returned from twitch",
-    );
-  }
-
-  if (isTwitchErrorResponse(json)) {
-    throw new TwitchError(json.error, res.status, json.message);
-  }
-
-  if (!res.ok) {
-    throw new TwitchError(
-      json.error ?? "",
-      res.status,
-      "twitch returns error status code",
-    );
-  }
-
-  return json.data;
-};
-
+// Export a getter to always get the current instance
 export const twitch = {
-  get: <T>([url, token]: [string, string]) =>
-    fetchForTwitch<T>(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}`, "Client-Id": CLIENT_ID },
-    }),
-  post: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchForTwitch<T>(url, {
-      method: "POST",
-      body: JSON.stringify(arg),
-      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
-    }),
-  put: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchForTwitch<T>(url, {
-      method: "PUT",
-      body: JSON.stringify(arg),
-      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
-    }),
-
-  patch: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchForTwitch<T>(url, {
-      method: "PATCH",
-      body: JSON.stringify(arg),
-      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
-    }),
-
-  delete: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
-    fetchForTwitch<T>(url, {
-      method: "DELETE",
-      body: JSON.stringify(arg),
-      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
-    }),
+  get: <T>(args: [string, string]) => getApiClient().get<T>(args),
+  post: <Arg, T>(args: [string, string], params: { arg: Arg }) => getApiClient().post<Arg, T>(args, params),
+  put: <Arg, T>(args: [string, string], params: { arg: Arg }) => getApiClient().put<Arg, T>(args, params),
+  patch: <Arg, T>(args: [string, string], params: { arg: Arg }) => getApiClient().patch<Arg, T>(args, params),
+  delete: <Arg, T>(args: [string, string], params: { arg: Arg }) => getApiClient().delete<Arg, T>(args, params),
 };

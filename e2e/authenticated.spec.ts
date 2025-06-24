@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { setupMockApi } from './fixtures/mockApi';
+import { setupMocks } from './mocks/setupMocks';
 
 test.beforeEach(async ({ page }) => {
-  // Setup mock API before navigation
-  await setupMockApi(page);
+  // Setup mocks before navigation
+  await setupMocks(page);
+  
+  // Navigate to the page (E2E build already has mocks enabled)
   await page.goto('/');
   
   // Wait for authentication to complete and main page to load
