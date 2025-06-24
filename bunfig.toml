@@ -1,4 +1,6 @@
 [test]
+# Set default test paths to match package.json test script
+root = "./src"
 coverage = true
 coverageReporter  = ["text", "lcov"]
 coverageDir = "coverage"
