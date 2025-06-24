@@ -37,6 +37,13 @@ const fetchForTwitch = async <T>(
   url: string,
   init: RequestInit,
 ): Promise<T> => {
+  // E2E test mode: intercept API calls
+  if (typeof window !== "undefined" && window.E2E_TEST_MODE) {
+    // Return mock data for E2E tests
+    const mockData = window.E2E_MOCK_API?.(url, init);
+    return (mockData !== undefined ? mockData : {}) as T;
+  }
+
   const res = await fetch(url, {
     ...init,
     headers: {
