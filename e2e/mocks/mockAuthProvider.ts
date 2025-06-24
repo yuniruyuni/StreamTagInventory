@@ -1,7 +1,14 @@
 import type { AuthProvider, AuthToken } from "../../src/auth/types";
 
 export class MockAuthProvider implements AuthProvider {
-  private token: AuthToken | null = "test-token";
+  private token: AuthToken | null = null;
+
+  constructor() {
+    // Check if there's a pre-set token in window
+    if (typeof window !== "undefined" && (window as any).__mockAuthToken) {
+      this.token = (window as any).__mockAuthToken;
+    }
+  }
 
   getToken(): AuthToken | null {
     return this.token;
@@ -16,12 +23,12 @@ export class MockAuthProvider implements AuthProvider {
   }
 
   shouldShowEntrance(): boolean {
-    // Always authenticated in tests
-    return false;
+    // Show entrance when not authenticated
+    return this.token === null;
   }
 
   getEntranceUri(): string {
-    // Not used in tests
-    return "#";
+    // Mock login URL
+    return "#mock-login";
   }
 }

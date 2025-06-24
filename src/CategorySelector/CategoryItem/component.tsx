@@ -26,7 +26,12 @@ export const CategoryItem: React.FC<Props> = ({
         }}
         onMouseEnter={onMouseEnter}
       >
-        <img src={category.box_art_url} alt={category.name} />
+        {category.box_art_url && (
+          <img 
+            src={category.box_art_url.replace("{width}", "52").replace("{height}", "72")} 
+            alt={category.name} 
+          />
+        )}
         {category.name}
       </button>
     </li>

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { newTemplate } from "~/model/template";
+import { I18nWrapper } from "~/test-utils";
 import { TemplateCard } from "./component";
 
 // モックコンポーネントを使用せずにテスト
@@ -13,13 +14,15 @@ test("TemplateCardコンポーネントが正しくレンダリングされる",
   const onSave = () => {};
 
   const { getAllByRole } = render(
-    <TemplateCard
-      template={template}
-      onApply={onApply}
-      onRemove={onRemove}
-      onClone={onClone}
-      onSave={onSave}
-    />,
+    <I18nWrapper>
+      <TemplateCard
+        template={template}
+        onApply={onApply}
+        onRemove={onRemove}
+        onClone={onClone}
+        onSave={onSave}
+      />
+    </I18nWrapper>,
   );
 
   // カードが表示されていることを確認（カードはdivなのでgetByRoleでは直接取得できない）
@@ -40,21 +43,20 @@ test("テンプレートの操作が正しく動作する", () => {
   const onClone = () => {};
   const onSave = () => {};
 
-  const { getAllByRole } = render(
-    <TemplateCard
-      template={template}
-      onApply={onApply}
-      onRemove={onRemove}
-      onClone={onClone}
-      onSave={onSave}
-    />,
+  const { getByLabelText } = render(
+    <I18nWrapper>
+      <TemplateCard
+        template={template}
+        onApply={onApply}
+        onRemove={onRemove}
+        onClone={onClone}
+        onSave={onSave}
+      />
+    </I18nWrapper>,
   );
 
-  // 各ボタンが存在することを確認
-  const buttons = getAllByRole("button");
-  expect(buttons.length).toBeGreaterThan(0);
-
-  // ボタンのテキストを確認
-  const buttonTexts = buttons.map((button) => button.textContent?.trim());
-  expect(buttonTexts.some((text) => text === "Apply")).toBe(true);
+  // aria-labelを使って言語に依存せずにボタンを検出
+  const applyButton = getByLabelText("apply template");
+  expect(applyButton).toBeTruthy();
+  expect(applyButton.tagName).toBe("BUTTON");
 });

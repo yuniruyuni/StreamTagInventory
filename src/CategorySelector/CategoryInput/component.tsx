@@ -32,7 +32,12 @@ export const CategoryInput: React.FC<Props> = ({
         data-testid="thumbnail"
         className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none "
       >
-        {value && <img src={value.box_art_url} alt={value.name} />}
+        {value && value.box_art_url && (
+          <img 
+            src={value.box_art_url.replace("{width}", "52").replace("{height}", "72")} 
+            alt={value.name} 
+          />
+        )}
       </div>
 
       <input
