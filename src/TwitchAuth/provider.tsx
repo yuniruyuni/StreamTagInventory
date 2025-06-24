@@ -1,8 +1,9 @@
 import type { FC, ReactNode } from "react";
 import { SWRConfig } from "swr";
+import { getAuthProvider } from "~/auth";
 import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
-import { type Auth, clearHash, generateURI, parseTokenFromHash } from "./utils";
+import { clearHash, parseTokenFromHash } from "./utils";
 
 type Props = {
   scope: string[];
@@ -15,33 +16,28 @@ export const TwitchAuthProvider: FC<Props> = ({
   entrance,
   children,
 }) => {
-  const [token, setToken] = useSession<AuthToken>("twitch-auth", "");
+  const [token, setToken, removeToken] = useSession<AuthToken>("twitch-auth", "");
+  
+  const authProvider = getAuthProvider({
+    get: () => token,
+    set: setToken,
+    remove: removeToken,
+  });
 
   const paramToken = parseTokenFromHash();
 
   if (paramToken && paramToken !== "") {
-    setToken(paramToken);
+    authProvider.setToken(paramToken);
     clearHash();
     return <>reloading...</>;
   }
 
-  // E2E test mode: bypass authentication
-  if (typeof window !== "undefined" && window.E2E_TEST_MODE) {
-    const testToken = window.E2E_TEST_TOKEN || "test-token";
-    
-    // Set token in state if not already set
-    if (!token && testToken) {
-      setToken(testToken);
-      return <>Setting up test environment...</>;
-    }
-  }
-
-  if (token && token !== "") {
+  if (!authProvider.shouldShowEntrance(paramToken, token)) {
     const logout = () => {
-      setToken("");
+      authProvider.clearToken();
     };
     return (
-      <TwitchAuthContext.Provider value={{ token, logout }}>
+      <TwitchAuthContext.Provider value={{ token: token || "", logout }}>
         <SWRConfig
           value={{
             onError: (err) => {
@@ -58,12 +54,6 @@ export const TwitchAuthProvider: FC<Props> = ({
     );
   }
 
-  const auth: Auth = {
-    redirect_url: window.location.href,
-    response_type: "token",
-    scope: scope,
-  };
-
-  const uri = generateURI(auth);
+  const uri = authProvider.getEntranceUri(window.location.href, scope);
   return entrance(uri);
 };

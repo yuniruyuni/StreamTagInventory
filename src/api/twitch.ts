@@ -1,0 +1,101 @@
+import { CLIENT_ID } from "~/constant";
+import type { ApiClient } from "./types";
+import { TwitchError } from "./types";
+
+const HTTP_STATUS_NO_CONTENT = 204;
+
+type TwitchErrorResponse = {
+  error: string;
+  status: number;
+  message: string;
+};
+
+const fetchForTwitch = async <T>(
+  url: string,
+  init: RequestInit,
+): Promise<T> => {
+  const res = await fetch(url, {
+    ...init,
+    headers: {
+      // this method defautly send json data so we can safely add this header.
+      // some usecase(ex: multipart request) may need to remove this header,
+      // in such case, user code can specify "Content-Type" in init.headers.
+      "Content-Type": "application/json",
+      ...init.headers,
+      // this method only accept json response so we can safely add this header.
+      Accept: "application/json",
+    },
+  });
+
+  type Resp = { data: T; error?: string } | TwitchErrorResponse;
+
+  function isTwitchErrorResponse(arg: Resp): arg is TwitchErrorResponse {
+    return arg.error !== undefined;
+  }
+
+  // special case for no content response,
+  // twitch api sometimes return 204 no content response
+  // in this case, we should return undefined anyway.
+  if (res.status === HTTP_STATUS_NO_CONTENT) {
+    return undefined as T;
+  }
+
+  let json: Resp;
+  try {
+    json = await res.json();
+  } catch {
+    throw new TwitchError(
+      "parse error",
+      500,
+      "invalid json payload was returned from twitch",
+    );
+  }
+
+  if (isTwitchErrorResponse(json)) {
+    throw new TwitchError(json.error, res.status, json.message);
+  }
+
+  if (!res.ok) {
+    throw new TwitchError(
+      json.error ?? "",
+      res.status,
+      "twitch returns error status code",
+    );
+  }
+
+  return json.data;
+};
+
+export const createTwitchApiClient = (): ApiClient => ({
+  get: <T>([url, token]: [string, string]) =>
+    fetchForTwitch<T>(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}`, "Client-Id": CLIENT_ID },
+    }),
+  post: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
+      method: "POST",
+      body: JSON.stringify(arg),
+      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
+    }),
+  put: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
+      method: "PUT",
+      body: JSON.stringify(arg),
+      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
+    }),
+
+  patch: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
+      method: "PATCH",
+      body: JSON.stringify(arg),
+      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
+    }),
+
+  delete: <Arg, T>([url, token]: [string, string], { arg }: { arg: Arg }) =>
+    fetchForTwitch<T>(url, {
+      method: "DELETE",
+      body: JSON.stringify(arg),
+      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
+    }),
+});
