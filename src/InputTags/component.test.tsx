@@ -145,3 +145,48 @@ test("フォーカス時にアクティブクラスが適用される", async ()
   expect(list).toHaveClass("border-base-content/20");
   expect(list).not.toHaveClass("border-base-content");
 });
+
+test("フィールドセットをクリックすると入力フィールドにフォーカスが当たる", async () => {
+  const onChange = mock();
+
+  const { getByRole } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+  );
+
+  const fieldset = getByRole("group");
+  const input = getByRole("textbox");
+
+  const user = userEvent.setup();
+
+  // フィールドセットの余白部分をクリック
+  await user.click(fieldset);
+
+  // 入力フィールドがフォーカスされていることを確認
+  expect(document.activeElement).toBe(input);
+});
+
+test("タグやボタンをクリックしても入力フィールドにフォーカスが移動しない", async () => {
+  const onChange = mock();
+
+  const { getAllByRole, getByRole } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+  );
+
+  const tagElements = getAllByRole("listitem");
+  const removeButtons = getAllByRole("button", { name: "remove tag" });
+  const input = getByRole("textbox");
+
+  const user = userEvent.setup();
+
+  // タグをクリック
+  await user.click(tagElements[0]);
+  
+  // 入力フィールドにフォーカスが移動していないことを確認
+  expect(document.activeElement).not.toBe(input);
+
+  // 削除ボタンをクリック
+  await user.click(removeButtons[0]);
+  
+  // 入力フィールドにフォーカスが移動していないことを確認
+  expect(document.activeElement).not.toBe(input);
+});
