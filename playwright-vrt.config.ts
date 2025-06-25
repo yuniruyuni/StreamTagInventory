@@ -5,6 +5,9 @@ import baseConfig from "./playwright.config";
 export default defineConfig({
   ...baseConfig,
 
+  // testIgnoreを明示的にundefinedにして、visual.spec.tsを含めるようにする
+  testIgnore: undefined,
+
   // webServerの設定を継承（重要！）
   webServer: baseConfig.webServer,
 

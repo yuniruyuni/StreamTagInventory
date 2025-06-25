@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: "**/visual.spec.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -36,17 +37,6 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-    },
-
-    // Visual regression test configuration
-    {
-      name: "visual",
-      use: {
-        ...devices["Desktop Chrome"],
-        // Force consistent viewport for visual tests
-        viewport: { width: 1280, height: 720 },
-      },
-      testMatch: /visual\.spec\.ts/,
     },
   ],
 
