@@ -5,7 +5,10 @@ export async function setupMocks(page: Page) {
   await page.addInitScript(() => {
     // Set authentication token
     window.__mockAuthToken = "test-token";
-    
+
+    // Force English locale for consistent testing
+    localStorage.setItem("language", "en");
+
     const mockTemplates = [
       {
         id: "test-template-1",

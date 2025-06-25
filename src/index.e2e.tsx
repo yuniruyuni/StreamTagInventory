@@ -8,5 +8,8 @@ import { setAuthProvider } from "./auth";
 setApiClient(new MockApiClient());
 setAuthProvider(new MockAuthProvider());
 
+// Import CSS first
+import "./index.css";
+
 // Load the main application
 import "./index";

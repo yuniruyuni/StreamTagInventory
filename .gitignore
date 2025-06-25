@@ -46,5 +46,9 @@ typings/
 /test-results/
 /playwright-report/
 
+# Snapshot directories
+/e2e/__snapshots__/
+/e2e/**/*-snapshots/
+
 # Test coverage
 /coverage/

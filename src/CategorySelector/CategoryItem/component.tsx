@@ -27,9 +27,11 @@ export const CategoryItem: React.FC<Props> = ({
         onMouseEnter={onMouseEnter}
       >
         {category.box_art_url && (
-          <img 
-            src={category.box_art_url.replace("{width}", "52").replace("{height}", "72")} 
-            alt={category.name} 
+          <img
+            src={category.box_art_url
+              .replace("{width}", "52")
+              .replace("{height}", "72")}
+            alt={category.name}
           />
         )}
         {category.name}
