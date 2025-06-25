@@ -42,7 +42,7 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run vrt:screenshots
+        run: bun run vrt:update
 
       - uses: yorifuji/easy-vrt/expected@v2
         with:
@@ -71,7 +71,7 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run vrt:screenshots
+        run: bun run vrt:update
 
       - uses: yorifuji/easy-vrt/actual@v2
         with:
