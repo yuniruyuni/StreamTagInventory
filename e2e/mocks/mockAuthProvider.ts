@@ -1,5 +1,10 @@
 import type { AuthProvider, AuthToken } from "../../src/auth/types";
-import "../types/window";
+
+declare global {
+  interface Window {
+    __mockAuthToken?: string;
+  }
+}
 
 export class MockAuthProvider implements AuthProvider {
   private token: AuthToken | null = null;
