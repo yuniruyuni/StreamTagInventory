@@ -2,8 +2,10 @@ Bun.serve({
   port: 3000,
   fetch: async (req) => {
     let path = new URL(req.url).pathname;
-    if (path === "/") path = "index.html";
-    const file = Bun.file(`static/${path}`);
+    if (path === "/") path = "/index.html";
+    // Remove leading slash to avoid double slashes
+    const filePath = path.startsWith("/") ? path.slice(1) : path;
+    const file = Bun.file(`static/${filePath}`);
     return new Response(file);
   },
 });
