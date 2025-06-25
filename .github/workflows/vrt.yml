@@ -1,0 +1,81 @@
+name: Visual Regression Test
+
+# Note: Snapshots are stored in e2e/__snapshots__/vrt/ and are gitignored
+# The directory structure is configured in playwright-vrt.config.ts
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  prepare:
+    uses: yorifuji/easy-vrt/.github/workflows/prepare.yml@v2
+
+  expected:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Generate screenshots
+        run: bun run vrt:screenshots
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: expected-screenshots
+          path: e2e/__snapshots__/vrt/
+          retention-days: 1
+
+  actual:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Generate screenshots
+        run: bun run vrt:screenshots
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: actual-screenshots
+          path: e2e/__snapshots__/vrt/
+          retention-days: 1
+
+  compare:
+    needs: [expected, actual]
+    uses: yorifuji/easy-vrt/.github/workflows/compare.yml@v2
+    with:
+      expected-artifact-name: expected-screenshots
+      actual-artifact-name: actual-screenshots
+      summary-comment: true
+      review-comment: true

@@ -7,9 +7,19 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+
+  // Snapshot configuration for regular tests
+  snapshotDir: "./e2e/__snapshots__",
+  snapshotPathTemplate:
+    "{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}-{platform}{ext}",
+
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
+    screenshot: {
+      mode: "only-on-failure",
+      fullPage: true,
+    },
   },
 
   projects: [
@@ -26,6 +36,17 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
+    },
+
+    // Visual regression test configuration
+    {
+      name: "visual",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Force consistent viewport for visual tests
+        viewport: { width: 1280, height: 720 },
+      },
+      testMatch: /visual\.spec\.ts/,
     },
   ],
 
