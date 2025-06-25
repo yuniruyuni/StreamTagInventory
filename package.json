@@ -46,7 +46,6 @@
     "format": "biome format --write",
     "check": "biome check --write",
     "vrt": "playwright test --config=playwright-vrt.config.ts",
-    "vrt:screenshots": "playwright test --config=playwright-vrt.config.ts",
     "vrt:update": "playwright test --config=playwright-vrt.config.ts --update-snapshots",
     "vrt:ui": "playwright test --config=playwright-vrt.config.ts --ui"
   },
