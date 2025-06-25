@@ -40,6 +40,7 @@ export function handleTagKeyDown(
 
 export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const [active, setActive] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   function onRemove(index: number) {
     const newTags = [...tags];
@@ -51,15 +52,31 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
     handleTagKeyDown(e, tags, onChange);
   }
 
+  function handleFieldsetClick(e: React.MouseEvent<HTMLFieldSetElement>) {
+    // フィールドセット内のクリックでinputにフォーカスを当てる
+    // ただし、タグやボタンをクリックした場合は除外
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName !== 'INPUT' &&
+      !target.closest('li') &&
+      !target.closest('button')
+    ) {
+      inputRef.current?.focus();
+    }
+  }
+
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: クリックはフォーカスを移動するだけなのでキーボードイベントは不要
     <fieldset
       className={clsx(
-        "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all",
+        "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all cursor-text",
         active ? "border-base-content" : "border-base-content/20",
       )}
+      onClick={handleFieldsetClick}
     >
       <TagList tags={tags} onRemove={onRemove} />
       <TagInput
+        ref={inputRef}
         onFocus={() => setActive(true)}
         onBlur={() => setActive(false)}
         onKeyDown={handleKeyDown}
