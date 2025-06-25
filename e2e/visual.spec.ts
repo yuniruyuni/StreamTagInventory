@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForCSS } from "./helpers/waitForCSS";
 import { setupMocks } from "./mocks/setupMocks";
 
 test.describe("Visual Regression Tests - Unauthenticated", () => {
@@ -11,7 +12,7 @@ test.describe("Visual Regression Tests - Unauthenticated", () => {
     // Wait for CSS to load
     await page.waitForLoadState("domcontentloaded");
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000); // Wait for CSS to be applied
+    await waitForCSS(page);
 
     // Take screenshot of the login page
     await expect(page).toHaveScreenshot("login-page.png", {
@@ -32,8 +33,8 @@ test.describe("Visual Regression Tests - Authenticated", () => {
     await page.waitForLoadState("networkidle");
     await page.locator(".avatar").waitFor({ state: "visible", timeout: 10000 });
 
-    // Additional wait for CSS to be fully applied
-    await page.waitForTimeout(2000);
+    // Wait for CSS to be fully applied
+    await waitForCSS(page);
   });
 
   test("main inventory page", async ({ page }) => {
@@ -140,8 +141,8 @@ test.describe("Visual Regression Tests - Responsive", () => {
     await page.waitForLoadState("networkidle");
     await page.locator(".avatar").waitFor({ state: "visible", timeout: 10000 });
 
-    // Additional wait for CSS to be fully applied
-    await page.waitForTimeout(2000);
+    // Wait for CSS to be fully applied
+    await waitForCSS(page);
   });
 
   test("mobile viewport", async ({ page }) => {

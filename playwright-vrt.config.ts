@@ -8,8 +8,16 @@ export default defineConfig({
   // testIgnoreを明示的にundefinedにして、visual.spec.tsを含めるようにする
   testIgnore: undefined,
 
-  // webServerの設定を継承（重要！）
-  webServer: baseConfig.webServer,
+  // webServerの設定を明示的に定義（baseConfigの継承がうまく動作しないため）
+  webServer: {
+    command: "bun run vrt:start",
+    port: 3000,
+    reuseExistingServer: !process.env.CI,
+    env: {
+      E2E_TEST: "true",
+    },
+    timeout: 120 * 1000, // 2分のタイムアウト
+  },
 
   // スクリーンショットの保存先
   snapshotDir: "./e2e/__snapshots__/vrt",
