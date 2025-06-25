@@ -4,7 +4,7 @@ export async function setupMocks(page: Page) {
   // Set up authentication and mock templates in localStorage
   await page.addInitScript(() => {
     // Set authentication token
-    (window as any).__mockAuthToken = "test-token";
+    window.__mockAuthToken = "test-token";
     
     const mockTemplates = [
       {
