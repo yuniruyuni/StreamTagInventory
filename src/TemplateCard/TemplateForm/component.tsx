@@ -18,7 +18,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
       <input
         name="title"
         type="text"
-        className="p-2 border border-slate-300 rounded"
+        className="w-full input form-input focus:outline-none focus:border-base-content transition-all"
         onChange={(e) => onChange({ ...template, title: e.target.value })}
         value={template.title}
       />
