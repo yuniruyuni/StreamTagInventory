@@ -51,8 +51,7 @@ export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
           open ? "visible" : "invisible",
           "absolute top-0",
           "w-full h-fit",
-          "border border-slate-300",
-          "outline outline-slate-200",
+          "border border-base-content",
           "bg-base-100",
           "rounded",
         )}
