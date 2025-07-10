@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
 
-  // Snapshot configuration for regular tests
+  // Snapshot configuration
   snapshotDir: "./e2e/__snapshots__",
   snapshotPathTemplate:
     "{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}-{platform}{ext}",
@@ -20,6 +20,11 @@ export default defineConfig({
       mode: "only-on-failure",
       fullPage: true,
     },
+    // VRT固有の設定を統合
+    ignoreHTTPSErrors: true,
+    colorScheme: "light",
+    timezoneId: "Asia/Tokyo",
+    locale: "en-US",
   },
 
   projects: [
@@ -46,5 +51,6 @@ export default defineConfig({
     env: {
       E2E_TEST: "true",
     },
+    timeout: 120 * 1000, // 2分のタイムアウト
   },
 });
