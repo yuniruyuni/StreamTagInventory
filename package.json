@@ -36,7 +36,6 @@
     "vrt:prebuild": "run-p 'e2e:frontend:static' 'e2e:frontend:favicon' 'vrt:prebuild:*'",
     "vrt:prebuild:bundle": "bun build --sourcemap=inline --outdir=static/ --entry-naming='[dir]/index.[ext]' src/index.e2e.tsx",
     "vrt:prebuild:tailwind": "tailwindcss --input src/index.css --output static/index.css",
-    "vrt:wait": "bun run bin/wait-for-css.js",
     "e2e:frontend:static": "mkdir -p static && cp src/index.html static/index.html",
     "e2e:frontend:favicon": "bun run bin/generate-favicon.js",
     "e2e:frontend:bundle": "bun build --watch --sourcemap=inline --outdir=static/ --entry-naming='[dir]/index.[ext]' src/index.e2e.tsx",
