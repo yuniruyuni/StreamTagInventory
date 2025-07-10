@@ -3,29 +3,7 @@ import { render } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import i18n from "~/i18n/config";
-import { type Template, newTemplate } from "~/model/template";
 import { Menu } from "./component";
-
-// Mock the dynamic imports
-mock.module("~/utils/templateIO", () => {
-  return {
-    exportTemplates: mock((_templates: Template[], _filename?: string) => {}),
-    importTemplates: mock(async () => {
-      const mockTemplate = newTemplate();
-      mockTemplate.id = "mock-id";
-      return [mockTemplate];
-    }),
-    validateImportedTemplates: mock((_data: unknown) => true),
-  };
-});
-
-mock.module("~/ErrorNotification", () => {
-  return {
-    ErrorNotification: {
-      call: mock(async () => {}),
-    },
-  };
-});
 
 // モックユーザーの作成
 function createMockUser() {
