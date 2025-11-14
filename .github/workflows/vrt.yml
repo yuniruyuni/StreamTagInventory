@@ -43,6 +43,8 @@ jobs:
 
       - name: Generate screenshots
         run: bun run e2e
+        env:
+          CI: true
 
       - uses: yorifuji/easy-vrt/expected@v2
         with:
@@ -72,6 +74,8 @@ jobs:
 
       - name: Generate screenshots
         run: bun run e2e
+        env:
+          CI: true
 
       - uses: yorifuji/easy-vrt/actual@v2
         with:
