@@ -27,22 +27,31 @@ export default defineConfig({
     locale: "en-US",
   },
 
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
+  projects: process.env.CI
+    ? [
+        // CI環境ではChromiumのみ使用（VRTワークフローでインストールされるため）
+        {
+          name: "chromium",
+          use: { ...devices["Desktop Chrome"] },
+        },
+      ]
+    : [
+        // ローカル環境では全ブラウザでテスト可能
+        {
+          name: "chromium",
+          use: { ...devices["Desktop Chrome"] },
+        },
 
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
+        {
+          name: "firefox",
+          use: { ...devices["Desktop Firefox"] },
+        },
 
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
-  ],
+        {
+          name: "webkit",
+          use: { ...devices["Desktop Safari"] },
+        },
+      ],
 
   webServer: {
     command: "bun run e2e:start",
