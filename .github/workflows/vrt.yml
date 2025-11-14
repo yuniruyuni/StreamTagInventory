@@ -42,7 +42,7 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run e2e
+        run: bunx playwright test --update-snapshots --project=chromium
         env:
           CI: true
 
@@ -73,7 +73,7 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run e2e
+        run: bunx playwright test --update-snapshots --project=chromium
         env:
           CI: true
 
