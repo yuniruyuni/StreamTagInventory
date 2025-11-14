@@ -23,6 +23,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
+  const removeNotification = useCallback((id: string) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((notification) => notification.id !== id),
+    );
+  }, []);
+
   const addNotification = useCallback(
     (notification: Omit<NotificationProps, "id">) => {
       const id = ulid();
@@ -46,14 +52,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
       return id;
     },
-    [],
+    [removeNotification],
   );
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.filter((notification) => notification.id !== id),
-    );
-  }, []);
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);

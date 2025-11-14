@@ -195,7 +195,7 @@ test("タグが変更されたとき、onChangeが呼び出される", () => {
 
 test("template.tagsがnullの場合、空の配列として扱われる", () => {
   const template = newTemplate();
-  // @ts-ignore: テスト用に意図的にnullを設定
+  // @ts-expect-error: テスト用に意図的にnullを設定
   template.tags = null;
   const onChange = () => {};
 
