@@ -6,6 +6,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
+    "types": ["@types/bun", "@types/node"],
 
     /* Alias */
     "baseUrl": ".",
@@ -32,5 +33,6 @@
     /* Debugging */
     "sourceMap": true
   },
-  "exclude": ["static/**/*"]
+  "include": ["src/**/*", "bin/**/*", "test-preload.ts", "matchers.d.ts"],
+  "exclude": ["static/**/*", "e2e/**/*"]
 }
