@@ -94,7 +94,7 @@ export function importTemplates(): Promise<Template[]> {
           }
 
           resolve(data);
-        } catch (error) {
+        } catch (_error) {
           reject(new Error("Failed to parse file"));
         }
       };

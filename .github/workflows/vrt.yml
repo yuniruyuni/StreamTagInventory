@@ -42,7 +42,9 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run e2e
+        run: bunx playwright test --update-snapshots --project=chromium
+        env:
+          CI: true
 
       - uses: yorifuji/easy-vrt/expected@v2
         with:
@@ -71,7 +73,9 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: bun run e2e
+        run: bunx playwright test --update-snapshots --project=chromium
+        env:
+          CI: true
 
       - uses: yorifuji/easy-vrt/actual@v2
         with:
