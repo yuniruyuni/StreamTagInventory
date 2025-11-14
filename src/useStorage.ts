@@ -18,7 +18,7 @@ export const genUseStorage = <T>(
         return;
       }
       setState(parsed);
-    } catch (e) {
+    } catch (_e) {
       // 無効なJSONの場合は、セッションストレージから削除
       storage.removeItem(key);
       return;

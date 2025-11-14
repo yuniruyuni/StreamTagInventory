@@ -11,7 +11,7 @@ export async function waitForCSS(page: Page) {
             sheet.href?.includes("index.css") ||
             (sheet.cssRules && sheet.cssRules.length > 0)
           );
-        } catch (e) {
+        } catch (_e) {
           // CORS制限などでアクセスできない場合はスキップ
           return false;
         }
