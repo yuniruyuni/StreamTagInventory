@@ -4,7 +4,7 @@ import type React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "~/i18n/config";
 import type { Category } from "~/model/category";
-import { type Template, newTemplate } from "~/model/template";
+import { newTemplate, type Template } from "~/model/template";
 import { TemplateForm } from "./component";
 
 // CategorySelectorとInputTagsコンポーネントをモック
@@ -13,7 +13,10 @@ mock.module("~/CategorySelector", () => {
     CategorySelector: ({
       value,
       onChange,
-    }: { value?: Category; onChange: (category: Category) => void }) => (
+    }: {
+      value?: Category;
+      onChange: (category: Category) => void;
+    }) => (
       <div data-testid="mock-category-selector">
         <button
           type="button"
@@ -40,7 +43,10 @@ mock.module("~/InputTags", () => {
     InputTags: ({
       tags,
       onChange,
-    }: { tags: string[]; onChange: (tags: string[]) => void }) => (
+    }: {
+      tags: string[];
+      onChange: (tags: string[]) => void;
+    }) => (
       <div data-testid="mock-input-tags">
         <button
           type="button"

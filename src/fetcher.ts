@@ -1,4 +1,5 @@
 import { getApiClient } from "./api";
+
 export { TwitchError } from "./api";
 
 export function dep(templs: TemplateStringsArray, ...exprs: unknown[]): string {

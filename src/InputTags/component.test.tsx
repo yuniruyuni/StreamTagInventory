@@ -180,13 +180,13 @@ test("タグやボタンをクリックしても入力フィールドにフォ�
 
   // タグをクリック
   await user.click(tagElements[0]);
-  
+
   // 入力フィールドにフォーカスが移動していないことを確認
   expect(document.activeElement).not.toBe(input);
 
   // 削除ボタンをクリック
   await user.click(removeButtons[0]);
-  
+
   // 入力フィールドにフォーカスが移動していないことを確認
   expect(document.activeElement).not.toBe(input);
 });

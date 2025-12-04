@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import { setupMocks } from "../mocks/setupMocks";
-import { InventoryScreen } from "../screens/inventory/InventoryScreen";
 import { NavbarScreen } from "../screens/components/navbar/NavbarScreen";
+import { InventoryScreen } from "../screens/inventory/InventoryScreen";
 
 test.beforeEach(async ({ page }) => {
   await setupMocks(page);

@@ -1,9 +1,9 @@
 import { test } from "@playwright/test";
 import { waitForCSS } from "../helpers/waitForCSS";
 import { setupMocks } from "../mocks/setupMocks";
-import { LoginScreen } from "../screens/login/LoginScreen";
-import { InventoryScreen } from "../screens/inventory/InventoryScreen";
 import { NavbarScreen } from "../screens/components/navbar/NavbarScreen";
+import { InventoryScreen } from "../screens/inventory/InventoryScreen";
+import { LoginScreen } from "../screens/login/LoginScreen";
 
 test.describe("Visual Regression Tests - Unauthenticated", () => {
   test("login page", async ({ page }) => {

@@ -18,7 +18,7 @@ export const TagInput = React.forwardRef<HTMLInputElement, Props>(
         onKeyDown={onKeyDown}
       />
     );
-  }
+  },
 );
 
 TagInput.displayName = "TagInput";

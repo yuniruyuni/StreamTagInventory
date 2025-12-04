@@ -5,16 +5,15 @@ import { TemplateCardPage } from "./TemplateCardPage";
 export class TemplateCardState extends BaseState {
   private templateCardPage: TemplateCardPage;
 
-  constructor(
-    page: Page,
-    cardLocator: Locator,
-  ) {
+  constructor(page: Page, cardLocator: Locator) {
     super(page);
     this.templateCardPage = new TemplateCardPage(page, cardLocator);
   }
 
   async expectCategoryValue(expectedValue: string): Promise<void> {
-    await expect(this.templateCardPage.categoryInput).toHaveValue(expectedValue);
+    await expect(this.templateCardPage.categoryInput).toHaveValue(
+      expectedValue,
+    );
   }
 
   async expectTitleValue(expectedValue: string): Promise<void> {

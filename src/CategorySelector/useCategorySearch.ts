@@ -1,9 +1,8 @@
 import { useCallback, useContext, useState } from "react";
 import useSWR from "swr";
-
-import { TwitchAuthContext } from "~/TwitchAuth";
 import { dep, twitch } from "~/fetcher";
 import type { Category } from "~/model/category";
+import { TwitchAuthContext } from "~/TwitchAuth";
 
 type UseCategorySearchProps = {
   initialCategory?: Category;
