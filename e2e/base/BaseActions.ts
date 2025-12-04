@@ -17,7 +17,10 @@ export abstract class BaseActions {
     await this.page.waitForTimeout(timeout);
   }
 
-  async setViewportSize(size: { width: number; height: number }): Promise<void> {
+  async setViewportSize(size: {
+    width: number;
+    height: number;
+  }): Promise<void> {
     await this.page.setViewportSize(size);
   }
 }

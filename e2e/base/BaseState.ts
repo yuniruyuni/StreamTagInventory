@@ -1,4 +1,8 @@
-import { expect, type Page, type PageAssertionsToHaveScreenshotOptions } from "@playwright/test";
+import {
+  expect,
+  type Page,
+  type PageAssertionsToHaveScreenshotOptions,
+} from "@playwright/test";
 
 export abstract class BaseState {
   constructor(protected page: Page) {}
@@ -11,7 +15,10 @@ export abstract class BaseState {
     await expect(this.page).toHaveURL(url);
   }
 
-  async expectScreenshot(name: string, options?: PageAssertionsToHaveScreenshotOptions): Promise<void> {
+  async expectScreenshot(
+    name: string,
+    options?: PageAssertionsToHaveScreenshotOptions,
+  ): Promise<void> {
     await expect(this.page).toHaveScreenshot(name, options);
   }
 }

@@ -57,9 +57,9 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
     // ただし、タグやボタンをクリックした場合は除外
     const target = e.target as HTMLElement;
     if (
-      target.tagName !== 'INPUT' &&
-      !target.closest('li') &&
-      !target.closest('button')
+      target.tagName !== "INPUT" &&
+      !target.closest("li") &&
+      !target.closest("button")
     ) {
       inputRef.current?.focus();
     }

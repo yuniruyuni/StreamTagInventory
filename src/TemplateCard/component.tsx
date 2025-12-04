@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React, { memo } from "react";
 import type { FC } from "react";
+import React, { memo } from "react";
 import type { Template } from "~/model/template";
 
 import { DragHandle } from "./DragHandle";

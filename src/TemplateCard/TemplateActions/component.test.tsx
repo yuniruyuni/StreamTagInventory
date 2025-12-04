@@ -3,7 +3,7 @@ import { render } from "@testing-library/react";
 import type React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "~/i18n/config";
-import { type Template, newTemplate } from "~/model/template";
+import { newTemplate, type Template } from "~/model/template";
 import { TemplateActions } from "./component";
 
 // モックテンプレートの作成

@@ -11,8 +11,8 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import type React from "react";
-import { TemplateCard } from "~/TemplateCard";
 import type { Template } from "~/model/template";
+import { TemplateCard } from "~/TemplateCard";
 
 type Props = {
   templates: Template[];

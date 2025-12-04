@@ -1,12 +1,12 @@
 import React from "react";
 import useSWR from "swr";
-import { Menu } from "~/Menu";
-import { TwitchAuthContext } from "~/TwitchAuth";
 import { twitch } from "~/fetcher";
 import { useTemplateOperations, useTemplateSearch } from "~/hooks";
 import { useTranslation } from "~/i18n";
+import { Menu } from "~/Menu";
 import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
+import { TwitchAuthContext } from "~/TwitchAuth";
 import { useStorage } from "~/useStorage";
 import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";

@@ -5,10 +5,7 @@ import { TemplateCardPage } from "./TemplateCardPage";
 export class TemplateCardActions extends BaseActions {
   private templateCardPage: TemplateCardPage;
 
-  constructor(
-    page: Page,
-    cardLocator: Locator,
-  ) {
+  constructor(page: Page, cardLocator: Locator) {
     super(page);
     this.templateCardPage = new TemplateCardPage(page, cardLocator);
   }

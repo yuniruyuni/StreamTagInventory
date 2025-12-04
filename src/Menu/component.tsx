@@ -1,8 +1,8 @@
 import React from "react";
-import { LanguageSwitcher } from "~/LanguageSwitcher";
-import { TwitchAuthContext } from "~/TwitchAuth";
 import { useTranslation } from "~/i18n";
+import { LanguageSwitcher } from "~/LanguageSwitcher";
 import type { User } from "~/model/user";
+import { TwitchAuthContext } from "~/TwitchAuth";
 
 type Props = {
   user: User;

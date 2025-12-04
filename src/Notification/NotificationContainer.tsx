@@ -1,6 +1,6 @@
 import type React from "react";
-import { NotificationBanner } from "./NotificationBanner";
 import { useNotification } from "./context";
+import { NotificationBanner } from "./NotificationBanner";
 
 export const NotificationContainer: React.FC = () => {
   const { notifications } = useNotification();

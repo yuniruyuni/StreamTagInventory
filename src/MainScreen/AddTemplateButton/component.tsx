@@ -1,6 +1,6 @@
 import type React from "react";
 import { useTranslation } from "~/i18n";
-import { type Template, newTemplate } from "~/model/template";
+import { newTemplate, type Template } from "~/model/template";
 
 type Props = {
   onAdd: (template: Template) => void;
