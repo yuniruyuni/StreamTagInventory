@@ -7,7 +7,7 @@ export class LoginPage extends BasePage {
   }
 
   get loginButton(): Locator {
-    return this.getByRole("link");
+    return this.getByRole("link", { name: /login/i });
   }
 
   get loginContainer(): Locator {
