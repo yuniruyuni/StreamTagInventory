@@ -27,6 +27,8 @@ i18n
   .use(initReactI18next) // Reactと統合
   .init({
     resources,
+    supportedLngs: ["en", "ja"], // サポートする言語を明示的に指定
+    load: "languageOnly", // 地域コード（ja-JP）を無視して言語コード（ja）のみを使用
     fallbackLng: "ja", // フォールバック言語
     debug: process.env.NODE_ENV === "development",
     interpolation: {
