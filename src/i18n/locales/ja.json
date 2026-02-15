@@ -65,5 +65,9 @@
   },
   "broadcast": {
     "language": "日本語"
+  },
+  "entrance": {
+    "tagline": "配信テンプレートを簡単に管理・適用",
+    "description": "タイトル・カテゴリ・タグをテンプレートとして保存し、ワンクリックでTwitchに適用できます"
   }
 }

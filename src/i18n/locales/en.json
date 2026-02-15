@@ -65,5 +65,9 @@
   },
   "broadcast": {
     "language": "English"
+  },
+  "entrance": {
+    "tagline": "Easily manage and apply stream templates",
+    "description": "Save your titles, categories, and tags as templates and apply them to Twitch with one click"
   }
 }
