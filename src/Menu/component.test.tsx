@@ -1,9 +1,14 @@
-import { expect, mock, test } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "~/i18n/config";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { Menu } from "./component";
+
+// テスト用に言語を英語に固定
+beforeAll(() => {
+  i18n.changeLanguage("en");
+});
 
 // モックユーザーの作成
 function createMockUser() {
