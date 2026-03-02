@@ -66,6 +66,13 @@
   "broadcast": {
     "language": "English"
   },
+  "stream": {
+    "currentInfo": "Current Stream",
+    "noTitle": "No title set",
+    "noCategory": "No category set",
+    "importAsTemplate": "Import as Template",
+    "importSuccess": "Current stream info imported as template"
+  },
   "entrance": {
     "tagline": "Easily manage and apply stream templates",
     "description": "Save your titles, categories, and tags as templates and apply them to Twitch with one click"

@@ -66,6 +66,13 @@
   "broadcast": {
     "language": "日本語"
   },
+  "stream": {
+    "currentInfo": "現在の配信情報",
+    "noTitle": "タイトル未設定",
+    "noCategory": "カテゴリ未設定",
+    "importAsTemplate": "テンプレートとして取り込む",
+    "importSuccess": "現在の配信情報をテンプレートとして取り込みました"
+  },
   "entrance": {
     "tagline": "配信テンプレートを簡単に管理・適用",
     "description": "タイトル・カテゴリ・タグをテンプレートとして保存し、ワンクリックでTwitchに適用できます"
