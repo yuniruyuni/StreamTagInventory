@@ -38,7 +38,10 @@ export const useChannelInfo = (
     twitch.get<Category[]>,
   );
 
-  const category = games?.[0];
+  const game = games?.[0];
+  const category: Category | undefined = game
+    ? { id: game.id, name: game.name, box_art_url: game.box_art_url }
+    : undefined;
 
   return {
     channelInfo,
