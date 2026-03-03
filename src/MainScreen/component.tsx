@@ -75,24 +75,20 @@ export const MainScreen: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      {isLoading && <div className="skelton pt-16">{t("common.loading")}</div>}
-      {users && (
-        <Menu
-          user={users[0]}
-          onSearch={setSearchQuery}
-          onImport={onImportTemplates}
-          onExport={onExportTemplates}
-        />
-      )}
+      <Menu
+        user={users?.[0]}
+        isLoading={isLoading}
+        onSearch={setSearchQuery}
+        onImport={onImportTemplates}
+        onExport={onExportTemplates}
+      />
       <div className="flex flex-col gap-4 p-16 pt-24">
-        {users && (
-          <CurrentStreamInfo
-            channelInfo={channelInfo}
-            category={channelCategory}
-            isLoading={isChannelLoading}
-            onImportAsTemplate={onImportCurrentAsTemplate}
-          />
-        )}
+        <CurrentStreamInfo
+          channelInfo={channelInfo}
+          category={channelCategory}
+          isLoading={isLoading || isChannelLoading}
+          onImportAsTemplate={onImportCurrentAsTemplate}
+        />
         <div className="flex flex-wrap gap-4">
           {filteredTemplates.length > 0 ? (
             <TemplateList
