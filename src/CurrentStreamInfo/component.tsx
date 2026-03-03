@@ -21,12 +21,18 @@ export const CurrentStreamInfo: React.FC<Props> = ({
   if (isLoading) {
     return (
       <div className="w-full bg-base-200 rounded-lg p-4">
-        <div className="animate-pulse flex gap-4">
-          <div className="bg-base-300 rounded w-13 h-18" />
-          <div className="flex-1 space-y-2">
-            <div className="bg-base-300 rounded h-4 w-1/3" />
-            <div className="bg-base-300 rounded h-4 w-1/4" />
-            <div className="bg-base-300 rounded h-4 w-1/2" />
+        <div className="animate-pulse">
+          <div className="flex items-center justify-between mb-2">
+            <div className="bg-base-300 rounded h-5 w-28" />
+            <div className="bg-base-300 rounded h-8 w-36" />
+          </div>
+          <div className="flex gap-4 items-start">
+            <div className="bg-base-300 rounded w-13 h-18" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="bg-base-300 rounded h-4 w-1/3" />
+              <div className="bg-base-300 rounded h-3 w-1/4" />
+              <div className="bg-base-300 rounded h-4 w-1/2" />
+            </div>
           </div>
         </div>
       </div>
