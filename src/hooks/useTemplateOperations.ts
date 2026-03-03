@@ -46,6 +46,7 @@ export const useTemplateOperations = ({
     () => [
       dep`https://api.twitch.tv/helix/channels?broadcaster_id=${users?.[0]?.id}`,
       token,
+      i18n.language,
     ],
     twitch.patch,
     {
@@ -61,7 +62,7 @@ export const useTemplateOperations = ({
   );
 
   const { trigger: createMarker } = useSWRMutation(
-    () => [dep`https://api.twitch.tv/helix/streams/markers`, token],
+    () => [dep`https://api.twitch.tv/helix/streams/markers`, token, i18n.language],
     twitch.post,
   );
 

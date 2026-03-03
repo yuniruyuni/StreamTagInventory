@@ -20,12 +20,12 @@ import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";
 
 export const MainScreen: React.FC = () => {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
 
   const { data: users, isLoading } = useSWR(
-    ["https://api.twitch.tv/helix/users", token],
+    ["https://api.twitch.tv/helix/users", token, i18n.language],
     twitch.get<User[]>,
   );
 

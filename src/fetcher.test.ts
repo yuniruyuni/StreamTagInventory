@@ -14,6 +14,7 @@ afterEach(() => {
 const headers = {
   "Content-Type": "application/json",
   Accept: "application/json",
+  "Accept-Language": "en",
   Authorization: "Bearer token",
   "Client-Id": CLIENT_ID,
 };
@@ -30,7 +31,7 @@ test("twtich.get makes requests with GET method", async () => {
   };
   mock("https://example.com/", { method: "GET", headers, response });
 
-  const res = await twitch.get<Res>(["https://example.com/", "token"]);
+  const res = await twitch.get<Res>(["https://example.com/", "token", "en"]);
   expect(res).toEqual({ hoge: "hoge" });
 });
 
@@ -42,7 +43,7 @@ test("error response on fetchers throws TwitchError", async () => {
   mock("https://example.com/", { method: "GET", headers, response });
 
   expect(
-    async () => await twitch.get<Res>(["https://example.com/", "token"]),
+    async () => await twitch.get<Res>(["https://example.com/", "token", "en"]),
   ).toThrowError(TwitchError);
 });
 
@@ -54,7 +55,7 @@ test("error status on fetchers throws TwitchError", async () => {
   mock("https://example.com/", { method: "GET", headers, response });
 
   expect(
-    async () => await twitch.get<Res>(["https://example.com/", "token"]),
+    async () => await twitch.get<Res>(["https://example.com/", "token", "en"]),
   ).toThrowError(TwitchError);
 });
 
@@ -66,7 +67,7 @@ test("twtich.post makes requests with POST method", async () => {
   mock("https://example.com/", { method: "POST", headers, response });
 
   const res = await twitch.post<string, Res>(
-    ["https://example.com/", "token"],
+    ["https://example.com/", "token", "en"],
     { arg: "" },
   );
   expect(res).toEqual({ hoge: "hoge" });
@@ -79,7 +80,7 @@ test("twtich.put makes requests with PUT method", async () => {
   };
   mock("https://example.com/", { method: "PUT", headers, response });
 
-  const res = await twitch.put<string, Res>(["https://example.com/", "token"], {
+  const res = await twitch.put<string, Res>(["https://example.com/", "token", "en"], {
     arg: "",
   });
   expect(res).toEqual({ hoge: "hoge" });
@@ -93,7 +94,7 @@ test("twtich.patch makes requests with PATCH method", async () => {
   mock("https://example.com/", { method: "PATCH", headers, response });
 
   const res = await twitch.patch<string, Res>(
-    ["https://example.com/", "token"],
+    ["https://example.com/", "token", "en"],
     { arg: "" },
   );
   expect(res).toEqual({ hoge: "hoge" });
@@ -107,7 +108,7 @@ test("twtich.delete makes requests with DELETE method", async () => {
   mock("https://example.com/", { method: "DELETE", headers, response });
 
   const res = await twitch.delete<string, Res>(
-    ["https://example.com/", "token"],
+    ["https://example.com/", "token", "en"],
     { arg: "" },
   );
   expect(res).toEqual({ hoge: "hoge" });
