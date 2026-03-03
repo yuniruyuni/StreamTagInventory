@@ -5,7 +5,8 @@ import type { User } from "~/model/user";
 import { TwitchAuthContext } from "~/TwitchAuth";
 
 type Props = {
-  user: User;
+  user?: User;
+  isLoading?: boolean;
   onSearch: (query: string) => void;
   onImport: () => void;
   onExport: () => void;
@@ -13,6 +14,7 @@ type Props = {
 
 export const Menu: React.FC<Props> = ({
   user,
+  isLoading,
   onSearch,
   onImport,
   onExport,
@@ -23,6 +25,23 @@ export const Menu: React.FC<Props> = ({
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(event.target.value);
   };
+
+  if (isLoading) {
+    return (
+      <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-30 shadow-md">
+        <div className="flex-1 flex items-center animate-pulse">
+          <div className="bg-base-300 rounded h-8 w-48 ml-4" />
+          <div className="bg-base-300 rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
+        </div>
+        <div className="flex-none flex gap-4 animate-pulse">
+          <div className="bg-base-300 rounded h-8 w-20" />
+          <div className="bg-base-300 rounded-full w-10 h-10" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-30 shadow-md">

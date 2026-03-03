@@ -185,6 +185,47 @@ test("onImportが提供されるとインポート/エクスポートメニュ�
   expect(exportMenuItem).not.toBeNull();
 });
 
+test("ローディング中にスケルトンが表示される", () => {
+  const { container } = render(
+    <Menu isLoading={true} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    { wrapper: TestWrapper },
+  );
+  const skeleton = container.querySelector(".animate-pulse");
+  expect(skeleton).not.toBeNull();
+});
+
+test("スケルトンとロード後のレイアウト構造が一致する", () => {
+  const user = createMockUser();
+
+  const { container: skeletonContainer } = render(
+    <Menu isLoading={true} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    { wrapper: TestWrapper },
+  );
+
+  const { container: loadedContainer } = render(
+    <Menu user={user} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    { wrapper: TestWrapper },
+  );
+
+  // 両方が .navbar.fixed.top-0 を持つことを検証
+  const skeletonNavbar = skeletonContainer.querySelector(".navbar.fixed.top-0");
+  const loadedNavbar = loadedContainer.querySelector(".navbar.fixed.top-0");
+  expect(skeletonNavbar).not.toBeNull();
+  expect(loadedNavbar).not.toBeNull();
+
+  // 両方が .flex-1.flex.items-center を持つことを検証
+  const skeletonFlexSection = skeletonContainer.querySelector(".flex-1.flex.items-center");
+  const loadedFlexSection = loadedContainer.querySelector(".flex-1.flex.items-center");
+  expect(skeletonFlexSection).not.toBeNull();
+  expect(loadedFlexSection).not.toBeNull();
+
+  // 両方が .flex-none.flex.gap-4 を持つことを検証
+  const skeletonActions = skeletonContainer.querySelector(".flex-none.flex.gap-4");
+  const loadedActions = loadedContainer.querySelector(".flex-none.flex.gap-4");
+  expect(skeletonActions).not.toBeNull();
+  expect(loadedActions).not.toBeNull();
+});
+
 test("表示・非表示の制御が正しく機能する", () => {
   const user = createMockUser();
   const onSearch = mock((_query: string) => {});

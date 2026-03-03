@@ -170,6 +170,42 @@ test("タグがない場合タグセクションが表示されない", () => {
   expect(badges.length).toBe(0);
 });
 
+test("スケルトンとロード後のレイアウト構造が一致する", () => {
+  // レイアウトに影響するCSSクラスのセレクタ。
+  // スケルトンとロード後の両方に存在しなければレイアウトシフトが発生する。
+  const layoutSelectors = [
+    ".w-full.bg-base-200.rounded-lg.p-4", // 外枠
+    ".flex.items-center.justify-between.mb-2", // ヘッダー行
+    ".flex.gap-4.items-start", // コンテンツ行
+    ".flex-1.min-w-0", // テキスト領域
+  ];
+
+  const { container: skeletonContainer } = render(
+    <CurrentStreamInfo
+      channelInfo={undefined}
+      category={undefined}
+      isLoading={true}
+      onImportAsTemplate={() => {}}
+    />,
+    { wrapper: TestWrapper },
+  );
+
+  const { container: loadedContainer } = render(
+    <CurrentStreamInfo
+      channelInfo={mockChannelInfo}
+      category={mockCategory}
+      isLoading={false}
+      onImportAsTemplate={() => {}}
+    />,
+    { wrapper: TestWrapper },
+  );
+
+  for (const selector of layoutSelectors) {
+    expect(skeletonContainer.querySelector(selector)).not.toBeNull();
+    expect(loadedContainer.querySelector(selector)).not.toBeNull();
+  }
+});
+
 test("テンプレートとして取り込むボタンをクリックするとコールバックが呼ばれる", async () => {
   const onImport = mock(() => {});
 
