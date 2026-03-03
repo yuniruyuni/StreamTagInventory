@@ -1,6 +1,7 @@
 import { useCallback, useContext, useState } from "react";
 import useSWR from "swr";
 import { dep, twitch } from "~/fetcher";
+import { useTranslation } from "~/i18n";
 import type { Category } from "~/model/category";
 import { TwitchAuthContext } from "~/TwitchAuth";
 
@@ -22,6 +23,7 @@ export const useCategorySearch = ({
   initialCategory,
   onCategoryFound,
 }: UseCategorySearchProps): UseCategorySearchResult => {
+  const { i18n } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
   const [query, setQuery] = useState(initialCategory?.name ?? "");
   const [cursor, setCursor] = useState(0);
@@ -32,6 +34,7 @@ export const useCategorySearch = ({
         query !== "" ? query : undefined
       }`,
       token,
+      i18n.language,
     ],
     twitch.get<Category[]>,
     {

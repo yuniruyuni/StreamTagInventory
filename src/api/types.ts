@@ -1,19 +1,19 @@
 export interface ApiClient {
-  get: <T>([url, token]: [string, string]) => Promise<T>;
+  get: <T>([url, token, language]: [string, string, string]) => Promise<T>;
   post: <Arg, T>(
-    [url, token]: [string, string],
+    [url, token, language]: [string, string, string],
     { arg }: { arg: Arg },
   ) => Promise<T>;
   put: <Arg, T>(
-    [url, token]: [string, string],
+    [url, token, language]: [string, string, string],
     { arg }: { arg: Arg },
   ) => Promise<T>;
   patch: <Arg, T>(
-    [url, token]: [string, string],
+    [url, token, language]: [string, string, string],
     { arg }: { arg: Arg },
   ) => Promise<T>;
   delete: <Arg, T>(
-    [url, token]: [string, string],
+    [url, token, language]: [string, string, string],
     { arg }: { arg: Arg },
   ) => Promise<T>;
 }

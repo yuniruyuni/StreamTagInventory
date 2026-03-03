@@ -7,7 +7,7 @@ import {
 } from "../fixtures/mockData";
 
 export class MockApiClient implements ApiClient {
-  async get<T>([url]: [string, string]): Promise<T> {
+  async get<T>([url]: [string, string, string]): Promise<T> {
     const urlObj = new URL(url);
     const path = urlObj.pathname;
 
@@ -36,7 +36,7 @@ export class MockApiClient implements ApiClient {
   }
 
   async post<Arg, T>(
-    [url]: [string, string],
+    [url]: [string, string, string],
     _params: { arg: Arg },
   ): Promise<T> {
     const urlObj = new URL(url);
@@ -54,7 +54,7 @@ export class MockApiClient implements ApiClient {
     return {} as T;
   }
 
-  async patch<_Arg, T>([url]: [string, string]): Promise<T> {
+  async patch<_Arg, T>([url]: [string, string, string]): Promise<T> {
     const urlObj = new URL(url);
     const path = urlObj.pathname;
 
