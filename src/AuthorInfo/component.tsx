@@ -16,6 +16,10 @@ export const AuthorInfo: React.FC<Props> = ({ className }) => {
       <img
         src={AUTHOR.avatarPath}
         alt={AUTHOR.name}
+        width={64}
+        height={64}
+        loading="lazy"
+        decoding="async"
         className="w-16 h-16 rounded-full object-cover shadow-lg ring-2 ring-gray-300 group-hover:ring-blue-400 transition-all"
       />
       <span className="text-sm text-gray-600 group-hover:text-blue-500 transition-colors">
