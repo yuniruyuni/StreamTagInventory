@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  include: svg, scrollbar, properties, rootscrolllock, rootscrollgutter, rootcolor, button, badge, card, navbar, menu, dropdown, input, select, avatar, link, radius;
+}
 
 @layer utilities {
   @keyframes shrink {
