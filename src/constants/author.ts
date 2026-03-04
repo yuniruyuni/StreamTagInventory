@@ -1,5 +1,5 @@
 export const AUTHOR = {
   name: "yuniruyuni",
-  avatarPath: "/yuniruyuni.png",
+  avatarPath: "/yuniruyuni.webp",
   websiteUrl: "https://yuniruyuni.net/",
 } as const;
