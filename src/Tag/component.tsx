@@ -14,8 +14,7 @@ export const Tag: React.FC<Props> = ({ onRemove, children }) => (
       "rounded",
       "px-2 py-1 me-2",
       "text-sm font-medium",
-      "text-blue-800 bg-blue-100",
-      "dark:bg-blue-900 dark:text-blue-300",
+      "text-on-primary-light bg-primary-light",
     )}
   >
     {children}

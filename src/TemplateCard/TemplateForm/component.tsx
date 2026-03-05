@@ -1,6 +1,6 @@
 import type React from "react";
-import { Input } from "~/components/Input";
 import { CategorySelector } from "~/CategorySelector";
+import { Input } from "~/components/Input";
 import { InputTags } from "~/InputTags";
 import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";

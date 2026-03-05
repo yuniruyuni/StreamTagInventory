@@ -54,7 +54,7 @@ export const Menu: React.FC<Props> = ({
       <div className="flex-1 flex items-center">
         <a
           href="/"
-          className="inline-flex items-center justify-center font-medium rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-gray-100 text-xl whitespace-nowrap"
+          className="inline-flex items-center justify-center font-bold rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-hover-bg text-xl whitespace-nowrap"
         >
           Stream Tag Inventory
         </a>
@@ -66,7 +66,7 @@ export const Menu: React.FC<Props> = ({
             onChange={handleSearchChange}
             aria-label={t("template.search")}
           />
-          <div className="absolute right-3 top-2.5 text-gray-400">
+          <div className="absolute right-3 top-2.5 text-text-subtle">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -118,7 +118,7 @@ export const Menu: React.FC<Props> = ({
               </li>
               {/* 区切り線をメニュー幅いっぱいに表示 */}
               <div className="py-0.5">
-                <hr className="border-t border-gray-200 w-full" />
+                <hr className="border-t border-border w-full" />
               </div>
               <li>
                 <button type="button" onClick={() => logout()}>

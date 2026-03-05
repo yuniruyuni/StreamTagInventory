@@ -19,7 +19,7 @@ export const CategoryItem: React.FC<Props> = ({
     <li>
       <button
         type="button"
-        className={clsx(isSelected && "bg-slate-100")}
+        className={clsx("flex items-center gap-2", isSelected && "bg-hover-bg")}
         onMouseDown={(e) => {
           e.preventDefault();
           onSelect(category);

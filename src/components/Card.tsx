@@ -27,7 +27,9 @@ type CardBodyProps = {
 
 export const CardBody: React.FC<CardBodyProps> = ({ className, children }) => {
   return (
-    <div className={clsx("p-6 flex flex-col flex-auto gap-2 text-sm", className)}>
+    <div
+      className={clsx("p-6 flex flex-col flex-auto gap-2 text-sm", className)}
+    >
       {children}
     </div>
   );

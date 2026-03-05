@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type React from "react";
+import { forwardRef, type Ref } from "react";
 
 type Props = {
   size?: "sm" | "md";
@@ -12,22 +12,23 @@ const sizeStyles: Record<NonNullable<Props["size"]>, string> = {
   md: "[&_li>button]:px-3 [&_li>button]:py-2 [&_li>a]:px-3 [&_li>a]:py-2",
 };
 
-export const MenuList: React.FC<Props> = ({
-  size = "md",
-  children,
-  className,
-}) => {
-  return (
-    <ul
-      className={clsx(
-        "flex flex-col",
-        "[&_li>button]:w-full [&_li>button]:text-left [&_li>button]:rounded [&_li>button]:cursor-pointer [&_li>button]:transition-colors [&_li>button]:hover:bg-gray-100",
-        "[&_li>a]:block [&_li>a]:rounded [&_li>a]:cursor-pointer [&_li>a]:transition-colors [&_li>a]:hover:bg-gray-100",
-        sizeStyles[size],
-        className,
-      )}
-    >
-      {children}
-    </ul>
-  );
-};
+export const MenuList = forwardRef(
+  ({ size = "md", children, className }: Props, ref: Ref<HTMLUListElement>) => {
+    return (
+      <ul
+        ref={ref}
+        className={clsx(
+          "flex flex-col",
+          "[&_li>button]:w-full [&_li>button]:text-left [&_li>button]:rounded [&_li>button]:cursor-pointer [&_li>button]:transition-colors [&_li>button]:hover:bg-hover-bg",
+          "[&_li>button]:focus-visible:outline-none [&_li>button]:focus-visible:ring-2 [&_li>button]:focus-visible:ring-focus-ring [&_li>button]:focus-visible:ring-offset-2",
+          "[&_li>a]:block [&_li>a]:rounded [&_li>a]:cursor-pointer [&_li>a]:transition-colors [&_li>a]:hover:bg-hover-bg",
+          "[&_li>a]:focus-visible:outline-none [&_li>a]:focus-visible:ring-2 [&_li>a]:focus-visible:ring-focus-ring [&_li>a]:focus-visible:ring-offset-2",
+          sizeStyles[size],
+          className,
+        )}
+      >
+        {children}
+      </ul>
+    );
+  },
+);

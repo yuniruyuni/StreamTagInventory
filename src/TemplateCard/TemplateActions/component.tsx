@@ -67,11 +67,7 @@ export const TemplateActions: React.FC<Props> = ({
             {t("common.delete")}
           </Button>
           {!valid && (
-            <Button
-              aria-label="apply template"
-              type="button"
-              disabled
-            >
+            <Button aria-label="apply template" type="button" disabled>
               {t("common.apply")}
             </Button>
           )}

@@ -62,7 +62,11 @@ export const useTemplateOperations = ({
   );
 
   const { trigger: createMarker } = useSWRMutation(
-    () => [dep`https://api.twitch.tv/helix/streams/markers`, token, i18n.language],
+    () => [
+      dep`https://api.twitch.tv/helix/streams/markers`,
+      token,
+      i18n.language,
+    ],
     twitch.post,
   );
 
