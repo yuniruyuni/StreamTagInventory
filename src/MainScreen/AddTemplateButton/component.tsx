@@ -1,4 +1,5 @@
 import type React from "react";
+import { Button } from "~/components/Button";
 import { useTranslation } from "~/i18n";
 import { newTemplate, type Template } from "~/model/template";
 
@@ -11,13 +12,13 @@ export const AddTemplateButton: React.FC<Props> = ({ onAdd }) => {
 
   return (
     <div className="w-96 min-h-64 outline-dashed rounded outline-2 outline-slate-400 flex flex-col items-center place-content-center">
-      <button
+      <Button
         type="button"
-        className="btn btn-primary"
+        variant="primary"
         onClick={() => onAdd(newTemplate())}
       >
         {t("template.addTemplate")}
-      </button>
+      </Button>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import type React from "react";
+import { Input } from "~/components/Input";
 import { CategorySelector } from "~/CategorySelector";
 import { InputTags } from "~/InputTags";
 import { useTranslation } from "~/i18n";
@@ -15,10 +16,10 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
   return (
     <>
       <label htmlFor="title">{t("template.title")}</label>
-      <input
+      <Input
         name="title"
         type="text"
-        className="w-full input form-input focus:outline-none focus:border-base-content transition-all"
+        className="w-full focus:border-on-surface"
         onChange={(e) => onChange({ ...template, title: e.target.value })}
         value={template.title}
       />

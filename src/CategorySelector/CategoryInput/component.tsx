@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import type React from "react";
+import { Input } from "~/components/Input";
 import { useTranslation } from "~/i18n";
 import type { Category } from "~/model/category";
 
@@ -27,7 +28,7 @@ export const CategoryInput: React.FC<Props> = ({
   const { t } = useTranslation();
 
   return (
-    <label className="relative w-full h-24">
+    <label htmlFor="category" className="relative w-full h-24">
       <div
         data-testid="thumbnail"
         className="absolute z-20 inset-y-0 start-0 flex items-center ps-3 pointer-events-none "
@@ -42,7 +43,7 @@ export const CategoryInput: React.FC<Props> = ({
         )}
       </div>
 
-      <input
+      <Input
         id="category"
         type="text"
         placeholder={t("template.pickCategory")}
@@ -64,8 +65,7 @@ export const CategoryInput: React.FC<Props> = ({
         className={clsx(
           "relative z-10",
           "w-full h-24 ps-24",
-          "input form-input",
-          "focus:outline-none focus:border-base-content transition-all",
+          "focus:border-on-surface",
           open && "border-b-0 rounded-b-none",
         )}
       />

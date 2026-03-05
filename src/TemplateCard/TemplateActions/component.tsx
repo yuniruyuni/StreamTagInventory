@@ -1,4 +1,6 @@
 import type React from "react";
+import { Button } from "~/components/Button";
+import { CardActions } from "~/components/Card";
 import { useTranslation } from "~/i18n";
 import { type Template, validateTemplate } from "~/model/template";
 
@@ -25,67 +27,66 @@ export const TemplateActions: React.FC<Props> = ({
   const valid = validateTemplate(template);
 
   return (
-    <div className="card-actions justify-end">
+    <CardActions className="justify-end">
       {changed && (
         <>
-          <button
+          <Button
             aria-label="revert template"
             type="button"
-            className="btn btn-error"
+            variant="error"
             onClick={onRevert}
           >
             {t("common.revert")}
-          </button>
-          <button
+          </Button>
+          <Button
             aria-label="save template"
             type="button"
-            className="btn btn-primary"
+            variant="primary"
             onClick={() => onSave(template)}
           >
             {t("common.save")}
-          </button>
+          </Button>
         </>
       )}
       {!changed && (
         <>
-          <button
+          <Button
             aria-label="clone template"
             type="button"
-            className="btn btn-secondary"
+            variant="secondary"
             onClick={() => onClone(template)}
           >
             {t("common.clone")}
-          </button>
-          <button
+          </Button>
+          <Button
             aria-label="remove template"
             type="button"
-            className="btn btn-error"
+            variant="error"
             onClick={() => onRemove(template)}
           >
             {t("common.delete")}
-          </button>
+          </Button>
           {!valid && (
-            <button
+            <Button
               aria-label="apply template"
               type="button"
-              className="btn"
               disabled
             >
               {t("common.apply")}
-            </button>
+            </Button>
           )}
           {valid && (
-            <button
+            <Button
               aria-label="apply template"
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               onClick={() => onApply(template)}
             >
               {t("common.apply")}
-            </button>
+            </Button>
           )}
         </>
       )}
-    </div>
+    </CardActions>
   );
 };

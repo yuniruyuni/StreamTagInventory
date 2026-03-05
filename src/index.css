@@ -1,6 +1,15 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  include: svg, scrollbar, properties, rootscrolllock, rootscrollgutter, rootcolor, button, badge, card, navbar, menu, dropdown, input, select, avatar, link, radius;
+
+@theme {
+  --color-surface: #ffffff;
+  --color-surface-alt: #f3f4f6;
+  --color-surface-muted: #d1d5db;
+  --color-on-surface: #1f2937;
+}
+
+:root {
+  color: #1f2937;
+  background-color: #ffffff;
 }
 
 @layer utilities {

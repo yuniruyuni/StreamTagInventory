@@ -1,4 +1,6 @@
 import type React from "react";
+import { Badge } from "~/components/Badge";
+import { Button } from "~/components/Button";
 import { useTranslation } from "~/i18n";
 import type { Category } from "~/model/category";
 import type { ChannelInfo } from "~/model/channel";
@@ -20,18 +22,18 @@ export const CurrentStreamInfo: React.FC<Props> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full bg-base-200 rounded-lg p-4">
+      <div className="w-full bg-surface-alt rounded-lg p-4">
         <div className="animate-pulse">
           <div className="flex items-center justify-between mb-2">
-            <div className="bg-base-300 rounded h-5 w-28" />
-            <div className="bg-base-300 rounded h-8 w-36" />
+            <div className="bg-surface-muted rounded h-5 w-28" />
+            <div className="bg-surface-muted rounded h-8 w-36" />
           </div>
           <div className="flex gap-4 items-start">
-            <div className="bg-base-300 rounded w-13 h-18" />
+            <div className="bg-surface-muted rounded w-13 h-18" />
             <div className="flex-1 min-w-0 space-y-2">
-              <div className="bg-base-300 rounded h-4 w-1/3" />
-              <div className="bg-base-300 rounded h-3 w-1/4" />
-              <div className="bg-base-300 rounded h-4 w-1/2" />
+              <div className="bg-surface-muted rounded h-4 w-1/3" />
+              <div className="bg-surface-muted rounded h-3 w-1/4" />
+              <div className="bg-surface-muted rounded h-4 w-1/2" />
             </div>
           </div>
         </div>
@@ -45,16 +47,17 @@ export const CurrentStreamInfo: React.FC<Props> = ({
   const categoryName = channelInfo.game_name || t("stream.noCategory");
 
   return (
-    <div className="w-full bg-base-200 rounded-lg p-4">
+    <div className="w-full bg-surface-alt rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold">{t("stream.currentInfo")}</h2>
-        <button
+        <Button
           type="button"
-          className="btn btn-sm btn-primary"
+          variant="primary"
+          size="sm"
           onClick={onImportAsTemplate}
         >
           {t("stream.importAsTemplate")}
-        </button>
+        </Button>
       </div>
       <div className="flex gap-4 items-start">
         {category?.box_art_url && (
@@ -72,9 +75,9 @@ export const CurrentStreamInfo: React.FC<Props> = ({
           {channelInfo.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {channelInfo.tags.map((tag) => (
-                <span key={tag} className="badge badge-sm badge-outline">
+                <Badge key={tag} size="sm" variant="outline">
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
           )}
