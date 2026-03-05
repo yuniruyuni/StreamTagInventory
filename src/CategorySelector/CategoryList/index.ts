@@ -1,1 +1,0 @@
-export { CategoryList } from "./component";

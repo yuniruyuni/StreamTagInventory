@@ -8,8 +8,6 @@ import { TwitchAuthContext } from "~/TwitchAuth";
 type UseCategorySearchProps = {
   initialCategory?: Category;
   onCategoryFound: (category: Category) => void;
-  onCursorReset: () => void;
-  onCursorSet: (index: number) => void;
 };
 
 type UseCategorySearchResult = {
@@ -21,8 +19,6 @@ type UseCategorySearchResult = {
 export const useCategorySearch = ({
   initialCategory,
   onCategoryFound,
-  onCursorReset,
-  onCursorSet,
 }: UseCategorySearchProps): UseCategorySearchResult => {
   const { i18n } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
@@ -39,13 +35,8 @@ export const useCategorySearch = ({
     twitch.get<Category[]>,
     {
       onSuccess: (categories) => {
-        onCursorReset();
-
-        const foundIndex = categories.findIndex((item) => item.name === query);
-        if (foundIndex === -1) return;
-        const found = categories[foundIndex];
-        onCursorSet(foundIndex);
-        onCategoryFound(found);
+        const found = categories.find((item) => item.name === query);
+        if (found) onCategoryFound(found);
       },
     },
   );
