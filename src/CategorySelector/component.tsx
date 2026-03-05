@@ -1,94 +1,65 @@
 import clsx from "clsx";
-import { type FC, memo, useCallback, useState } from "react";
-
+import { type FC, memo, useCallback } from "react";
+import { SearchCombobox } from "~/components/SearchCombobox";
+import { useTranslation } from "~/i18n";
 import type { Category } from "~/model/category";
-import { CategoryInput } from "./CategoryInput";
-import { CategoryList } from "./CategoryList";
-import { useCategoryNavigation } from "./useCategoryNavigation";
 import { useCategorySearch } from "./useCategorySearch";
-import { useCursor } from "./useCursor";
 
 type Props = {
   value?: Category;
   onChange: (category: Category) => void;
 };
 
-export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
-  const [open, setOpen] = useState(false);
+const getItemId = (item: Category) => item.id;
+const getItemName = (item: Category) => item.name;
 
-  const { cursor, setCursor, moveCursor, resetCursor } = useCursor();
+const renderItem = (item: Category, isSelected: boolean) => (
+  <span
+    className={clsx("flex items-center gap-2", isSelected && "bg-hover-bg")}
+  >
+    {item.box_art_url && (
+      <img
+        src={item.box_art_url
+          .replace("{width}", "52")
+          .replace("{height}", "72")}
+        alt={item.name}
+      />
+    )}
+    {item.name}
+  </span>
+);
+
+const renderSelected = (value: Category | undefined) =>
+  value?.box_art_url ? (
+    <img
+      src={value.box_art_url.replace("{width}", "52").replace("{height}", "72")}
+      alt={value.name}
+    />
+  ) : null;
+
+export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
+  const { t } = useTranslation();
 
   const { query, setQuery, categories } = useCategorySearch({
     initialCategory: value,
     onCategoryFound: onChange,
-    onCursorReset: resetCursor,
-    onCursorSet: setCursor,
   });
 
-  const { handleKeyDown, handleSelectCategory } = useCategoryNavigation({
-    categories,
-    cursor,
-    moveCursor: (diff) => moveCursor(diff, categories?.length ?? 0),
-    query,
-    setQuery,
-    setOpen,
-    onChange,
-    value,
-  });
-
-  const hasResults = categories !== undefined && categories.length > 0;
-  const showDropdown = open && hasResults;
-
-  const handleFocus = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const handleBlur = useCallback(() => {
-    setOpen(false);
-    setQuery(value?.name ?? "");
-  }, [setQuery, value]);
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
-      const found = categories?.find((item) => item.name === e.target.value);
-      if (!found) return;
-      onChange(found);
-    },
-    [setQuery, categories, onChange],
-  );
+  const handleQueryChange = useCallback((q: string) => setQuery(q), [setQuery]);
 
   return (
-    <div className="relative">
-      <CategoryInput
-        value={value}
-        query={query}
-        open={showDropdown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-      />
-
-      {showDropdown && (
-        <div
-          data-testid="dropdown-content"
-          className={clsx(
-            "absolute top-full left-0",
-            "w-full h-fit",
-            "border border-t-0 border-on-surface",
-            "bg-surface",
-            "rounded-b",
-          )}
-        >
-          <CategoryList
-            categories={categories}
-            cursor={cursor}
-            setCursor={setCursor}
-            onSelect={handleSelectCategory}
-          />
-        </div>
-      )}
-    </div>
+    <SearchCombobox<Category>
+      items={categories}
+      value={value}
+      query={query}
+      onQueryChange={handleQueryChange}
+      onSelect={onChange}
+      getItemId={getItemId}
+      getItemName={getItemName}
+      renderItem={renderItem}
+      renderSelected={renderSelected}
+      placeholder={t("template.pickCategory")}
+      id="category"
+    />
   );
 });

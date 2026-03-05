@@ -6,7 +6,6 @@ import { SWRConfigWrapper } from "~/test-utils";
 import { type Category, EmptyCategory } from "../model/category";
 import { CategorySelector } from "./component";
 
-// モックカテゴリデータ
 const mockCategories: Category[] = [
   {
     id: "1",
@@ -25,7 +24,6 @@ const mockCategories: Category[] = [
   },
 ];
 
-// テスト実行前にi18nを英語に設定
 beforeAll(async () => {
   await i18n.changeLanguage("en");
 });
@@ -38,12 +36,10 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
-  // 入力フィールドが存在することを確認
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // 初期状態ではドロップダウンがDOMに存在しないことを確認
-  const dropdownContent = queryByTestId("dropdown-content");
+  const dropdownContent = queryByTestId("combobox-dropdown");
   expect(dropdownContent).toBeNull();
 });
 
@@ -55,32 +51,26 @@ test("入力フィールドにフォーカスするとドロップダウンが�
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
-  // 入力フィールドを取得
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // フォーカスイベントをシミュレート
   fireEvent.focus(input);
 
-  // ドロップダウンが表示されることを確認
-  const dropdownContent = getByTestId("dropdown-content");
+  const dropdownContent = getByTestId("combobox-dropdown");
   expect(dropdownContent).not.toBeNull();
 });
 
 test("検索クエリに基づいてカテゴリがフィルタリングされる", () => {
   const onChange = mock();
 
-  // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
 
-  // 入力フィールドを取得
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // 入力値を変更
   fireEvent.change(input, { target: { value: "Mine" } });
 
   expect(input).toHaveValue("Mine");
@@ -89,7 +79,6 @@ test("検索クエリに基づいてカテゴリがフィルタリングされ�
 test("Enterで選択中の項目を選ぶことができる", async () => {
   const onChange = mock();
 
-  // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
@@ -97,11 +86,9 @@ test("Enterで選択中の項目を選ぶことができる", async () => {
 
   const user = userEvent.setup();
 
-  // 入力フィールドを取得
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // 入力値を変更
   await user.click(input);
   expect(input).toHaveValue("");
 
@@ -112,7 +99,6 @@ test("Enterで選択中の項目を選ぶことができる", async () => {
 test("下キー入力で次の項目を選ぶことができる", async () => {
   const onChange = mock();
 
-  // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
@@ -120,11 +106,9 @@ test("下キー入力で次の項目を選ぶことができる", async () => {
 
   const user = userEvent.setup();
 
-  // 入力フィールドを取得
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // 入力値を変更
   await user.click(input);
   expect(input).toHaveValue("");
 
@@ -135,7 +119,6 @@ test("下キー入力で次の項目を選ぶことができる", async () => {
 test("前キー入力で一番下の項目を選ぶことができる", async () => {
   const onChange = mock();
 
-  // コンポーネントをレンダリング
   const { getByPlaceholderText } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
