@@ -129,7 +129,7 @@ test("カーソル位置に対応するカテゴリが選択状態になる", ()
   expect(buttons.length).toBe(3);
 
   // 2番目のボタンが選択状態になっていることを確認
-  expect(buttons[0]).not.toHaveClass("bg-slate-100");
-  expect(buttons[1]).toHaveClass("bg-slate-100");
-  expect(buttons[2]).not.toHaveClass("bg-slate-100");
+  expect(buttons[0]).not.toHaveClass("bg-hover-bg");
+  expect(buttons[1]).toHaveClass("bg-hover-bg");
+  expect(buttons[2]).not.toHaveClass("bg-hover-bg");
 });

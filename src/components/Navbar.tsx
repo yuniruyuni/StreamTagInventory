@@ -9,10 +9,7 @@ type Props = {
 export const Navbar: React.FC<Props> = ({ children, className }) => {
   return (
     <nav
-      className={clsx(
-        "navbar flex items-center px-4 py-2 min-h-16",
-        className,
-      )}
+      className={clsx("navbar flex items-center px-4 py-2 min-h-16", className)}
     >
       {children}
     </nav>

@@ -61,7 +61,7 @@ test("選択されている場合、適切なクラスが適用される", () =>
   );
 
   const button = getByRole("button");
-  expect(button).toHaveClass("bg-slate-100");
+  expect(button).toHaveClass("bg-hover-bg");
 });
 
 test("選択されていない場合、選択クラスが適用されない", () => {
@@ -84,7 +84,7 @@ test("選択されていない場合、選択クラスが適用されない", ()
   );
 
   const button = getByRole("button");
-  expect(button).not.toHaveClass("bg-slate-100");
+  expect(button).not.toHaveClass("bg-hover-bg");
 });
 
 test("ボタンがクリックされたとき、onSelect関数が呼び出される", async () => {

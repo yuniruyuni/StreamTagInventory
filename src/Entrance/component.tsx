@@ -13,15 +13,15 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center relative">
       <div className="flex flex-col items-center">
-        <h1 className="text-4xl">Stream Tag Inventory</h1>
-        <p className="text-xl text-gray-700 pt-6 text-center">
+        <h1 className="text-4xl font-bold">Stream Tag Inventory</h1>
+        <p className="text-xl text-on-surface pt-6 text-center">
           {t("entrance.tagline")}
         </p>
-        <p className="text-sm text-gray-500 pt-2 text-center max-w-md px-4">
+        <p className="text-sm text-text-muted pt-2 text-center max-w-md px-4">
           {t("entrance.description")}
         </p>
         <Link
-          className="text-2xl pt-6 text-blue-400 hover:text-blue-700 visited:text-purple-500"
+          className="text-2xl pt-6 text-primary-muted hover:text-primary visited:text-purple-500"
           href={uri}
         >
           {t("auth.login")}

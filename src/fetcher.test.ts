@@ -80,9 +80,12 @@ test("twtich.put makes requests with PUT method", async () => {
   };
   mock("https://example.com/", { method: "PUT", headers, response });
 
-  const res = await twitch.put<string, Res>(["https://example.com/", "token", "en"], {
-    arg: "",
-  });
+  const res = await twitch.put<string, Res>(
+    ["https://example.com/", "token", "en"],
+    {
+      arg: "",
+    },
+  );
   expect(res).toEqual({ hoge: "hoge" });
 });
 

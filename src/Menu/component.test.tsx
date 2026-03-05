@@ -187,7 +187,12 @@ test("onImportが提供されるとインポート/エクスポートメニュ�
 
 test("ローディング中にスケルトンが表示される", () => {
   const { container } = render(
-    <Menu isLoading={true} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    <Menu
+      isLoading={true}
+      onSearch={() => {}}
+      onImport={() => {}}
+      onExport={() => {}}
+    />,
     { wrapper: TestWrapper },
   );
   const skeleton = container.querySelector(".animate-pulse");
@@ -198,12 +203,22 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
   const user = createMockUser();
 
   const { container: skeletonContainer } = render(
-    <Menu isLoading={true} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    <Menu
+      isLoading={true}
+      onSearch={() => {}}
+      onImport={() => {}}
+      onExport={() => {}}
+    />,
     { wrapper: TestWrapper },
   );
 
   const { container: loadedContainer } = render(
-    <Menu user={user} onSearch={() => {}} onImport={() => {}} onExport={() => {}} />,
+    <Menu
+      user={user}
+      onSearch={() => {}}
+      onImport={() => {}}
+      onExport={() => {}}
+    />,
     { wrapper: TestWrapper },
   );
 
@@ -214,13 +229,19 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
   expect(loadedNavbar).not.toBeNull();
 
   // 両方が .flex-1.flex.items-center を持つことを検証
-  const skeletonFlexSection = skeletonContainer.querySelector(".flex-1.flex.items-center");
-  const loadedFlexSection = loadedContainer.querySelector(".flex-1.flex.items-center");
+  const skeletonFlexSection = skeletonContainer.querySelector(
+    ".flex-1.flex.items-center",
+  );
+  const loadedFlexSection = loadedContainer.querySelector(
+    ".flex-1.flex.items-center",
+  );
   expect(skeletonFlexSection).not.toBeNull();
   expect(loadedFlexSection).not.toBeNull();
 
   // 両方が .flex-none.flex.gap-4 を持つことを検証
-  const skeletonActions = skeletonContainer.querySelector(".flex-none.flex.gap-4");
+  const skeletonActions = skeletonContainer.querySelector(
+    ".flex-none.flex.gap-4",
+  );
   const loadedActions = loadedContainer.querySelector(".flex-none.flex.gap-4");
   expect(skeletonActions).not.toBeNull();
   expect(loadedActions).not.toBeNull();

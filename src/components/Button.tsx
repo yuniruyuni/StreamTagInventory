@@ -8,11 +8,14 @@ type Props = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantStyles: Record<NonNullable<Props["variant"]>, string> = {
-  primary: "bg-violet-700 border-violet-800 text-white hover:bg-violet-800",
-  secondary: "bg-fuchsia-600 border-fuchsia-700 text-white hover:bg-fuchsia-700",
-  error: "bg-red-400 border-red-500 text-red-950 hover:bg-red-500",
-  ghost: "bg-transparent border-transparent hover:bg-gray-100",
-  default: "bg-gray-200 border-gray-300 text-gray-800 hover:bg-gray-300",
+  primary:
+    "bg-primary border-primary-border text-on-primary hover:bg-primary-hover",
+  secondary:
+    "bg-secondary border-secondary-border text-on-secondary hover:bg-secondary-hover",
+  error: "bg-error border-error-border text-on-error hover:bg-error-hover",
+  ghost: "bg-transparent border-transparent hover:bg-hover-bg",
+  default:
+    "bg-neutral border-neutral-border text-on-neutral hover:bg-neutral-hover",
 };
 
 const sizeStyles: Record<NonNullable<Props["size"]>, string> = {
@@ -33,10 +36,9 @@ export const Button: React.FC<Props> = ({
       className={clsx(
         "inline-flex items-center justify-center font-semibold border rounded-lg transition-colors cursor-pointer",
         "disabled:opacity-50 disabled:cursor-not-allowed",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2",
         variantStyles[variant],
-        shape === "circle"
-          ? "rounded-full p-0"
-          : sizeStyles[size],
+        shape === "circle" ? "rounded-full p-0" : sizeStyles[size],
         className,
       )}
     />

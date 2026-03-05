@@ -39,15 +39,15 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
   const getBannerStyles = () => {
     switch (notification.type) {
       case "success":
-        return "bg-white border-l-4 border-green-500 text-green-700";
+        return "bg-surface border-l-4 border-green-500 text-green-700";
       case "error":
-        return "bg-white border-l-4 border-red-500 text-red-700";
+        return "bg-surface border-l-4 border-red-500 text-red-700";
       case "warning":
-        return "bg-white border-l-4 border-yellow-500 text-yellow-700";
+        return "bg-surface border-l-4 border-yellow-500 text-yellow-700";
       case "info":
-        return "bg-white border-l-4 border-blue-500 text-blue-700";
+        return "bg-surface border-l-4 border-blue-500 text-blue-700";
       default:
-        return "bg-white border-l-4 border-gray-500 text-gray-700";
+        return "bg-surface border-l-4 border-gray-500 text-gray-700";
     }
   };
 
@@ -159,7 +159,7 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
           <div className="ml-4 flex-shrink-0 flex">
             <button
               type="button"
-              className="rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
+              className="rounded-md inline-flex text-text-subtle hover:text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2"
               onClick={handleClose}
             >
               <span className="sr-only">Close</span>
@@ -184,7 +184,7 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
         </div>
       </div>
       {notification.autoClose && (
-        <div className="bg-gray-100 h-1 w-full">
+        <div className="bg-hover-bg h-1 w-full">
           <div
             className={clsx(
               "h-full animate-shrink",
