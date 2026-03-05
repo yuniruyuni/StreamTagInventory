@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { FC } from "react";
 import React, { memo } from "react";
+import { Card, CardBody } from "~/components/Card";
 import type { Template } from "~/model/template";
 
 import { DragHandle } from "./DragHandle";
@@ -31,14 +32,14 @@ export const TemplateCard: FC<Props> = memo(
     const changed = JSON.stringify(template) !== JSON.stringify(temp);
 
     return (
-      <div
+      <Card
         data-testid={`template-card-${template.id}`}
-        className="card w-96 bg-base-100 shadow-xl"
+        className="w-96 bg-surface shadow-xl"
         ref={setNodeRef}
         {...attributes}
         style={style}
       >
-        <div className="card-body">
+        <CardBody>
           <DragHandle listeners={listeners} />
 
           <TemplateForm template={temp} onChange={setTemp} />
@@ -52,8 +53,8 @@ export const TemplateCard: FC<Props> = memo(
             onRemove={onRemove}
             onApply={onApply}
           />
-        </div>
-      </div>
+        </CardBody>
+      </Card>
     );
   },
 );

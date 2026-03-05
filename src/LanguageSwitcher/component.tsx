@@ -1,5 +1,6 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
+import { Select } from "~/components/Select";
 import { SupportedLanguages } from "../i18n/config";
 
 export const LanguageSwitcher: React.FC = () => {
@@ -10,9 +11,10 @@ export const LanguageSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="form-control w-full max-w-xs">
-      <select
-        className="select select-bordered select-sm"
+    <div className="flex items-center">
+      <Select
+        size="sm"
+        bordered
         value={i18n.language}
         onChange={changeLanguage}
         aria-label="Select language"
@@ -22,7 +24,7 @@ export const LanguageSwitcher: React.FC = () => {
             {i18n.getFixedT(lang)("language")}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 };

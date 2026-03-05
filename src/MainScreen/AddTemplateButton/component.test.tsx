@@ -28,7 +28,7 @@ test("AddTemplateButtonコンポーネントが正しくレンダリングされ
   const button = getByRole("button");
   expect(button).not.toBeNull();
   expect(button).toHaveTextContent("Add");
-  expect(button).toHaveClass("btn-primary");
+  expect(button).toHaveClass("bg-violet-700");
 });
 
 test("ボタンをクリックすると、新しいテンプレートを作成してonAddコールバックに渡す", async () => {

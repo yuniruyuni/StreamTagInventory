@@ -1,4 +1,10 @@
 import React from "react";
+import { Avatar } from "~/components/Avatar";
+import { Button } from "~/components/Button";
+import { Dropdown, DropdownContent } from "~/components/Dropdown";
+import { Input } from "~/components/Input";
+import { MenuList } from "~/components/MenuList";
+import { Navbar } from "~/components/Navbar";
 import { useTranslation } from "~/i18n";
 import { LanguageSwitcher } from "~/LanguageSwitcher";
 import type { User } from "~/model/user";
@@ -28,32 +34,35 @@ export const Menu: React.FC<Props> = ({
 
   if (isLoading) {
     return (
-      <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-30 shadow-md">
+      <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
         <div className="flex-1 flex items-center animate-pulse">
-          <div className="bg-base-300 rounded h-8 w-48 ml-4" />
-          <div className="bg-base-300 rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
+          <div className="bg-surface-muted rounded h-8 w-48 ml-4" />
+          <div className="bg-surface-muted rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
         </div>
         <div className="flex-none flex gap-4 animate-pulse">
-          <div className="bg-base-300 rounded h-8 w-20" />
-          <div className="bg-base-300 rounded-full w-10 h-10" />
+          <div className="bg-surface-muted rounded h-8 w-20" />
+          <div className="bg-surface-muted rounded-full w-10 h-10" />
         </div>
-      </div>
+      </Navbar>
     );
   }
 
   if (!user) return null;
 
   return (
-    <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-30 shadow-md">
+    <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
       <div className="flex-1 flex items-center">
-        <a href="/" className="btn btn-ghost text-xl whitespace-nowrap">
+        <a
+          href="/"
+          className="inline-flex items-center justify-center font-medium rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-gray-100 text-xl whitespace-nowrap"
+        >
           Stream Tag Inventory
         </a>
-        <div className="form-control ml-4 mr-4 relative hidden md:block flex-grow">
-          <input
+        <div className="ml-4 mr-4 relative hidden md:block flex-grow">
+          <Input
             type="text"
             placeholder={t("template.search")}
-            className="input h-10 w-full pr-10"
+            className="h-10 w-full pr-10"
             onChange={handleSearchChange}
             aria-label={t("template.search")}
           />
@@ -78,42 +87,48 @@ export const Menu: React.FC<Props> = ({
       </div>
       <div className="flex-none flex gap-4">
         <LanguageSwitcher />
-        <div className="dropdown dropdown-end">
-          <button
+        <Dropdown align="end">
+          <Button
             type="button"
             tabIndex={0}
-            className="btn btn-ghost btn-circle avatar"
+            variant="ghost"
+            shape="circle"
+            className="avatar"
           >
-            <div className="w-10 rounded-full">
-              <img
-                alt={`${user.display_name} icon`}
-                src={user.profile_image_url}
-              />
-            </div>
-          </button>
-          <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-            <li data-testid="import-templates-menu-item">
-              <button type="button" onClick={onImport}>
-                {t("template.importTemplates")}
-              </button>
-            </li>
-            <li data-testid="export-templates-menu-item">
-              <button type="button" onClick={onExport}>
-                {t("template.exportTemplates")}
-              </button>
-            </li>
-            {/* 区切り線をメニュー幅いっぱいに表示 */}
-            <div className="py-0.5">
-              <hr className="border-t border-gray-200 w-full" />
-            </div>
-            <li>
-              <button type="button" onClick={() => logout()}>
-                {t("auth.logout")}
-              </button>
-            </li>
-          </ul>
-        </div>
+            <Avatar>
+              <div className="w-10 rounded-full">
+                <img
+                  alt={`${user.display_name} icon`}
+                  src={user.profile_image_url}
+                />
+              </div>
+            </Avatar>
+          </Button>
+          <DropdownContent className="mt-3 w-52 p-2 shadow bg-surface rounded-lg">
+            <MenuList size="sm">
+              <li data-testid="import-templates-menu-item">
+                <button type="button" onClick={onImport}>
+                  {t("template.importTemplates")}
+                </button>
+              </li>
+              <li data-testid="export-templates-menu-item">
+                <button type="button" onClick={onExport}>
+                  {t("template.exportTemplates")}
+                </button>
+              </li>
+              {/* 区切り線をメニュー幅いっぱいに表示 */}
+              <div className="py-0.5">
+                <hr className="border-t border-gray-200 w-full" />
+              </div>
+              <li>
+                <button type="button" onClick={() => logout()}>
+                  {t("auth.logout")}
+                </button>
+              </li>
+            </MenuList>
+          </DropdownContent>
+        </Dropdown>
       </div>
-    </div>
+    </Navbar>
   );
 };

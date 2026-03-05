@@ -33,7 +33,7 @@ export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
   });
 
   return (
-    <div className="dropdown relative">
+    <div className="relative">
       <CategoryInput
         value={value}
         query={query}
@@ -51,8 +51,8 @@ export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
           open ? "visible" : "invisible",
           "absolute top-0",
           "w-full h-fit",
-          "border border-base-content",
-          "bg-base-100",
+          "border border-on-surface",
+          "bg-surface",
           "rounded",
         )}
       >

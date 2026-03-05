@@ -1,5 +1,6 @@
 import type React from "react";
 import { AuthorInfo } from "~/AuthorInfo/component";
+import { Link } from "~/components/Link";
 import { useTranslation } from "~/i18n";
 
 type Props = {
@@ -19,12 +20,12 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
         <p className="text-sm text-gray-500 pt-2 text-center max-w-md px-4">
           {t("entrance.description")}
         </p>
-        <a
-          className="link text-2xl pt-6 text-blue-400 hover:text-blue-700 visited:text-purple-500"
+        <Link
+          className="text-2xl pt-6 text-blue-400 hover:text-blue-700 visited:text-purple-500"
           href={uri}
         >
           {t("auth.login")}
-        </a>
+        </Link>
       </div>
 
       <div className="absolute bottom-8 flex flex-col items-center gap-3">

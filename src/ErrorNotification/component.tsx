@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { createCallable } from "react-call";
+import { Button } from "~/components/Button";
 import { useTranslation } from "~/i18n";
 
 type Props = {
@@ -21,13 +22,14 @@ export const ErrorNotification = createCallable<Props, Response>(
         <div className="max-w-prose ml-16 mr-16 bg-white p-4 rounded-lg">
           <h2 className="text-xl font-bold">{title}</h2>
           <div className="whitespace-pre-wrap break-words">{message}</div>
-          <button
+          <Button
             type="button"
-            className="block mx-auto mt-4 btn btn-primary"
+            variant="primary"
+            className="block mx-auto mt-4"
             onClick={() => call.end(undefined)}
           >
             {t("common.close")}
-          </button>
+          </Button>
         </div>
       </dialog>
     );
