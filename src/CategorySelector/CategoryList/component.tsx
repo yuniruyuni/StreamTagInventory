@@ -1,10 +1,10 @@
-import clsx from "clsx";
 import React from "react";
+import { MenuList } from "~/components/MenuList";
 import type { Category } from "~/model/category";
 import { CategoryItem } from "../CategoryItem";
 
 type Props = {
-  categories: Category[] | undefined;
+  categories: Category[];
   cursor: number;
   setCursor: (index: number) => void;
   onSelect: (category: Category) => void;
@@ -19,7 +19,7 @@ export const CategoryList: React.FC<Props> = ({
   const ref = React.useRef<HTMLUListElement>(null);
 
   React.useEffect(() => {
-    if (!ref.current || !categories || categories.length === 0) return;
+    if (!ref.current || categories.length === 0) return;
 
     ref.current.children[cursor]?.scrollIntoView({
       behavior: "smooth",
@@ -27,21 +27,10 @@ export const CategoryList: React.FC<Props> = ({
     });
   }, [cursor, categories]);
 
-  if (!categories || categories.length === 0) {
-    return null;
-  }
-
   return (
-    <ul
+    <MenuList
       ref={ref}
-      className={clsx(
-        "flex flex-col w-full",
-        "[&_li>button]:w-full [&_li>button]:text-left [&_li>button]:rounded [&_li>button]:cursor-pointer [&_li>button]:transition-colors [&_li>button]:hover:bg-gray-100",
-        "[&_li>button]:px-3 [&_li>button]:py-2",
-        "mt-24",
-        "max-h-80 py-0 p-2",
-        "flex-nowrap overflow-auto",
-      )}
+      className="w-full max-h-80 py-0 p-2 flex-nowrap overflow-auto"
     >
       {categories.map((item, index) => (
         <CategoryItem
@@ -52,6 +41,6 @@ export const CategoryList: React.FC<Props> = ({
           onMouseEnter={() => setCursor(index)}
         />
       ))}
-    </ul>
+    </MenuList>
   );
 };

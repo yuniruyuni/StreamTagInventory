@@ -20,8 +20,8 @@ beforeAll(async () => {
 test("CategoryInputコンポーネントが正しくレンダリングされる", () => {
   const query = "";
   const open = false;
-  const setOpen = mock();
-  const setQuery = mock();
+  const onFocus = mock();
+  const onBlur = mock();
   const onKeyDown = mock();
   const onChange = mock();
 
@@ -29,8 +29,8 @@ test("CategoryInputコンポーネントが正しくレンダリングされる"
     <CategoryInput
       query={query}
       open={open}
-      setOpen={setOpen}
-      setQuery={setQuery}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
@@ -55,8 +55,8 @@ test("valueが指定されている場合、画像が表示される", () => {
   };
   const query = "テストカテゴリ";
   const open = false;
-  const setOpen = mock();
-  const setQuery = mock();
+  const onFocus = mock();
+  const onBlur = mock();
   const onKeyDown = mock();
   const onChange = mock();
 
@@ -65,8 +65,8 @@ test("valueが指定されている場合、画像が表示される", () => {
       value={value}
       query={query}
       open={open}
-      setOpen={setOpen}
-      setQuery={setQuery}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
@@ -83,8 +83,8 @@ test("valueが指定されている場合、画像が表示される", () => {
 test("openがtrueの場合、適切なクラスが適用される", () => {
   const query = "";
   const open = true;
-  const setOpen = mock();
-  const setQuery = mock();
+  const onFocus = mock();
+  const onBlur = mock();
   const onKeyDown = mock();
   const onChange = mock();
 
@@ -92,8 +92,8 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
     <CategoryInput
       query={query}
       open={open}
-      setOpen={setOpen}
-      setQuery={setQuery}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
@@ -105,11 +105,11 @@ test("openがtrueの場合、適切なクラスが適用される", () => {
   expect(input).toHaveClass("rounded-b-none");
 });
 
-test("フォーカス時にsetOpenが呼び出される", async () => {
+test("フォーカス時にonFocusが呼び出される", async () => {
   const query = "";
   const open = false;
-  const setOpen = mock();
-  const setQuery = mock();
+  const onFocus = mock();
+  const onBlur = mock();
   const onKeyDown = mock();
   const onChange = mock();
 
@@ -117,8 +117,8 @@ test("フォーカス時にsetOpenが呼び出される", async () => {
     <CategoryInput
       query={query}
       open={open}
-      setOpen={setOpen}
-      setQuery={setQuery}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
@@ -130,10 +130,10 @@ test("フォーカス時にsetOpenが呼び出される", async () => {
   const input = getByPlaceholderText("Pick a category");
   await user.click(input);
 
-  expect(setOpen).toBeCalledWith(true);
+  expect(onFocus).toHaveBeenCalled();
 });
 
-test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
+test("ブラー時にonBlurが呼び出される", async () => {
   const value: Category = {
     id: "123",
     name: "テストカテゴリ",
@@ -141,8 +141,8 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
   };
   const query = "テスト";
   const open = false;
-  const setOpen = mock();
-  const setQuery = mock();
+  const onFocus = mock();
+  const onBlur = mock();
   const onKeyDown = mock();
   const onChange = mock();
 
@@ -151,8 +151,8 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
       value={value}
       query={query}
       open={open}
-      setOpen={setOpen}
-      setQuery={setQuery}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={onKeyDown}
       onChange={onChange}
     />,
@@ -167,6 +167,5 @@ test("ブラー時にsetOpenとsetQueryが呼び出される", async () => {
   await user.click(input); // focus.
   await user.click(document.body); // unfocus.
 
-  expect(setOpen).toBeCalledWith(false);
-  expect(setQuery).toBeCalledWith("テストカテゴリ");
+  expect(onBlur).toHaveBeenCalled();
 });

@@ -8,22 +8,20 @@ type Props = {
   value?: Category;
   query: string;
   open: boolean;
-  setOpen: (open: boolean) => void;
-  setQuery: (query: string) => void;
+  onFocus: () => void;
+  onBlur: () => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onChange: (category: Category) => void;
-  categories?: Category[];
 };
 
 export const CategoryInput: React.FC<Props> = ({
   value,
   query,
   open,
-  setOpen,
-  setQuery,
-  onKeyDown,
+  onFocus,
+  onBlur,
   onChange,
-  categories,
+  onKeyDown,
 }) => {
   const { t } = useTranslation();
 
@@ -48,19 +46,9 @@ export const CategoryInput: React.FC<Props> = ({
         type="text"
         placeholder={t("template.pickCategory")}
         value={query}
-        onFocus={() => setOpen(true)}
-        onBlur={() => {
-          setOpen(false);
-          setQuery(value?.name ?? "");
-        }}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          const found = categories?.find(
-            (item) => item.name === e.target.value,
-          );
-          if (!found) return;
-          onChange(found);
-        }}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onChange={onChange}
         onKeyDown={onKeyDown}
         className={clsx(
           "relative z-10",

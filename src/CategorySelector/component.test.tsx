@@ -33,7 +33,7 @@ beforeAll(async () => {
 test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
   const onChange = mock();
 
-  const { getByPlaceholderText, getByTestId } = render(
+  const { getByPlaceholderText, queryByTestId } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
@@ -42,11 +42,9 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  // 初期状態ではドロップダウンが非表示であることを確認
-  const dropdownContent = getByTestId("dropdown-content");
-  expect(dropdownContent).not.toBeNull();
-  expect(dropdownContent).toHaveClass("invisible");
-  expect(dropdownContent).not.toHaveClass("visible");
+  // 初期状態ではドロップダウンがDOMに存在しないことを確認
+  const dropdownContent = queryByTestId("dropdown-content");
+  expect(dropdownContent).toBeNull();
 });
 
 test("入力フィールドにフォーカスするとドロップダウンが表示される", () => {
@@ -67,8 +65,6 @@ test("入力フィールドにフォーカスするとドロップダウンが�
   // ドロップダウンが表示されることを確認
   const dropdownContent = getByTestId("dropdown-content");
   expect(dropdownContent).not.toBeNull();
-  expect(dropdownContent).toHaveClass("visible");
-  expect(dropdownContent).not.toHaveClass("invisible");
 });
 
 test("検索クエリに基づいてカテゴリがフィルタリングされる", () => {
