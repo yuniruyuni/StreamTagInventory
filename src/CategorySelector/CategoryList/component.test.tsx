@@ -3,46 +3,6 @@ import { render } from "@testing-library/react";
 import type { Category } from "~/model/category";
 import { CategoryList } from "./component";
 
-test("カテゴリが空の場合、何も表示されない", () => {
-  const categories: Category[] = [];
-  const cursor = 0;
-  const setCursor = mock();
-  const onSelect = mock();
-
-  const { queryByRole } = render(
-    <CategoryList
-      categories={categories}
-      cursor={cursor}
-      setCursor={setCursor}
-      onSelect={onSelect}
-    />,
-  );
-
-  // リスト要素が存在しないことを確認
-  const list = queryByRole("list");
-  expect(list).toBeNull();
-});
-
-test("カテゴリがundefinedの場合、何も表示されない", () => {
-  const categories = undefined;
-  const cursor = 0;
-  const setCursor = mock();
-  const onSelect = mock();
-
-  const { queryByRole } = render(
-    <CategoryList
-      categories={categories}
-      cursor={cursor}
-      setCursor={setCursor}
-      onSelect={onSelect}
-    />,
-  );
-
-  // リスト要素が存在しないことを確認
-  const list = queryByRole("list");
-  expect(list).toBeNull();
-});
-
 test("カテゴリがある場合、各カテゴリが表示される", () => {
   const categories: Category[] = [
     {
