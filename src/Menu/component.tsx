@@ -94,6 +94,7 @@ export const Menu: React.FC<Props> = ({
             variant="ghost"
             shape="circle"
             className="avatar"
+            data-testid="avatar-button"
           >
             <Avatar>
               <div className="w-10 rounded-full">
@@ -104,7 +105,10 @@ export const Menu: React.FC<Props> = ({
               </div>
             </Avatar>
           </Button>
-          <DropdownContent className="mt-3 w-52 p-2 shadow bg-surface rounded-lg">
+          <DropdownContent
+            data-testid="user-menu"
+            className="mt-3 w-52 p-2 shadow bg-surface rounded-lg"
+          >
             <MenuList size="sm">
               <li data-testid="import-templates-menu-item">
                 <button type="button" onClick={onImport}>

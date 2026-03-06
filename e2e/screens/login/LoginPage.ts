@@ -11,6 +11,6 @@ export class LoginPage extends BasePage {
   }
 
   get loginContainer(): Locator {
-    return this.getLocator(".hero");
+    return this.getByTestId("login-container");
   }
 }

@@ -11,7 +11,10 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center relative">
+    <div
+      data-testid="login-container"
+      className="h-screen w-screen flex flex-col items-center justify-center relative"
+    >
       <div className="flex flex-col items-center">
         <h1 className="text-4xl font-bold">Stream Tag Inventory</h1>
         <p className="text-xl text-on-surface pt-6 text-center">

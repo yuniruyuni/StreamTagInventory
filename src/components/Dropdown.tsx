@@ -28,14 +28,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
 type DropdownContentProps = {
   children: React.ReactNode;
   className?: string;
-};
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "className">;
 
 export const DropdownContent: React.FC<DropdownContentProps> = ({
   children,
   className,
+  ...rest
 }) => {
   return (
     <div
+      {...rest}
       className={clsx(
         "dropdown-content absolute z-[1] hidden [*:focus-within>&]:block",
         className,
