@@ -1,5 +1,5 @@
-import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import type React from "react";
+import { AbsoluteFill, interpolate } from "remotion";
 
 const TRANSITION_FRAMES = 6; // ~0.2s at 30fps — snappy
 
@@ -49,13 +49,17 @@ const WhipTransition: React.FC<TransitionProps> = ({ children, progress }) => (
   </AbsoluteFill>
 );
 
-const GlitchTransition: React.FC<TransitionProps> = ({ children, progress }) => (
+const GlitchTransition: React.FC<TransitionProps> = ({
+  children,
+  progress,
+}) => (
   <>
     <AbsoluteFill
       style={{
-        transform: progress < 0.5
-          ? `translateX(${Math.sin(progress * 40) * 20}px)`
-          : "none",
+        transform:
+          progress < 0.5
+            ? `translateX(${Math.sin(progress * 40) * 20}px)`
+            : "none",
         opacity: progress,
       }}
     >
@@ -90,7 +94,8 @@ const GlowTransition: React.FC<TransitionProps> = ({ children, progress }) => (
     <AbsoluteFill style={{ opacity: progress }}>{children}</AbsoluteFill>
     <AbsoluteFill
       style={{
-        background: "radial-gradient(circle, rgba(157,71,255,0.6) 0%, transparent 70%)",
+        background:
+          "radial-gradient(circle, rgba(157,71,255,0.6) 0%, transparent 70%)",
         opacity: progress < 0.5 ? progress * 2 : (1 - progress) * 2,
         pointerEvents: "none",
       }}

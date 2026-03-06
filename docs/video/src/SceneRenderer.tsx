@@ -1,9 +1,20 @@
 import React from "react";
-import { AbsoluteFill, Img, OffthreadVideo, staticFile, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+import {
+  AbsoluteFill,
+  Img,
+  interpolate,
+  OffthreadVideo,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import type { Scene } from "./scenes";
 
 /** Animated red underline span. Width grows from 0% to 100%. */
-const EmphasisSpan: React.FC<{ children: React.ReactNode; delay: number }> = ({ children, delay }) => {
+const EmphasisSpan: React.FC<{ children: React.ReactNode; delay: number }> = ({
+  children,
+  delay,
+}) => {
   const frame = useCurrentFrame();
   const width = interpolate(frame, [delay, delay + 10], [0, 100], {
     extrapolateLeft: "clamp",
@@ -28,7 +39,10 @@ const EmphasisSpan: React.FC<{ children: React.ReactNode; delay: number }> = ({ 
 };
 
 /** Render text with optional emphasis (animated red underline on matching substrings). */
-const renderTextWithEmphasis = (text: string, emphasis?: string | string[]): React.ReactNode => {
+const renderTextWithEmphasis = (
+  text: string,
+  emphasis?: string | string[],
+): React.ReactNode => {
   if (!emphasis) return text;
   const words = Array.isArray(emphasis) ? emphasis : [emphasis];
 
@@ -50,7 +64,10 @@ const renderTextWithEmphasis = (text: string, emphasis?: string | string[]): Rea
       break;
     }
     if (earliestPos > 0) {
-      segments.push({ text: remaining.slice(0, earliestPos), emphasisIndex: -1 });
+      segments.push({
+        text: remaining.slice(0, earliestPos),
+        emphasisIndex: -1,
+      });
     }
     segments.push({ text: words[earliest], emphasisIndex: earliest });
     remaining = remaining.slice(earliestPos + words[earliest].length);
@@ -58,13 +75,13 @@ const renderTextWithEmphasis = (text: string, emphasis?: string | string[]): Rea
 
   return (
     <>
-      {segments.map((seg, i) =>
+      {segments.map((seg) =>
         seg.emphasisIndex >= 0 ? (
-          <EmphasisSpan key={i} delay={6 + seg.emphasisIndex * 8}>
+          <EmphasisSpan key={seg.text} delay={6 + seg.emphasisIndex * 8}>
             {seg.text}
           </EmphasisSpan>
         ) : (
-          <React.Fragment key={i}>{seg.text}</React.Fragment>
+          <React.Fragment key={seg.text}>{seg.text}</React.Fragment>
         ),
       )}
     </>
@@ -109,7 +126,8 @@ const SPARKLES = [
 ];
 
 const Star: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} role="img">
+    <title>Star</title>
     <path d="M12 0l3 9h9l-7.5 5.5L19.5 24 12 18l-7.5 6 3-9.5L0 9h9z" />
   </svg>
 );
@@ -124,55 +142,100 @@ const HighlightOverlay: React.FC<{
   if (style === "sparkleClick") {
     // Click animation timing (relative to content appearance)
     const clickFrame = contentDelay + 12; // click happens shortly after content appears
-    const clickProgress = interpolate(frame, [clickFrame, clickFrame + 6], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const _clickProgress = interpolate(
+      frame,
+      [clickFrame, clickFrame + 6],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
 
     // Cursor position: moves to center of highlight area
     const cursorTargetX = h.x + h.w / 2;
     const cursorTargetY = h.y + h.h / 2;
     const cursorStartX = h.x + h.w / 2 + 15;
     const cursorStartY = h.y - 15;
-    const cursorX = interpolate(frame, [contentDelay + 4, clickFrame], [cursorStartX, cursorTargetX], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
-    const cursorY = interpolate(frame, [contentDelay + 4, clickFrame], [cursorStartY, cursorTargetY], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
-    const cursorOpacity = interpolate(frame, [contentDelay + 2, contentDelay + 6], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const cursorX = interpolate(
+      frame,
+      [contentDelay + 4, clickFrame],
+      [cursorStartX, cursorTargetX],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
+    const cursorY = interpolate(
+      frame,
+      [contentDelay + 4, clickFrame],
+      [cursorStartY, cursorTargetY],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
+    const cursorOpacity = interpolate(
+      frame,
+      [contentDelay + 2, contentDelay + 6],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
 
     // Click press scale
-    const cursorScale = frame >= clickFrame && frame < clickFrame + 3
-      ? interpolate(frame, [clickFrame, clickFrame + 3], [1, 0.85], { extrapolateRight: "clamp" })
-      : frame >= clickFrame + 3 && frame < clickFrame + 6
-        ? interpolate(frame, [clickFrame + 3, clickFrame + 6], [0.85, 1], { extrapolateRight: "clamp" })
-        : 1;
+    const cursorScale =
+      frame >= clickFrame && frame < clickFrame + 3
+        ? interpolate(frame, [clickFrame, clickFrame + 3], [1, 0.85], {
+            extrapolateRight: "clamp",
+          })
+        : frame >= clickFrame + 3 && frame < clickFrame + 6
+          ? interpolate(frame, [clickFrame + 3, clickFrame + 6], [0.85, 1], {
+              extrapolateRight: "clamp",
+            })
+          : 1;
 
     // Glow pulse after click
-    const glowOpacity = interpolate(frame, [clickFrame + 3, clickFrame + 8, clickFrame + 20], [0, 0.8, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
-    const glowScale = interpolate(frame, [clickFrame + 3, clickFrame + 15], [0.8, 1.6], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const glowOpacity = interpolate(
+      frame,
+      [clickFrame + 3, clickFrame + 8, clickFrame + 20],
+      [0, 0.8, 0],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
+    const glowScale = interpolate(
+      frame,
+      [clickFrame + 3, clickFrame + 15],
+      [0.8, 1.6],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
 
     // Ripple after click
-    const rippleOpacity = interpolate(frame, [clickFrame + 4, clickFrame + 18], [0.6, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
-    const rippleScale = interpolate(frame, [clickFrame + 4, clickFrame + 18], [0.5, 2.5], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const rippleOpacity = interpolate(
+      frame,
+      [clickFrame + 4, clickFrame + 18],
+      [0.6, 0],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
+    const rippleScale = interpolate(
+      frame,
+      [clickFrame + 4, clickFrame + 18],
+      [0.5, 2.5],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
 
     return (
       <>
@@ -185,7 +248,8 @@ const HighlightOverlay: React.FC<{
             width: `${h.w * 1.5}%`,
             height: `${h.h * 2}%`,
             transform: `translate(-50%, -50%) scale(${glowScale})`,
-            background: "radial-gradient(ellipse, rgba(250,204,21,0.7) 0%, rgba(250,204,21,0) 70%)",
+            background:
+              "radial-gradient(ellipse, rgba(250,204,21,0.7) 0%, rgba(250,204,21,0) 70%)",
             opacity: glowOpacity,
             pointerEvents: "none",
           }}
@@ -208,28 +272,48 @@ const HighlightOverlay: React.FC<{
         />
 
         {/* Sparkle particles */}
-        {SPARKLES.map((s, i) => {
+        {SPARKLES.map((s, sparkleIndex) => {
           const sparkleStart = clickFrame + 4 + s.delay;
-          const sparkleOpacity = interpolate(frame, [sparkleStart, sparkleStart + 4, sparkleStart + 14], [0, 1, 0], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
-          const sparkleScale = interpolate(frame, [sparkleStart, sparkleStart + 6, sparkleStart + 14], [0.3, 1.2, 0.5], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
-          const sparkleY = interpolate(frame, [sparkleStart, sparkleStart + 14], [0, s.dy * 0.5], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
-          const sparkleRotation = interpolate(frame, [sparkleStart, sparkleStart + 14], [0, 45 + i * 20], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
+          const sparkleOpacity = interpolate(
+            frame,
+            [sparkleStart, sparkleStart + 4, sparkleStart + 14],
+            [0, 1, 0],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const sparkleScale = interpolate(
+            frame,
+            [sparkleStart, sparkleStart + 6, sparkleStart + 14],
+            [0.3, 1.2, 0.5],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const sparkleY = interpolate(
+            frame,
+            [sparkleStart, sparkleStart + 14],
+            [0, s.dy * 0.5],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const sparkleRotation = interpolate(
+            frame,
+            [sparkleStart, sparkleStart + 14],
+            [0, 45 + sparkleIndex * 20],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
 
           return (
             <div
-              key={i}
+              key={`sparkle-${s.dx}-${s.dy}`}
               style={{
                 position: "absolute",
                 top: `${cursorTargetY}%`,
@@ -300,14 +384,21 @@ const HighlightOverlay: React.FC<{
 
 export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const fontSize = textSizes[scene.textSize ?? "md"];
   const bg = bgColors[scene.bg];
   const color = textColors[scene.bg];
 
   const isDelayedFadeIn = scene.enterAnimation === "delayedFadeIn";
   const contentStart = isDelayedFadeIn ? 45 : 0;
-  const popIn = interpolate(frame, [contentStart, contentStart + 4], [0.9, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const fadeIn = interpolate(frame, [contentStart, contentStart + 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const popIn = interpolate(frame, [contentStart, contentStart + 4], [0.9, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const fadeIn = interpolate(frame, [contentStart, contentStart + 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   if (scene.layout === "splitHighlight" && scene.image && scene.highlight) {
     const h = scene.highlight;
@@ -324,13 +415,15 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
     // Image positions (1280x720 viewport, 16:9 source)
     // Full-screen: 1152x648, centered at (640, 360)
     // Split left pane: ~694x390, centered at (~371, 360)
-    const fullW = 1152, fullH = 648;
+    const fullW = 1152,
+      fullH = 648;
     const fullX = (1280 - fullW) / 2; // 64
-    const fullY = (720 - fullH) / 2;  // 36
-    const splitW = 694, splitH = 390;
+    const fullY = (720 - fullH) / 2; // 36
+    const splitW = 694,
+      splitH = 390;
     const splitPaneW = 1280 * 0.58; // 742.4
     const splitX = (splitPaneW - splitW) / 2; // ~24
-    const splitY = (720 - splitH) / 2;        // 165
+    const splitY = (720 - splitH) / 2; // 165
 
     const shrinkProgress = hasShrinkAnim
       ? interpolate(frame, [shrinkStart, shrinkEnd], [0, 1], {
@@ -350,21 +443,37 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
 
     // Right panel + highlight fade in after shrink or delayed entry
     const contentDelay = hasShrinkAnim ? shrinkEnd : hasDelayedEntry ? 45 : 0;
-    const contentFade = interpolate(frame, [contentDelay, contentDelay + 8], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const contentFade = interpolate(
+      frame,
+      [contentDelay, contentDelay + 8],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
     // Highlight appears slightly after the panel
-    const highlightFade = interpolate(frame, [contentDelay + 4, contentDelay + 12], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const highlightFade = interpolate(
+      frame,
+      [contentDelay + 4, contentDelay + 12],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
 
     // Full-screen image fade-in
     const entryFade = hasShrinkAnim
-      ? interpolate(frame, [18, 38], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+      ? interpolate(frame, [18, 38], [0, 1], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        })
       : hasDelayedEntry
-        ? interpolate(frame, [45, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+        ? interpolate(frame, [45, 65], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          })
         : fadeIn;
 
     if (isAnimating) {
@@ -381,9 +490,10 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
               height: imgH,
               objectFit: "contain",
               borderRadius: imgRadius,
-              boxShadow: frame < shrinkStart
-                ? "0 8px 32px rgba(0,0,0,0.2)"
-                : `0 ${interpolate(shrinkProgress, [0, 1], [8, 4])}px ${interpolate(shrinkProgress, [0, 1], [32, 20])}px rgba(0,0,0,${interpolate(shrinkProgress, [0, 1], [0.2, 0.12])})`,
+              boxShadow:
+                frame < shrinkStart
+                  ? "0 8px 32px rgba(0,0,0,0.2)"
+                  : `0 ${interpolate(shrinkProgress, [0, 1], [8, 4])}px ${interpolate(shrinkProgress, [0, 1], [32, 20])}px rgba(0,0,0,${interpolate(shrinkProgress, [0, 1], [0.2, 0.12])})`,
               opacity: entryFade,
             }}
           />
@@ -394,7 +504,9 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
     // Phase 3: normal splitHighlight layout
     const layoutFade = hasDelayedEntry ? contentFade : 1;
     return (
-      <AbsoluteFill style={{ backgroundColor: bg, display: "flex", flexDirection: "row" }}>
+      <AbsoluteFill
+        style={{ backgroundColor: bg, display: "flex", flexDirection: "row" }}
+      >
         {/* Left: screenshot with highlight */}
         <div
           style={{
@@ -424,7 +536,13 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
               }}
             />
             {/* Highlight overlay */}
-            <HighlightOverlay h={h} style={scene.highlightStyle ?? "redBorder"} opacity={highlightFade} frame={frame} contentDelay={contentDelay} />
+            <HighlightOverlay
+              h={h}
+              style={scene.highlightStyle ?? "redBorder"}
+              opacity={highlightFade}
+              frame={frame}
+              contentDelay={contentDelay}
+            />
           </div>
         </div>
         {/* Right: description */}
@@ -469,7 +587,6 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
   }
 
   if (scene.layout === "titleReveal" && scene.image) {
-    const { fps } = useVideoConfig();
     const slideStart = fps * 1;
     const slideEnd = fps * 1.5;
     const imgStart = fps * 1.2;
@@ -567,8 +684,18 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
           }}
         >
           {/* Left pane */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            {scene.icon && <div style={{ fontSize: 80, lineHeight: 1 }}>{scene.icon}</div>}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 16,
+            }}
+          >
+            {scene.icon && (
+              <div style={{ fontSize: 80, lineHeight: 1 }}>{scene.icon}</div>
+            )}
             <div
               style={{
                 fontSize: fontSize * 0.8,
@@ -583,10 +710,27 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
             </div>
           </div>
           {/* Divider */}
-          <div style={{ width: 2, backgroundColor: color, opacity: 0.2, borderRadius: 1 }} />
+          <div
+            style={{
+              width: 2,
+              backgroundColor: color,
+              opacity: 0.2,
+              borderRadius: 1,
+            }}
+          />
           {/* Right pane */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            {scene.icon2 && <div style={{ fontSize: 80, lineHeight: 1 }}>{scene.icon2}</div>}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 16,
+            }}
+          >
+            {scene.icon2 && (
+              <div style={{ fontSize: 80, lineHeight: 1 }}>{scene.icon2}</div>
+            )}
             <div
               style={{
                 fontSize: fontSize * 0.8,
@@ -606,7 +750,6 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
   }
 
   if (scene.video) {
-    const { fps } = useVideoConfig();
     const videoStartFromFrames = Math.round((scene.videoStartFrom ?? 0) * fps);
 
     return (
@@ -707,45 +850,69 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
             }}
           >
             {/* Callout positioned relative to content — above-left */}
-            {scene.callout && (() => {
-              const calloutDelay = 12;
-              const calloutScale = interpolate(frame, [calloutDelay, calloutDelay + 6], [0, 1], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              });
-              const calloutOpacity = interpolate(frame, [calloutDelay, calloutDelay + 4], [0, 1], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              });
-              const calloutBounce = interpolate(frame, [calloutDelay + 6, calloutDelay + 10], [1, 1.05], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              }) * interpolate(frame, [calloutDelay + 10, calloutDelay + 14], [1, 1 / 1.05], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              });
-              return (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    transform: `translate(-35%, -80%) rotate(-12deg) scale(${calloutScale * calloutBounce})`,
-                    transformOrigin: "center center",
-                    opacity: calloutOpacity,
-                    fontSize: 32,
-                    fontWeight: 800,
-                    color: "#fbbf24",
-                    textShadow: "0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(251,191,36,0.3)",
-                    whiteSpace: "nowrap",
-                    letterSpacing: "0.05em",
-                    pointerEvents: "none",
-                  }}
-                >
-                  {scene.callout}
-                </div>
-              );
-            })()}
+            {scene.callout &&
+              (() => {
+                const calloutDelay = 12;
+                const calloutScale = interpolate(
+                  frame,
+                  [calloutDelay, calloutDelay + 6],
+                  [0, 1],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  },
+                );
+                const calloutOpacity = interpolate(
+                  frame,
+                  [calloutDelay, calloutDelay + 4],
+                  [0, 1],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  },
+                );
+                const calloutBounce =
+                  interpolate(
+                    frame,
+                    [calloutDelay + 6, calloutDelay + 10],
+                    [1, 1.05],
+                    {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                    },
+                  ) *
+                  interpolate(
+                    frame,
+                    [calloutDelay + 10, calloutDelay + 14],
+                    [1, 1 / 1.05],
+                    {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                    },
+                  );
+                return (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      transform: `translate(-35%, -80%) rotate(-12deg) scale(${calloutScale * calloutBounce})`,
+                      transformOrigin: "center center",
+                      opacity: calloutOpacity,
+                      fontSize: 32,
+                      fontWeight: 800,
+                      color: "#fbbf24",
+                      textShadow:
+                        "0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(251,191,36,0.3)",
+                      whiteSpace: "nowrap",
+                      letterSpacing: "0.05em",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {scene.callout}
+                  </div>
+                );
+              })()}
             <div
               style={{
                 fontSize: fontSize * 0.6,
@@ -776,13 +943,16 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
                   color,
                 }}
               >
-                {scene.sub.split("\n").map((line, i, arr) => (
+                {scene.sub.split("\n").map((line, _idx, arr) => (
                   <div
-                    key={i}
+                    key={line}
                     style={{
-                      fontSize: i === arr.length - 1 ? fontSize : fontSize * 0.5,
-                      fontWeight: i === arr.length - 1 ? 800 : 500,
-                      opacity: i === arr.length - 1 ? 1 : 0.7,
+                      fontSize:
+                        line === arr[arr.length - 1]
+                          ? fontSize
+                          : fontSize * 0.5,
+                      fontWeight: line === arr[arr.length - 1] ? 800 : 500,
+                      opacity: line === arr[arr.length - 1] ? 1 : 0.7,
                     }}
                   >
                     {line}
@@ -810,8 +980,21 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
     }
 
     return (
-      <AbsoluteFill style={{ backgroundColor: bg, justifyContent: "center", alignItems: "center" }}>
-        <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <AbsoluteFill
+        style={{
+          backgroundColor: bg,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Img
             src={staticFile(scene.image)}
             style={{
@@ -846,7 +1029,13 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
             }}
           >
             {scene.text && (
-              <div style={{ fontSize: 36, fontWeight: 700, textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+              <div
+                style={{
+                  fontSize: 36,
+                  fontWeight: 700,
+                  textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                }}
+              >
                 {scene.text}
               </div>
             )}
@@ -913,46 +1102,70 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
       </div>
 
       {/* Diagonal callout (manga-style) — positioned above-left of center content */}
-      {scene.callout && (() => {
-        const calloutDelay = 12;
-        const calloutScale = interpolate(frame, [calloutDelay, calloutDelay + 6], [0, 1], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
-        const calloutOpacity = interpolate(frame, [calloutDelay, calloutDelay + 4], [0, 1], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
-        const calloutBounce = interpolate(frame, [calloutDelay + 6, calloutDelay + 10], [1, 1.05], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        }) * interpolate(frame, [calloutDelay + 10, calloutDelay + 14], [1, 1 / 1.05], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
+      {scene.callout &&
+        (() => {
+          const calloutDelay = 12;
+          const calloutScale = interpolate(
+            frame,
+            [calloutDelay, calloutDelay + 6],
+            [0, 1],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const calloutOpacity = interpolate(
+            frame,
+            [calloutDelay, calloutDelay + 4],
+            [0, 1],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            },
+          );
+          const calloutBounce =
+            interpolate(
+              frame,
+              [calloutDelay + 6, calloutDelay + 10],
+              [1, 1.05],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              },
+            ) *
+            interpolate(
+              frame,
+              [calloutDelay + 10, calloutDelay + 14],
+              [1, 1 / 1.05],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              },
+            );
 
-        return (
-          <div
-            style={{
-              position: "absolute",
-              top: "22%",
-              left: "18%",
-              transform: `rotate(-12deg) scale(${calloutScale * calloutBounce})`,
-              transformOrigin: "center center",
-              opacity: calloutOpacity,
-              fontSize: 36,
-              fontWeight: 800,
-              color: "#fbbf24",
-              textShadow: "0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(251,191,36,0.3)",
-              whiteSpace: "nowrap",
-              letterSpacing: "0.05em",
-              pointerEvents: "none",
-            }}
-          >
-            {scene.callout}
-          </div>
-        );
-      })()}
+          return (
+            <div
+              style={{
+                position: "absolute",
+                top: "22%",
+                left: "18%",
+                transform: `rotate(-12deg) scale(${calloutScale * calloutBounce})`,
+                transformOrigin: "center center",
+                opacity: calloutOpacity,
+                fontSize: 36,
+                fontWeight: 800,
+                color: "#fbbf24",
+                textShadow:
+                  "0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(251,191,36,0.3)",
+                whiteSpace: "nowrap",
+                letterSpacing: "0.05em",
+                pointerEvents: "none",
+              }}
+            >
+              {scene.callout}
+            </div>
+          );
+        })()}
     </AbsoluteFill>
   );
 };
