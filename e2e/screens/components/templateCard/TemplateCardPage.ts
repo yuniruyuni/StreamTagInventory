@@ -34,9 +34,7 @@ export class TemplateCardPage extends BasePage {
   }
 
   get tags(): Locator {
-    return this.cardLocator.locator(
-      ".inline-flex.items-center.rounded.px-2.py-1.me-2.text-sm.font-medium.text-on-primary-light.bg-primary-light",
-    );
+    return this.cardLocator.getByTestId("tag");
   }
 
   getCategoryOption(name: string): Locator {
