@@ -23,6 +23,10 @@ export const TemplateCard: FC<Props> = memo(
     const { attributes, listeners, setNodeRef, transform, transition } =
       useSortable({ id: template.id });
 
+    // dnd-kit sets role="button" in attributes, which overrides <article>'s
+    // implicit role. Destructure it out so the Card keeps role="article".
+    const { role: _role, ...restAttributes } = attributes;
+
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
@@ -36,7 +40,7 @@ export const TemplateCard: FC<Props> = memo(
         data-testid={`template-card-${template.id}`}
         className="w-96 bg-surface shadow-xl"
         ref={setNodeRef}
-        {...attributes}
+        {...restAttributes}
         style={style}
       >
         <CardBody>
