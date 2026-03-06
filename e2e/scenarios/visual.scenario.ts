@@ -50,10 +50,7 @@ test.describe("Visual Regression Tests - Authenticated", () => {
     const inventoryScreen = new InventoryScreen(page);
     const firstTemplateCard = inventoryScreen.getTemplateCardScreen(0);
 
-    await page
-      .getByTestId("template-card")
-      .first()
-      .waitFor({ state: "visible" });
+    await page.getByRole("article").first().waitFor({ state: "visible" });
     await firstTemplateCard.state.expectCardScreenshot("template-card.png");
   });
 

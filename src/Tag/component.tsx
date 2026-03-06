@@ -9,7 +9,6 @@ type Props = {
 
 export const Tag: React.FC<Props> = ({ onRemove, children }) => (
   <li
-    data-testid="tag"
     className={clsx(
       "inline-flex items-center",
       "rounded",

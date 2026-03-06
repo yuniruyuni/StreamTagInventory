@@ -11,10 +11,7 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
   const { t } = useTranslation();
 
   return (
-    <div
-      data-testid="login-container"
-      className="h-screen w-screen flex flex-col items-center justify-center relative"
-    >
+    <main className="h-screen w-screen flex flex-col items-center justify-center relative">
       <div className="flex flex-col items-center">
         <h1 className="text-4xl font-bold">Stream Tag Inventory</h1>
         <p className="text-xl text-on-surface pt-6 text-center">
@@ -34,6 +31,6 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
       <div className="absolute bottom-8 flex flex-col items-center gap-3">
         <AuthorInfo />
       </div>
-    </div>
+    </main>
   );
 };

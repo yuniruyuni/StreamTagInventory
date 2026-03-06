@@ -17,6 +17,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
     <>
       <label htmlFor="title">{t("template.title")}</label>
       <Input
+        id="title"
         name="title"
         type="text"
         className="w-full focus:border-on-surface"
@@ -24,7 +25,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         value={template.title}
       />
 
-      <label htmlFor="">{t("template.category")}</label>
+      <label htmlFor="category">{t("template.category")}</label>
       <CategorySelector
         value={template.category}
         onChange={(category) => onChange({ ...template, category })}
