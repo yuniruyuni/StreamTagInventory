@@ -28,7 +28,7 @@ test("初期状態でドロップダウンが表示されない", () => {
   const onSelect = mock();
   const onQueryChange = mock();
 
-  const { queryByTestId } = render(
+  const { queryByRole } = render(
     <SearchCombobox
       items={items}
       value={undefined}
@@ -43,14 +43,14 @@ test("初期状態でドロップダウンが表示されない", () => {
     { wrapper: I18nWrapper },
   );
 
-  expect(queryByTestId("combobox-dropdown")).toBeNull();
+  expect(queryByRole("listbox")).toBeNull();
 });
 
 test("フォーカスでitemsありのドロップダウンが表示される", () => {
   const onSelect = mock();
   const onQueryChange = mock();
 
-  const { getByPlaceholderText, getByTestId } = render(
+  const { getByPlaceholderText, getByRole } = render(
     <SearchCombobox
       items={items}
       value={undefined}
@@ -67,14 +67,14 @@ test("フォーカスでitemsありのドロップダウンが表示される", 
 
   fireEvent.focus(getByPlaceholderText("Search..."));
 
-  expect(getByTestId("combobox-dropdown")).not.toBeNull();
+  expect(getByRole("listbox")).not.toBeNull();
 });
 
 test("フォーカスでitemsが空の場合ドロップダウンが表示されない", () => {
   const onSelect = mock();
   const onQueryChange = mock();
 
-  const { getByPlaceholderText, queryByTestId } = render(
+  const { getByPlaceholderText, queryByRole } = render(
     <SearchCombobox
       items={[]}
       value={undefined}
@@ -91,7 +91,7 @@ test("フォーカスでitemsが空の場合ドロップダウンが表示され
 
   fireEvent.focus(getByPlaceholderText("Search..."));
 
-  expect(queryByTestId("combobox-dropdown")).toBeNull();
+  expect(queryByRole("listbox")).toBeNull();
 });
 
 test("ArrowDown + Enterで選択確定", async () => {
@@ -222,7 +222,7 @@ test("mousedownでonSelectが呼ばれblurしない", () => {
   const onSelect = mock();
   const onQueryChange = mock();
 
-  const { getByPlaceholderText, getByTestId } = render(
+  const { getByPlaceholderText, getByRole } = render(
     <SearchCombobox
       items={items}
       value={undefined}
@@ -240,7 +240,7 @@ test("mousedownでonSelectが呼ばれblurしない", () => {
   const input = getByPlaceholderText("Search...");
   fireEvent.focus(input);
 
-  const dropdown = getByTestId("combobox-dropdown");
+  const dropdown = getByRole("listbox");
   const buttons = dropdown.querySelectorAll("button");
   fireEvent.mouseDown(buttons[2]); // Gamma
 

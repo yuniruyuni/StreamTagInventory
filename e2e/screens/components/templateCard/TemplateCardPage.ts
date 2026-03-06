@@ -10,15 +10,15 @@ export class TemplateCardPage extends BasePage {
   }
 
   get categoryInput(): Locator {
-    return this.cardLocator.locator("#category");
+    return this.cardLocator.getByRole("combobox");
   }
 
   get titleInput(): Locator {
-    return this.cardLocator.locator('input[name="title"]');
+    return this.cardLocator.getByRole("textbox", { name: /title|タイトル/i });
   }
 
   get categoryDropdown(): Locator {
-    return this.getByTestId("combobox-dropdown");
+    return this.cardLocator.getByRole("listbox");
   }
 
   get saveButton(): Locator {
@@ -30,11 +30,11 @@ export class TemplateCardPage extends BasePage {
   }
 
   get revertButton(): Locator {
-    return this.cardLocator.locator('button[aria-label="revert changes"]');
+    return this.cardLocator.getByRole("button", { name: "revert template" });
   }
 
   get tags(): Locator {
-    return this.cardLocator.getByTestId("tag");
+    return this.cardLocator.getByRole("listitem");
   }
 
   getCategoryOption(name: string): Locator {

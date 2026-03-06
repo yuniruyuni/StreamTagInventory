@@ -72,6 +72,9 @@ const SearchComboboxInner = <T,>({
         <Input
           id={inputId}
           type="text"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-autocomplete="list"
           placeholder={placeholder}
           value={query}
           onFocus={handleFocus}
@@ -92,7 +95,7 @@ const SearchComboboxInner = <T,>({
 
       {showDropdown && (
         <div
-          data-testid="combobox-dropdown"
+          role="listbox"
           className={clsx(
             "absolute top-full left-0 z-20",
             "w-full h-fit",

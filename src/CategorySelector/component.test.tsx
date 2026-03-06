@@ -31,7 +31,7 @@ beforeAll(async () => {
 test("CategorySelectorコンポーネントが正しくレンダリングされる", () => {
   const onChange = mock();
 
-  const { getByPlaceholderText, queryByTestId } = render(
+  const { getByPlaceholderText, queryByRole } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
@@ -39,14 +39,14 @@ test("CategorySelectorコンポーネントが正しくレンダリングされ�
   const input = getByPlaceholderText("Pick a category");
   expect(input).not.toBeNull();
 
-  const dropdownContent = queryByTestId("combobox-dropdown");
+  const dropdownContent = queryByRole("listbox");
   expect(dropdownContent).toBeNull();
 });
 
 test("入力フィールドにフォーカスするとドロップダウンが表示される", () => {
   const onChange = mock();
 
-  const { getByPlaceholderText, getByTestId } = render(
+  const { getByPlaceholderText, getByRole } = render(
     <CategorySelector value={EmptyCategory} onChange={onChange} />,
     { wrapper: SWRConfigWrapper({ data: mockCategories }) },
   );
@@ -56,7 +56,7 @@ test("入力フィールドにフォーカスするとドロップダウンが�
 
   fireEvent.focus(input);
 
-  const dropdownContent = getByTestId("combobox-dropdown");
+  const dropdownContent = getByRole("listbox");
   expect(dropdownContent).not.toBeNull();
 });
 

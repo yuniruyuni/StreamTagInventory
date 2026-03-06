@@ -4,19 +4,18 @@ import React from "react";
 type CardProps = {
   className?: string;
   children: React.ReactNode;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & React.HTMLAttributes<HTMLElement>;
 
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
+export const Card = React.forwardRef<HTMLElement, CardProps>(
   ({ className, children, ...rest }, ref) => {
     return (
-      <div
+      <article
         ref={ref}
-        data-testid="template-card"
         {...rest}
         className={clsx("card relative rounded-lg flex flex-col", className)}
       >
         {children}
-      </div>
+      </article>
     );
   },
 );
