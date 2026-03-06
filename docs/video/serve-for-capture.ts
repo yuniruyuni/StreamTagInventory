@@ -5,7 +5,7 @@ Bun.serve({
     let path = new URL(req.url).pathname;
     if (path === "/") path = "/index.html";
     const filePath = path.startsWith("/") ? path.slice(1) : path;
-    const root = import.meta.dir + "/../../../static";
+    const root = `${import.meta.dir}/../../../static`;
     const file = Bun.file(`${root}/${filePath}`);
     return new Response(file);
   },

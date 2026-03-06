@@ -1,7 +1,16 @@
 export interface SlideConfig {
   src: string;
   durationSec: number;
-  transition: "cut" | "push" | "flash" | "zoom" | "whip" | "glitch" | "flip" | "glow" | "wipe";
+  transition:
+    | "cut"
+    | "push"
+    | "flash"
+    | "zoom"
+    | "whip"
+    | "glitch"
+    | "flip"
+    | "glow"
+    | "wipe";
 }
 
 export const slides: SlideConfig[] = [

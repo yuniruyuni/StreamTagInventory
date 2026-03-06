@@ -25,7 +25,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "cd ../../.. && bun run e2e:build && bun run docs/intro-video/remotion/serve-for-capture.ts",
+    command:
+      "cd ../../.. && bun run e2e:build && bun run docs/intro-video/remotion/serve-for-capture.ts",
     port: 3100,
     reuseExistingServer: true,
     timeout: 120 * 1000,

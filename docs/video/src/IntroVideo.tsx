@@ -1,20 +1,21 @@
-import React from "react";
+import type React from "react";
 import {
   AbsoluteFill,
+  interpolate,
   Sequence,
   useCurrentFrame,
   useVideoConfig,
-  interpolate,
 } from "remotion";
-import { scenes } from "./scenes";
 import { SceneRenderer } from "./SceneRenderer";
+import { scenes } from "./scenes";
 import { TRANSITION_FRAMES, transitionMap } from "./transitions";
 
 const CROSSFADE_FRAMES = 10; // ~0.33s overlap for cross-fade transitions
 
 // Collect sections from sectionTitle markers in scenes.
 // Each section runs from its start scene until the next scene with sectionTitle.
-const sectionDefs: { label: string; startIndex: number; endIndex: number }[] = [];
+const sectionDefs: { label: string; startIndex: number; endIndex: number }[] =
+  [];
 for (let i = 0; i < scenes.length; i++) {
   if (scenes[i].sectionTitle) {
     // Find end: next scene with sectionTitle, or end of scenes
@@ -25,7 +26,11 @@ for (let i = 0; i < scenes.length; i++) {
         break;
       }
     }
-    sectionDefs.push({ label: scenes[i].sectionTitle!, startIndex: i, endIndex });
+    sectionDefs.push({
+      label: scenes[i].sectionTitle as string,
+      startIndex: i,
+      endIndex,
+    });
   }
 }
 
@@ -66,7 +71,11 @@ const SceneWithTransition: React.FC<{
     return content;
   }
 
-  return <TransitionComponent progress={enterProgress}>{content}</TransitionComponent>;
+  return (
+    <TransitionComponent progress={enterProgress}>
+      {content}
+    </TransitionComponent>
+  );
 };
 
 /**
@@ -87,21 +96,37 @@ const PersistentSectionTitle: React.FC<{ label: string }> = ({ label }) => {
   const frame = useCurrentFrame();
 
   // Center text: fade in → hold → fade out
-  const centerOpacity = frame < TITLE_HOLD_END
-    ? interpolate(frame, [0, TITLE_FADE_IN_END], [0, 1], { extrapolateRight: "clamp" })
-    : interpolate(frame, [TITLE_HOLD_END, TITLE_FADE_OUT_END], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const centerOpacity =
+    frame < TITLE_HOLD_END
+      ? interpolate(frame, [0, TITLE_FADE_IN_END], [0, 1], {
+          extrapolateRight: "clamp",
+        })
+      : interpolate(frame, [TITLE_HOLD_END, TITLE_FADE_OUT_END], [1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        });
 
   // Top-left label: fade in after center disappears
-  const labelOpacity = interpolate(frame, [TITLE_FADE_OUT_END, LABEL_FADE_IN_END], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const labelOpacity = interpolate(
+    frame,
+    [TITLE_FADE_OUT_END, LABEL_FADE_IN_END],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   // Underline animation: grows from center after text fades in
-  const underlineWidth = interpolate(frame, [TITLE_FADE_IN_END, TITLE_FADE_IN_END + 10], [0, 100], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const underlineWidth = interpolate(
+    frame,
+    [TITLE_FADE_IN_END, TITLE_FADE_IN_END + 10],
+    [0, 100],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   return (
     <>
@@ -196,9 +221,8 @@ export const IntroVideo: React.FC = () => {
   // Compute section overlay frame ranges
   const sectionOverlays = sectionDefs.map(({ label, startIndex, endIndex }) => {
     const startFrame = sceneFrames[startIndex].startFrame;
-    const endFrame = endIndex < scenes.length
-      ? sceneFrames[endIndex].startFrame
-      : totalFrames;
+    const endFrame =
+      endIndex < scenes.length ? sceneFrames[endIndex].startFrame : totalFrames;
     return { label, startFrame, duration: endFrame - startFrame };
   });
 
@@ -207,7 +231,11 @@ export const IntroVideo: React.FC = () => {
       {scenes.map((scene, i) => {
         const { startFrame, durationFrames } = sceneFrames[i];
         return (
-          <Sequence key={i} from={startFrame} durationInFrames={durationFrames}>
+          <Sequence
+            key={scene.text}
+            from={startFrame}
+            durationInFrames={durationFrames}
+          >
             <SceneWithTransition scene={scene} />
           </Sequence>
         );
@@ -219,7 +247,6 @@ export const IntroVideo: React.FC = () => {
           <PersistentSectionTitle label={label} />
         </Sequence>
       ))}
-
     </AbsoluteFill>
   );
 };

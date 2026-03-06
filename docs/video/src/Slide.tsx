@@ -1,4 +1,4 @@
-import { AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+import { AbsoluteFill, Img, staticFile } from "remotion";
 import type { SlideConfig } from "./slides";
 
 export const Slide: React.FC<{ slide: SlideConfig }> = ({ slide }) => {

@@ -1,8 +1,8 @@
-import { test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Locator, Page } from "@playwright/test";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { test } from "@playwright/test";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const screenshotDir = path.resolve(__dirname, "public/screenshots");
@@ -32,7 +32,8 @@ async function computeHighlight(
     if (!box) throw new Error("Container element not found");
     containerBox = box;
   } else {
-    const vs = page.viewportSize()!;
+    const vs = page.viewportSize();
+    if (!vs) throw new Error("Viewport size not available");
     containerBox = { x: 0, y: 0, width: vs.width, height: vs.height };
   }
 
@@ -54,7 +55,7 @@ async function computeHighlight(
     }
   }
 
-  if (!isFinite(minX)) throw new Error("No target elements found");
+  if (!Number.isFinite(minX)) throw new Error("No target elements found");
 
   const pctX = ((minX - containerBox.x) / containerBox.width) * 100;
   const pctY = ((minY - containerBox.y) / containerBox.height) * 100;
@@ -88,31 +89,35 @@ async function injectVisibleCursor(page: Page) {
       borderRadius: "50%",
       background: "rgba(255, 80, 80, 0.6)",
       border: "3px solid rgba(255, 255, 255, 0.95)",
-      boxShadow: "0 0 20px rgba(255, 80, 80, 0.5), 0 0 40px rgba(255, 80, 80, 0.2)",
+      boxShadow:
+        "0 0 20px rgba(255, 80, 80, 0.5), 0 0 40px rgba(255, 80, 80, 0.2)",
       pointerEvents: "none",
       zIndex: "999999",
       transform: "translate(-50%, -50%)",
-      transition: "width 0.15s, height 0.15s, background 0.15s, box-shadow 0.15s",
+      transition:
+        "width 0.15s, height 0.15s, background 0.15s, box-shadow 0.15s",
       display: "none",
     });
     document.body.appendChild(cursor);
 
     document.addEventListener("mousemove", (e) => {
       cursor.style.display = "block";
-      cursor.style.left = e.clientX + "px";
-      cursor.style.top = e.clientY + "px";
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
     });
     document.addEventListener("mousedown", () => {
       cursor.style.width = "30px";
       cursor.style.height = "30px";
       cursor.style.background = "rgba(255, 200, 50, 0.9)";
-      cursor.style.boxShadow = "0 0 24px rgba(255, 200, 50, 0.7), 0 0 48px rgba(255, 200, 50, 0.3)";
+      cursor.style.boxShadow =
+        "0 0 24px rgba(255, 200, 50, 0.7), 0 0 48px rgba(255, 200, 50, 0.3)";
     });
     document.addEventListener("mouseup", () => {
       cursor.style.width = "40px";
       cursor.style.height = "40px";
       cursor.style.background = "rgba(255, 80, 80, 0.6)";
-      cursor.style.boxShadow = "0 0 20px rgba(255, 80, 80, 0.5), 0 0 40px rgba(255, 80, 80, 0.2)";
+      cursor.style.boxShadow =
+        "0 0 20px rgba(255, 80, 80, 0.5), 0 0 40px rgba(255, 80, 80, 0.2)";
     });
   });
 }
@@ -410,19 +415,34 @@ test.describe("Capture screenshots for intro video", () => {
         {
           id: "template-minecraft",
           title: "Minecraft Building Stream",
-          category: { id: "27471", name: "Minecraft", box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/27471-{width}x{height}.jpg" },
+          category: {
+            id: "27471",
+            name: "Minecraft",
+            box_art_url:
+              "https://static-cdn.jtvnw.net/ttv-boxart/27471-{width}x{height}.jpg",
+          },
           tags: ["building", "creative"],
         },
         {
           id: "template-apex",
           title: "Apex Legends Ranked",
-          category: { id: "511224", name: "Apex Legends", box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/511224-{width}x{height}.jpg" },
+          category: {
+            id: "511224",
+            name: "Apex Legends",
+            box_art_url:
+              "https://static-cdn.jtvnw.net/ttv-boxart/511224-{width}x{height}.jpg",
+          },
           tags: ["ranked", "FPS"],
         },
         {
           id: "template-valorant",
           title: "VALORANT Competitive",
-          category: { id: "516575", name: "VALORANT", box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/516575-{width}x{height}.jpg" },
+          category: {
+            id: "516575",
+            name: "VALORANT",
+            box_art_url:
+              "https://static-cdn.jtvnw.net/ttv-boxart/516575-{width}x{height}.jpg",
+          },
           tags: ["competitive", "FPS"],
         },
       ];
@@ -438,8 +458,12 @@ test.describe("Capture screenshots for intro video", () => {
     // Drag first card to second position (swap with neighbor)
     const firstCard = page.locator(".card").first();
     const secondCard = page.locator(".card").nth(1);
-    const dragHandle = firstCard.locator('button:has(svg[viewBox="0 0 20 20"])');
-    const targetHandle = secondCard.locator('button:has(svg[viewBox="0 0 20 20"])');
+    const dragHandle = firstCard.locator(
+      'button:has(svg[viewBox="0 0 20 20"])',
+    );
+    const targetHandle = secondCard.locator(
+      'button:has(svg[viewBox="0 0 20 20"])',
+    );
 
     const handleBox = await dragHandle.boundingBox();
     const targetBox = await targetHandle.boundingBox();
@@ -485,7 +509,8 @@ test.describe("Capture screenshots for intro video", () => {
     }
 
     const dndOutPath = path.join(videoDir, "dnd-reorder.webm");
-    const dndVideo = page.video()!;
+    const dndVideo = page.video();
+    if (!dndVideo) throw new Error("Video recording not available");
     await context.close();
     await dndVideo.saveAs(dndOutPath);
     await dndVideo.delete();
@@ -518,13 +543,23 @@ test.describe("Capture screenshots for intro video", () => {
         {
           id: "template-minecraft",
           title: "Minecraft Building Stream",
-          category: { id: "27471", name: "Minecraft", box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/27471-{width}x{height}.jpg" },
+          category: {
+            id: "27471",
+            name: "Minecraft",
+            box_art_url:
+              "https://static-cdn.jtvnw.net/ttv-boxart/27471-{width}x{height}.jpg",
+          },
           tags: ["building", "creative"],
         },
         {
           id: "template-apex",
           title: "Apex Legends Ranked",
-          category: { id: "511224", name: "Apex Legends", box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/511224-{width}x{height}.jpg" },
+          category: {
+            id: "511224",
+            name: "Apex Legends",
+            box_art_url:
+              "https://static-cdn.jtvnw.net/ttv-boxart/511224-{width}x{height}.jpg",
+          },
           tags: ["ranked", "FPS"],
         },
       ];
@@ -573,7 +608,8 @@ test.describe("Capture screenshots for intro video", () => {
       await newCard.evaluate((el) => {
         el.style.transition = "box-shadow 0.3s ease-out, outline 0.3s ease-out";
         el.style.outline = "3px solid rgba(59, 130, 246, 0.8)";
-        el.style.boxShadow = "0 0 24px rgba(59, 130, 246, 0.5), 0 0 48px rgba(59, 130, 246, 0.2)";
+        el.style.boxShadow =
+          "0 0 24px rgba(59, 130, 246, 0.5), 0 0 48px rgba(59, 130, 246, 0.2)";
       });
       await page.waitForTimeout(600);
       await newCard.evaluate((el) => {
@@ -584,7 +620,8 @@ test.describe("Capture screenshots for intro video", () => {
     await page.waitForTimeout(400);
 
     const cloneOutPath = path.join(videoDir, "clone-template.webm");
-    const cloneVideo = page.video()!;
+    const cloneVideo = page.video();
+    if (!cloneVideo) throw new Error("Video recording not available");
     await context.close();
     await cloneVideo.saveAs(cloneOutPath);
     await cloneVideo.delete();
@@ -631,7 +668,11 @@ test.describe("Capture screenshots for intro video", () => {
       const mockTemplates = ffGames.map((ff, i) => ({
         id: `template-ff${i + 1}`,
         title: `Final Fantasy ${i + 1}`,
-        category: { id: ff.id, name: ff.name, box_art_url: `https://static-cdn.jtvnw.net/ttv-boxart/${ff.id}-{width}x{height}.jpg` },
+        category: {
+          id: ff.id,
+          name: ff.name,
+          box_art_url: `https://static-cdn.jtvnw.net/ttv-boxart/${ff.id}-{width}x{height}.jpg`,
+        },
         tags: ["RPG"],
       }));
       localStorage.setItem("templates", JSON.stringify(mockTemplates));
@@ -644,7 +685,7 @@ test.describe("Capture screenshots for intro video", () => {
     await page.waitForTimeout(200);
 
     // Start cursor at screen center, move to search input
-    const searchInput = page.locator('input[aria-label]').first();
+    const searchInput = page.locator("input[aria-label]").first();
     const searchBox = await searchInput.boundingBox();
     if (searchBox) {
       const centerX = 800;
@@ -678,7 +719,8 @@ test.describe("Capture screenshots for intro video", () => {
     await page.waitForTimeout(800);
 
     const searchOutPath = path.join(videoDir, "search-filter.webm");
-    const searchVideo = page.video()!;
+    const searchVideo = page.video();
+    if (!searchVideo) throw new Error("Video recording not available");
     await context.close();
     await searchVideo.saveAs(searchOutPath);
     await searchVideo.delete();
@@ -687,6 +729,6 @@ test.describe("Capture screenshots for intro video", () => {
   // Write all computed highlights to JSON after all tests
   test("write highlights.json", async () => {
     const outPath = path.resolve(__dirname, "src/highlights.json");
-    fs.writeFileSync(outPath, JSON.stringify(highlights, null, 2) + "\n");
+    fs.writeFileSync(outPath, `${JSON.stringify(highlights, null, 2)}\n`);
   });
 });
