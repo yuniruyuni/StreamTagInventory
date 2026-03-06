@@ -18,7 +18,7 @@ export class TemplateCardPage extends BasePage {
   }
 
   get categoryDropdown(): Locator {
-    return this.getByTestId("dropdown-content");
+    return this.getByTestId("combobox-dropdown");
   }
 
   get saveButton(): Locator {
