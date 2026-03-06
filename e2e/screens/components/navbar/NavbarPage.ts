@@ -3,15 +3,15 @@ import { BasePage } from "../../../base/BasePage";
 
 export class NavbarPage extends BasePage {
   get navbar(): Locator {
-    return this.getLocator(".navbar");
+    return this.getByTestId("navbar");
   }
 
   get avatarButton(): Locator {
-    return this.getLocator("button.avatar");
+    return this.getByTestId("avatar-button");
   }
 
   get userMenuDropdown(): Locator {
-    return this.getLocator(".dropdown-content");
+    return this.getByTestId("user-menu");
   }
 
   get logoutButton(): Locator {

@@ -7,15 +7,15 @@ export class InventoryPage extends BasePage {
   }
 
   get userAvatar(): Locator {
-    return this.getLocator("button.avatar");
+    return this.getByTestId("avatar-button");
   }
 
   get navbar(): Locator {
-    return this.getLocator(".navbar");
+    return this.getByTestId("navbar");
   }
 
   get userMenuDropdown(): Locator {
-    return this.getLocator(".dropdown-content");
+    return this.getByTestId("user-menu");
   }
 
   get logoutButton(): Locator {
@@ -23,7 +23,7 @@ export class InventoryPage extends BasePage {
   }
 
   get templateCards(): Locator {
-    return this.getLocator(".card");
+    return this.getByTestId("template-card");
   }
 
   templateCard(index: number): Locator {

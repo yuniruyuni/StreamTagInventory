@@ -11,6 +11,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
+        data-testid="template-card"
         {...rest}
         className={clsx("card relative rounded-lg flex flex-col", className)}
       >
