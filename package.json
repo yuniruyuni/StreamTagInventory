@@ -68,7 +68,7 @@
     "@types/node": "^25.2.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@types/web": "^0.0.338",
+    "@types/web": "^0.0.340",
     "bun": "^1.3.3",
     "bun-bagel": "^1.2.0",
     "happy-dom": "^20.0.11",
