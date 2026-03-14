@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: streamtaginventory
+  name: stream-tag-inventory
   annotations:
     run.googleapis.com/ingress: internal
 spec:
