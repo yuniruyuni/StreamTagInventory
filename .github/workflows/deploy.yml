@@ -11,7 +11,7 @@ permissions:
 
 env:
   GCP_REGION: us-west1
-  SERVICE_NAME: streamtaginventory
+  SERVICE_NAME: stream-tag-inventory
 
 jobs:
   deploy:
