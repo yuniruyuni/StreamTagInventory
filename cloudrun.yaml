@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: streamtaginventory
   annotations:
-    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress: internal
 spec:
   template:
     metadata:
