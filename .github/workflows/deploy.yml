@@ -7,6 +7,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: write
 
 env:
   GCP_REGION: us-west1
@@ -30,11 +31,27 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Build and Push to Artifact Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image
+        run: docker build -t ${{ env.SERVICE_NAME }}:${{ github.sha }} .
+
+      - name: Push to Artifact Registry (for Cloud Run)
         run: |
           IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/apps/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          docker build -t $IMAGE_TAG .
+          docker tag ${{ env.SERVICE_NAME }}:${{ github.sha }} $IMAGE_TAG
           docker push $IMAGE_TAG
+
+      - name: Push to GHCR (archive)
+        run: |
+          GHCR_TAG="ghcr.io/${{ github.repository_owner }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker tag ${{ env.SERVICE_NAME }}:${{ github.sha }} $GHCR_TAG
+          docker push $GHCR_TAG
 
       - name: Update cloudrun.yaml with image
         run: |
