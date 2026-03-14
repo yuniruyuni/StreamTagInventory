@@ -1,0 +1,23 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: streamtaginventory
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "2"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      containers:
+        - image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "1"
+              memory: "256Mi"
