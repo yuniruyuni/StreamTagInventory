@@ -63,10 +63,3 @@ jobs:
           gcloud run services replace cloudrun.yaml \
             --region ${{ env.GCP_REGION }} \
             --project ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Output Service URL
-        run: |
-          gcloud run services describe ${{ env.SERVICE_NAME }} \
-            --region ${{ env.GCP_REGION }} \
-            --project ${{ secrets.GCP_PROJECT_ID }} \
-            --format='value(status.url)'
