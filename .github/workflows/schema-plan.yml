@@ -11,6 +11,8 @@ permissions:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    env:
+      WORKSPACE: ${{ github.workspace }}
     services:
       postgres:
         image: postgres:18
@@ -45,7 +47,7 @@ jobs:
       - name: Plan PR schema changes (diff from main)
         run: |
           docker run --rm --network host \
-            -v ${{ github.workspace }}/db:/schema:ro \
+            -v "${WORKSPACE}/db:/schema:ro" \
             pgschema/pgschema plan \
             --file /schema/schema.sql \
             --host localhost --port 5432 \

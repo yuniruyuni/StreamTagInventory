@@ -9,10 +9,6 @@ permissions:
   id-token: write
   packages: write
 
-env:
-  GCP_REGION: us-west1
-  SERVICE_NAME: stream-tag-inventory
-
 jobs:
   build-app:
     uses: ./.github/workflows/build-image.yml
@@ -31,6 +27,10 @@ jobs:
   migrate:
     needs: [build-migration]
     runs-on: ubuntu-latest
+    env:
+      GCP_REGION: us-west1
+      SERVICE_NAME: stream-tag-inventory
+      SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
 
@@ -44,20 +44,26 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Run migration
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          MIGRATE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/apps/${{ env.SERVICE_NAME }}-migrate:${{ github.sha }}"
+          MIGRATE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${SERVICE_NAME}-migrate:${SHA}"
           sed -i "s|MIGRATE_IMAGE_PLACEHOLDER|$MIGRATE_TAG|g" cloudrun-job.yaml
           gcloud run jobs replace cloudrun-job.yaml \
-            --region ${{ env.GCP_REGION }} \
-            --project ${{ secrets.GCP_PROJECT_ID }}
-          gcloud run jobs execute ${{ env.SERVICE_NAME }}-migrate \
-            --region ${{ env.GCP_REGION }} \
-            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --region "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID"
+          gcloud run jobs execute "${SERVICE_NAME}-migrate" \
+            --region "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID" \
             --wait
 
   deploy:
     needs: [build-app, migrate]
     runs-on: ubuntu-latest
+    env:
+      GCP_REGION: us-west1
+      SERVICE_NAME: stream-tag-inventory
+      SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
 
@@ -71,9 +77,11 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Deploy to Cloud Run
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/apps/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          IMAGE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${SERVICE_NAME}:${SHA}"
           sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_TAG|g" cloudrun.yaml
           gcloud run services replace cloudrun.yaml \
-            --region ${{ env.GCP_REGION }} \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+            --region "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID"
