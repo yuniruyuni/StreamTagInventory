@@ -60,9 +60,17 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           PLAN=$(cat plan_output.txt)
+          ALERT=""
+          if echo "$PLAN" | grep -qiE "GRANT|REVOKE|PRIVILEGES"; then
+            ALERT="> [!CAUTION]
+          > This migration includes **privilege changes** (GRANT/REVOKE/ALTER DEFAULT PRIVILEGES).
+          > Please review carefully before merging.
+
+          "
+          fi
           BODY="<!-- pgschema-plan -->
           ## pgschema plan
-          \`\`\`sql
+          ${ALERT}\`\`\`sql
           ${PLAN}
           \`\`\`"
 
