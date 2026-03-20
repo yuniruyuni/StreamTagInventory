@@ -17,5 +17,5 @@ done
 
 # Run declarative migration (DDL only)
 # App user DML GRANT is handled by NixOS ALTER DEFAULT PRIVILEGES
-pgschema apply --file /app/db/schema.sql
+pgschema apply --file /app/db/schema.sql --auto-approve
 echo "Migration complete."
