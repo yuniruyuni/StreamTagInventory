@@ -1,0 +1,2 @@
+-- pgschema declarative schema
+-- Add table definitions here. pgschema will generate DDL to match this state.

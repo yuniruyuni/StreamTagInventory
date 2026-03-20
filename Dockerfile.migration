@@ -1,0 +1,7 @@
+FROM pgschema/pgschema:latest AS pgschema
+FROM postgres:18-alpine
+COPY --from=pgschema /pgschema /usr/local/bin/pgschema
+COPY db/ /app/db/
+COPY bin/migrate.sh /app/migrate.sh
+RUN chmod +x /app/migrate.sh
+ENTRYPOINT ["/app/migrate.sh"]
