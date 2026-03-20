@@ -1,0 +1,60 @@
+name: Build and Push Image
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GCP_REGION: us-west1
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      REPO_OWNER: ${{ github.repository_owner }}
+      IMAGE_NAME: ${{ inputs.image_name }}
+      DOCKERFILE: ${{ inputs.dockerfile }}
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
+
+      - name: Push to Artifact Registry
+        run: |
+          IMAGE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${IMAGE_NAME}:${SHA}"
+          docker tag "${IMAGE_NAME}:${SHA}" "$IMAGE_TAG"
+          docker push "$IMAGE_TAG"
+
+      - name: Push to GHCR (archive)
+        run: |
+          GHCR_TAG="ghcr.io/${REPO_OWNER}/${IMAGE_NAME}:${SHA}"
+          docker tag "${IMAGE_NAME}:${SHA}" "$GHCR_TAG"
+          docker push "$GHCR_TAG"

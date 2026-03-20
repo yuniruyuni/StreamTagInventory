@@ -1,0 +1,37 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: stream-tag-inventory-migrate
+spec:
+  template:
+    spec:
+      template:
+        spec:
+          maxRetries: 1
+          timeoutSeconds: 300
+          containers:
+            - image: MIGRATE_IMAGE_PLACEHOLDER
+              env:
+                - name: DB_APP_NAME
+                  value: stream_tag_inventory
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: latest
+                      name: stream-tag-inventory-db-password
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: "256Mi"
+            - image: cloudflare/cloudflared:latest
+              args:
+                - access
+                - tcp
+                - --hostname
+                - db.yuniruyuni.net
+                - --url
+                - localhost:5432
+              resources:
+                limits:
+                  cpu: "0.5"
+                  memory: "128Mi"
