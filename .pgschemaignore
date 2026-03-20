@@ -1,0 +1,9 @@
+# Privileges are managed by NixOS postgresql-app-credentials service.
+# pgschema's temporary validation schema doesn't have app roles,
+# so privilege statements must be excluded from pgschema management.
+
+[privileges]
+patterns = ["*"]
+
+[default_privileges]
+patterns = ["*"]
