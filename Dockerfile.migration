@@ -1,6 +1,7 @@
 FROM pgschema/pgschema:latest
+USER root
 RUN apk add --no-cache postgresql-client
+USER nobody
 COPY db/ /app/db/
 COPY bin/migrate.sh /app/migrate.sh
-RUN chmod +x /app/migrate.sh
 ENTRYPOINT ["/app/migrate.sh"]
