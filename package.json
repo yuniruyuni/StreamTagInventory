@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.8",
-    "@happy-dom/global-registrator": "^20.0.11",
+    "@happy-dom/global-registrator": "^20.8.4",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/cli": "^4.2.2",
     "@testing-library/dom": "^10.4.1",
