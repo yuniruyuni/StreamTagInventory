@@ -60,7 +60,20 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           PLAN=$(cat plan_output.txt)
-          gh pr comment "$PR_NUMBER" --body "## pgschema plan
+          BODY="<!-- pgschema-plan -->
+          ## pgschema plan
           \`\`\`sql
           ${PLAN}
           \`\`\`"
+
+          # Find existing comment by hidden marker
+          COMMENT_ID=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | contains("<!-- pgschema-plan -->")) | .id' \
+            | head -1)
+
+          if [ -n "$COMMENT_ID" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" \
+              -X PATCH -f body="$BODY"
+          else
+            gh pr comment "$PR_NUMBER" --body "$BODY"
+          fi
