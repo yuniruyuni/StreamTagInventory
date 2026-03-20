@@ -21,3 +21,23 @@ spec:
             limits:
               cpu: "1"
               memory: "256Mi"
+          env:
+            - name: DB_APP_NAME
+              value: stream_tag_inventory
+            - name: DB_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: stream-tag-inventory-db-app-password
+        - image: cloudflare/cloudflared:latest
+          args:
+            - access
+            - tcp
+            - --hostname
+            - db.yuniruyuni.net
+            - --url
+            - localhost:5432
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "128Mi"
