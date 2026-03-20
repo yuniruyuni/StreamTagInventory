@@ -6,10 +6,9 @@ on:
       dockerfile:
         required: true
         type: string
-      image_suffix:
-        required: false
+      image_name:
+        required: true
         type: string
-        default: ""
 
 permissions:
   contents: read
@@ -18,7 +17,6 @@ permissions:
 
 env:
   GCP_REGION: us-west1
-  SERVICE_NAME: stream-tag-inventory
 
 jobs:
   build:
@@ -45,16 +43,16 @@ jobs:
       - name: Build image
         run: |
           docker build -f ${{ inputs.dockerfile }} \
-            -t ${{ env.SERVICE_NAME }}${{ inputs.image_suffix }}:${{ github.sha }} .
+            -t ${{ inputs.image_name }}:${{ github.sha }} .
 
       - name: Push to Artifact Registry
         run: |
-          IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/apps/${{ env.SERVICE_NAME }}${{ inputs.image_suffix }}:${{ github.sha }}"
-          docker tag ${{ env.SERVICE_NAME }}${{ inputs.image_suffix }}:${{ github.sha }} $IMAGE_TAG
+          IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/apps/${{ inputs.image_name }}:${{ github.sha }}"
+          docker tag ${{ inputs.image_name }}:${{ github.sha }} $IMAGE_TAG
           docker push $IMAGE_TAG
 
       - name: Push to GHCR (archive)
         run: |
-          GHCR_TAG="ghcr.io/${{ github.repository_owner }}/${{ env.SERVICE_NAME }}${{ inputs.image_suffix }}:${{ github.sha }}"
-          docker tag ${{ env.SERVICE_NAME }}${{ inputs.image_suffix }}:${{ github.sha }} $GHCR_TAG
+          GHCR_TAG="ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ github.sha }}"
+          docker tag ${{ inputs.image_name }}:${{ github.sha }} $GHCR_TAG
           docker push $GHCR_TAG

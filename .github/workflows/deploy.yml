@@ -18,13 +18,14 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     with:
       dockerfile: Dockerfile
+      image_name: stream-tag-inventory
     secrets: inherit
 
   build-migration:
     uses: ./.github/workflows/build-image.yml
     with:
       dockerfile: Dockerfile.migration
-      image_suffix: "-migrate"
+      image_name: stream-tag-inventory-migrate
     secrets: inherit
 
   migrate:
