@@ -32,12 +32,12 @@ spec:
                 - --url
                 - localhost:5432
               env:
-                - name: CF_ACCESS_CLIENT_ID
+                - name: TUNNEL_SERVICE_TOKEN_ID
                   valueFrom:
                     secretKeyRef:
                       key: latest
                       name: cf-db-access-client-id
-                - name: CF_ACCESS_CLIENT_SECRET
+                - name: TUNNEL_SERVICE_TOKEN_SECRET
                   valueFrom:
                     secretKeyRef:
                       key: latest
