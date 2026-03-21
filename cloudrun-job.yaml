@@ -31,6 +31,17 @@ spec:
                 - db.yuniruyuni.net
                 - --url
                 - localhost:5432
+              env:
+                - name: CF_ACCESS_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      key: latest
+                      name: cf-db-access-client-id
+                - name: CF_ACCESS_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      key: latest
+                      name: cf-db-access-client-secret
               resources:
                 limits:
                   cpu: "0.5"
