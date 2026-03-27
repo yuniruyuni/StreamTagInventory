@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import useSWR from "swr";
 import { ulid } from "ulid";
 import { CurrentStreamInfo } from "~/CurrentStreamInfo";
@@ -14,8 +14,10 @@ import { newCategory } from "~/model/category";
 import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useNotification } from "~/Notification";
+import { PostTemplateEditor } from "~/PostTemplateEditor";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { useStorage } from "~/useStorage";
+import { DEFAULT_POST_TEMPLATE, POST_TEMPLATE_KEY } from "~/utils/postTemplate";
 import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";
 
@@ -23,6 +25,11 @@ export const MainScreen: React.FC = () => {
   const { i18n, t } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
   const [templates, setTemplates] = useStorage<Template[]>("templates", []);
+  const [postTemplate, setPostTemplate] = useStorage<string>(
+    POST_TEMPLATE_KEY,
+    DEFAULT_POST_TEMPLATE,
+  );
+  const [postTemplateEditorOpen, setPostTemplateEditorOpen] = useState(false);
 
   const { data: users, isLoading } = useSWR(
     ["https://api.twitch.tv/helix/users", token, i18n.language],
@@ -81,6 +88,7 @@ export const MainScreen: React.FC = () => {
         onSearch={setSearchQuery}
         onImport={onImportTemplates}
         onExport={onExportTemplates}
+        onEditPostTemplate={() => setPostTemplateEditorOpen(true)}
       />
       <div className="flex flex-col gap-4 p-16 pt-24">
         <CurrentStreamInfo
@@ -98,6 +106,8 @@ export const MainScreen: React.FC = () => {
               onRemove={onRemoveTemplate}
               onClone={onCloneTemplate}
               onSave={onSaveTemplate}
+              userLogin={users?.[0]?.login}
+              postTemplate={postTemplate}
             />
           ) : (
             searchQuery.trim() && (
@@ -109,6 +119,12 @@ export const MainScreen: React.FC = () => {
           <AddTemplateButton onAdd={onAddTemplate} />
         </div>
       </div>
+      <PostTemplateEditor
+        open={postTemplateEditorOpen}
+        postTemplate={postTemplate}
+        onSave={setPostTemplate}
+        onClose={() => setPostTemplateEditorOpen(false)}
+      />
     </div>
   );
 };
