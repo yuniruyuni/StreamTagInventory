@@ -34,7 +34,8 @@
     "searchBy": "Search by title, category, or tags",
     "noResults": "No results found",
     "importTemplates": "Import",
-    "exportTemplates": "Export"
+    "exportTemplates": "Export",
+    "postToX": "Post to X"
   },
   "errors": {
     "twitchError": "An error occurred with Twitch",

@@ -48,6 +48,7 @@ export const MainScreen: React.FC = () => {
     onImportTemplates,
     onExportTemplates,
     onAddTemplate,
+    onPostToX,
   } = useTemplateOperations({
     templates,
     setTemplates,
@@ -98,6 +99,7 @@ export const MainScreen: React.FC = () => {
               onRemove={onRemoveTemplate}
               onClone={onCloneTemplate}
               onSave={onSaveTemplate}
+              onPostToX={onPostToX}
             />
           ) : (
             searchQuery.trim() && (

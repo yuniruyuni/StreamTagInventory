@@ -12,6 +12,7 @@ test("TemplateCardコンポーネントが正しくレンダリングされる",
   const onRemove = () => {};
   const onClone = () => {};
   const onSave = () => {};
+  const onPostToX = () => {};
 
   const { getAllByRole } = render(
     <I18nWrapper>
@@ -21,6 +22,7 @@ test("TemplateCardコンポーネントが正しくレンダリングされる",
         onRemove={onRemove}
         onClone={onClone}
         onSave={onSave}
+        onPostToX={onPostToX}
       />
     </I18nWrapper>,
   );
@@ -42,6 +44,7 @@ test("テンプレートの操作が正しく動作する", () => {
   const onRemove = () => {};
   const onClone = () => {};
   const onSave = () => {};
+  const onPostToX = () => {};
 
   const { getByLabelText } = render(
     <I18nWrapper>
@@ -51,6 +54,7 @@ test("テンプレートの操作が正しく動作する", () => {
         onRemove={onRemove}
         onClone={onClone}
         onSave={onSave}
+        onPostToX={onPostToX}
       />
     </I18nWrapper>,
   );

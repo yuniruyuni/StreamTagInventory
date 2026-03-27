@@ -39,6 +39,7 @@ test("変更がない状態で正しくレンダリングされる", () => {
   const onClone = () => {};
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   const { getAllByRole } = render(
     <TemplateActions
@@ -49,18 +50,20 @@ test("変更がない状態で正しくレンダリングされる", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
 
   // ボタンが正しく表示されていることを確認
   const buttons = getAllByRole("button");
-  expect(buttons.length).toBe(3);
+  expect(buttons.length).toBe(4);
 
-  // Clone, Remove, Applyボタンが表示されていることを確認
+  // Clone, Remove, Apply, Post to X ボタンが表示されていることを確認
   expect(buttons[0]).toHaveTextContent("Clone");
   expect(buttons[1]).toHaveTextContent("Delete");
   expect(buttons[2]).toHaveTextContent("Apply");
+  expect(buttons[3]).toHaveTextContent("Post to X");
 
   // Cancel, Saveボタンが表示されていないことを確認
   for (const button of buttons) {
@@ -78,6 +81,7 @@ test("変更がある状態で正しくレンダリングされる", () => {
   const onClone = () => {};
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   const { getAllByRole } = render(
     <TemplateActions
@@ -88,6 +92,7 @@ test("変更がある状態で正しくレンダリングされる", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -117,6 +122,7 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
   const onClone = () => {};
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   const { getByRole } = render(
     <TemplateActions
@@ -127,6 +133,7 @@ test("無効なテンプレートの場合、Applyボタンが無効化される
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -149,6 +156,7 @@ test("RevertボタンをクリックするとonRevertが呼び出される", () 
   const onClone = () => {};
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   render(
     <TemplateActions
@@ -159,6 +167,7 @@ test("RevertボタンをクリックするとonRevertが呼び出される", () 
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -182,6 +191,7 @@ test("SaveボタンをクリックするとonSaveが呼び出される", () => {
   const onClone = () => {};
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   render(
     <TemplateActions
@@ -192,6 +202,7 @@ test("SaveボタンをクリックするとonSaveが呼び出される", () => {
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -215,6 +226,7 @@ test("CloneボタンをクリックするとonCloneが呼び出される", () =>
   };
   const onRemove = () => {};
   const onApply = () => {};
+  const onPostToX = () => {};
 
   render(
     <TemplateActions
@@ -225,6 +237,7 @@ test("CloneボタンをクリックするとonCloneが呼び出される", () =>
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -248,6 +261,7 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
     removedTemplate = t;
   };
   const onApply = () => {};
+  const onPostToX = () => {};
 
   render(
     <TemplateActions
@@ -258,6 +272,7 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );
@@ -281,6 +296,7 @@ test("ApplyボタンをクリックするとonApplyが呼び出される", () =>
   const onApply = (t: Template) => {
     appliedTemplate = t;
   };
+  const onPostToX = () => {};
 
   render(
     <TemplateActions
@@ -291,6 +307,7 @@ test("ApplyボタンをクリックするとonApplyが呼び出される", () =>
       onClone={onClone}
       onRemove={onRemove}
       onApply={onApply}
+      onPostToX={onPostToX}
     />,
     { wrapper: TestWrapper },
   );

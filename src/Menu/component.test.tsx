@@ -14,6 +14,7 @@ beforeAll(() => {
 function createMockUser() {
   return {
     id: "test-user-id",
+    login: "testuser",
     display_name: "TestUser",
     profile_image_url: "https://example.com/profile.jpg",
   };
