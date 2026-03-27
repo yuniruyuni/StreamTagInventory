@@ -14,6 +14,7 @@ beforeAll(() => {
 function createMockUser() {
   return {
     id: "test-user-id",
+    login: "testuser",
     display_name: "TestUser",
     profile_image_url: "https://example.com/profile.jpg",
   };
@@ -46,6 +47,7 @@ test("Menuコンポーネントが正しくレンダリングされる", () => {
         onSearch={onSearch}
         onImport={onImport}
         onExport={onExport}
+        onEditPostTemplate={() => {}}
       />
     </TwitchAuthContext.Provider>,
   );
@@ -75,6 +77,7 @@ test("ドロップダウンメニューにLogoutボタンが含まれている",
         onSearch={onSearch}
         onImport={onImport}
         onExport={onExport}
+        onEditPostTemplate={() => {}}
       />
     </TwitchAuthContext.Provider>,
   );
@@ -99,6 +102,7 @@ test("Logoutボタンをクリックするとlogout関数が呼び出される",
         onSearch={onSearch}
         onImport={onImport}
         onExport={onExport}
+        onEditPostTemplate={() => {}}
       />
     </TwitchAuthContext.Provider>,
   );
@@ -125,6 +129,7 @@ test("アプリ名がホームページへのリンクになっている", () =>
         onSearch={onSearch}
         onImport={onImport}
         onExport={onExport}
+        onEditPostTemplate={() => {}}
       />
     </TwitchAuthContext.Provider>,
   );
@@ -148,6 +153,7 @@ test("ユーザーアバターが正しく表示される", () => {
       onSearch={onSearch}
       onImport={onImport}
       onExport={onExport}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );
@@ -174,6 +180,7 @@ test("onImportが提供されるとインポート/エクスポートメニュ�
       onSearch={onSearch}
       onImport={onImport}
       onExport={onExport}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );
@@ -192,6 +199,7 @@ test("ローディング中にスケルトンが表示される", () => {
       onSearch={() => {}}
       onImport={() => {}}
       onExport={() => {}}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );
@@ -208,6 +216,7 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
       onSearch={() => {}}
       onImport={() => {}}
       onExport={() => {}}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );
@@ -218,6 +227,7 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
       onSearch={() => {}}
       onImport={() => {}}
       onExport={() => {}}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );
@@ -259,6 +269,7 @@ test("表示・非表示の制御が正しく機能する", () => {
       onSearch={onSearch}
       onImport={onImport}
       onExport={onExport}
+      onEditPostTemplate={() => {}}
     />,
     { wrapper: TestWrapper },
   );

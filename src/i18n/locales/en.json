@@ -14,7 +14,8 @@
     "add": "Add",
     "search": "Search",
     "import": "Import",
-    "export": "Export"
+    "export": "Export",
+    "announceOnX": "X"
   },
   "auth": {
     "login": "Login with Twitch",
@@ -72,6 +73,13 @@
     "noCategory": "No category set",
     "importAsTemplate": "Import as Template",
     "importSuccess": "Current stream info imported as template"
+  },
+  "settings": {
+    "postTemplate": "Post Template",
+    "postTemplateDescription": "Customize the text format for sharing on X. Available placeholders:",
+    "postTemplatePlaceholders": "{title} = Stream title, {category} = Category name, {tags} = Tags, {url} = Channel URL",
+    "preview": "Preview",
+    "resetToDefault": "Reset to Default"
   },
   "entrance": {
     "tagline": "Easily manage and apply stream templates",

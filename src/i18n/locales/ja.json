@@ -14,7 +14,8 @@
     "add": "追加",
     "search": "検索",
     "import": "インポート",
-    "export": "エクスポート"
+    "export": "エクスポート",
+    "announceOnX": "X"
   },
   "auth": {
     "login": "Twitchでログイン",
@@ -72,6 +73,13 @@
     "noCategory": "カテゴリ未設定",
     "importAsTemplate": "テンプレートとして取り込む",
     "importSuccess": "現在の配信情報をテンプレートとして取り込みました"
+  },
+  "settings": {
+    "postTemplate": "投稿テンプレート",
+    "postTemplateDescription": "Xでの配信告知テキストをカスタマイズできます。利用可能なプレースホルダー:",
+    "postTemplatePlaceholders": "{title} = タイトル, {category} = カテゴリ, {tags} = タグ, {url} = チャンネルURL",
+    "preview": "プレビュー",
+    "resetToDefault": "デフォルトに戻す"
   },
   "entrance": {
     "tagline": "配信テンプレートを簡単に管理・適用",
