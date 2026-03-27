@@ -21,6 +21,7 @@ type Props = {
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
   onSave: (template: Template) => void;
+  onPostToX: (template: Template) => void;
 };
 
 export const TemplateList: React.FC<Props> = ({
@@ -30,6 +31,7 @@ export const TemplateList: React.FC<Props> = ({
   onRemove,
   onClone,
   onSave,
+  onPostToX,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -57,6 +59,7 @@ export const TemplateList: React.FC<Props> = ({
             onRemove={onRemove}
             onClone={onClone}
             onSave={onSave}
+            onPostToX={onPostToX}
           />
         ))}
       </SortableContext>

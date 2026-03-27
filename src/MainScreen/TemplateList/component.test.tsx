@@ -34,6 +34,7 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
   const { getAllByTestId, getByTestId } = render(
     <TemplateList
       templates={templates}
@@ -42,6 +43,7 @@ test("TemplateListコンポーネントが正しくレンダリングされる",
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 
@@ -64,6 +66,7 @@ test("onApplyが正しく呼び出される", async () => {
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
   const { getAllByRole } = render(
     <TemplateList
       templates={templates}
@@ -72,6 +75,7 @@ test("onApplyが正しく呼び出される", async () => {
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 
@@ -102,6 +106,7 @@ test("onRemoveが正しく呼び出される", async () => {
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
 
   const { getAllByRole } = render(
     <TemplateList
@@ -111,6 +116,7 @@ test("onRemoveが正しく呼び出される", async () => {
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 
@@ -139,6 +145,7 @@ test("onCloneが正しく呼び出される", async () => {
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
 
   const { getAllByRole } = render(
     <TemplateList
@@ -148,6 +155,7 @@ test("onCloneが正しく呼び出される", async () => {
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 
@@ -175,6 +183,7 @@ test("onSaveが正しく呼び出される", async () => {
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
 
   const { getByRole, getByDisplayValue } = render(
     <TemplateList
@@ -184,6 +193,7 @@ test("onSaveが正しく呼び出される", async () => {
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 
@@ -215,6 +225,7 @@ test("空のテンプレートリストが正しくレンダリングされる",
   const onClone = mock();
   const onSave = mock();
   const onMove = mock();
+  const onPostToX = mock();
 
   const { queryAllByTestId } = render(
     <TemplateList
@@ -224,6 +235,7 @@ test("空のテンプレートリストが正しくレンダリングされる",
       onClone={onClone}
       onSave={onSave}
       onMove={onMove}
+      onPostToX={onPostToX}
     />,
   );
 

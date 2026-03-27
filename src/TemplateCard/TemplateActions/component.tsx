@@ -12,6 +12,7 @@ type Props = {
   onClone: (template: Template) => void;
   onRemove: (template: Template) => void;
   onApply: (template: Template) => void;
+  onPostToX: (template: Template) => void;
 };
 
 export const TemplateActions: React.FC<Props> = ({
@@ -22,6 +23,7 @@ export const TemplateActions: React.FC<Props> = ({
   onClone,
   onRemove,
   onApply,
+  onPostToX,
 }) => {
   const { t } = useTranslation();
   const valid = validateTemplate(template);
@@ -67,19 +69,34 @@ export const TemplateActions: React.FC<Props> = ({
             {t("common.delete")}
           </Button>
           {!valid && (
-            <Button aria-label="apply template" type="button" disabled>
-              {t("common.apply")}
-            </Button>
+            <>
+              <Button aria-label="apply template" type="button" disabled>
+                {t("common.apply")}
+              </Button>
+              <Button aria-label="post to x" type="button" disabled>
+                {t("template.postToX")}
+              </Button>
+            </>
           )}
           {valid && (
-            <Button
-              aria-label="apply template"
-              type="button"
-              variant="primary"
-              onClick={() => onApply(template)}
-            >
-              {t("common.apply")}
-            </Button>
+            <>
+              <Button
+                aria-label="apply template"
+                type="button"
+                variant="primary"
+                onClick={() => onApply(template)}
+              >
+                {t("common.apply")}
+              </Button>
+              <Button
+                aria-label="post to x"
+                type="button"
+                variant="secondary"
+                onClick={() => onPostToX(template)}
+              >
+                {t("template.postToX")}
+              </Button>
+            </>
           )}
         </>
       )}

@@ -34,7 +34,8 @@
     "searchBy": "タイトル、カテゴリ、タグで検索",
     "noResults": "見つかりません",
     "importTemplates": "インポート",
-    "exportTemplates": "エクスポート"
+    "exportTemplates": "エクスポート",
+    "postToX": "Xで告知"
   },
   "errors": {
     "twitchError": "Twitchでエラーが生じたようです",

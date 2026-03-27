@@ -25,6 +25,7 @@ type UseTemplateOperationsResult = {
   onImportTemplates: () => void;
   onExportTemplates: () => void;
   onAddTemplate: (template: Template) => void;
+  onPostToX: (template: Template) => void;
 };
 
 /**
@@ -199,6 +200,24 @@ export const useTemplateOperations = ({
     [templates, setTemplates],
   );
 
+  const onPostToX = useCallback(
+    (template: Template) => {
+      const login = users?.[0]?.login;
+      const twitchUrl = login ? `https://twitch.tv/${login}` : "";
+      const tags = template.tags.map((tag) => `#${tag}`).join(" ");
+      const lines = [
+        template.title,
+        template.category.name,
+        tags,
+        twitchUrl,
+      ].filter(Boolean);
+      const text = lines.join("\n");
+      const url = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    },
+    [users],
+  );
+
   return {
     onMoveTemplate,
     onApplyTemplate,
@@ -208,5 +227,6 @@ export const useTemplateOperations = ({
     onImportTemplates,
     onExportTemplates,
     onAddTemplate,
+    onPostToX,
   };
 };

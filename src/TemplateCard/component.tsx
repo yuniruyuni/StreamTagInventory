@@ -15,11 +15,12 @@ type Props = {
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
   onSave: (template: Template) => void;
+  onPostToX: (template: Template) => void;
 };
 
 // TODO: refine UI design.
 export const TemplateCard: FC<Props> = memo(
-  ({ template, onRemove, onApply, onClone, onSave }) => {
+  ({ template, onRemove, onApply, onClone, onSave, onPostToX }) => {
     const { attributes, listeners, setNodeRef, transform, transition } =
       useSortable({ id: template.id });
 
@@ -56,6 +57,7 @@ export const TemplateCard: FC<Props> = memo(
             onClone={onClone}
             onRemove={onRemove}
             onApply={onApply}
+            onPostToX={onPostToX}
           />
         </CardBody>
       </Card>
