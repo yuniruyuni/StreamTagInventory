@@ -16,6 +16,7 @@ type Props = {
   onSearch: (query: string) => void;
   onImport: () => void;
   onExport: () => void;
+  onEditPostTemplate: () => void;
 };
 
 export const Menu: React.FC<Props> = ({
@@ -24,6 +25,7 @@ export const Menu: React.FC<Props> = ({
   onSearch,
   onImport,
   onExport,
+  onEditPostTemplate,
 }) => {
   const { t } = useTranslation();
   const { logout } = React.useContext(TwitchAuthContext);
@@ -119,6 +121,11 @@ export const Menu: React.FC<Props> = ({
               <li data-testid="export-templates-menu-item">
                 <button type="button" onClick={onExport}>
                   {t("template.exportTemplates")}
+                </button>
+              </li>
+              <li data-testid="post-template-menu-item">
+                <button type="button" onClick={onEditPostTemplate}>
+                  {t("settings.postTemplate")}
                 </button>
               </li>
               {/* 区切り線をメニュー幅いっぱいに表示 */}
