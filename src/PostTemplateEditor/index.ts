@@ -1,0 +1,1 @@
+export { PostTemplateEditor } from "./component";
