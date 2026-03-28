@@ -1,54 +1,79 @@
 @import "tailwindcss";
 
 @theme {
-  /* Surface */
-  --color-surface: #ffffff;
-  --color-surface-alt: #f3f4f6;
-  --color-surface-muted: #d1d5db;
-  --color-on-surface: #1f2937;
+  --color-*: initial;
 
-  /* Primary (blue-700 系) */
-  --color-primary: #1d4ed8;
-  --color-primary-hover: #1e40af;
-  --color-primary-border: #1e40af;
-  --color-primary-light: #dbeafe;
-  --color-primary-muted: #60a5fa;
-  --color-on-primary: #ffffff;
-  --color-on-primary-light: #1e40af;
+  /* White / Black */
+  --color-white: #ffffff;
+  --color-black: #000000;
 
-  /* Secondary (fuchsia-600 系) */
-  --color-secondary: #c026d3;
-  --color-secondary-hover: #a21caf;
-  --color-secondary-border: #a21caf;
-  --color-on-secondary: #ffffff;
+  /* Slate (blue-tinted neutral — pale base) */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
 
-  /* Error (red-400 系) */
-  --color-error: #f87171;
-  --color-error-hover: #ef4444;
-  --color-error-border: #ef4444;
-  --color-on-error: #450a0a;
+  /* Blue (primary action — pale) */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
 
-  /* Neutral UI */
-  --color-border: #d1d5db;
-  --color-border-focus: #6b7280;
-  --color-text-muted: #6b7280;
-  --color-text-subtle: #9ca3af;
-  --color-hover-bg: #f3f4f6;
-  --color-neutral: #e5e7eb;
-  --color-neutral-hover: #d1d5db;
-  --color-neutral-border: #d1d5db;
-  --color-on-neutral: #1f2937;
+  /* Violet (secondary action — pale, CVD-safe) */
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
 
-  /* Focus ring */
-  --color-focus-ring: #3b82f6;
+  /* Red (error / destructive — pale) */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  /* Teal (success notification — pale, CVD-safe) */
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-300: #5eead4;
+  --color-teal-500: #14b8a6;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+
+  /* Amber (warning notification — pale) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-300: #fcd34d;
+  --color-amber-500: #f59e0b;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+
+  /* Purple (visited link) */
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-700: #7e22ce;
 }
 
 :root {
   font-family:
     ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
-  color: var(--color-on-surface);
-  background-color: var(--color-surface);
+  color: var(--color-slate-800);
+  background-color: var(--color-white);
 }
 
 @layer utilities {

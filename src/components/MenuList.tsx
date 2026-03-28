@@ -19,10 +19,10 @@ export const MenuList = forwardRef(
         ref={ref}
         className={clsx(
           "flex flex-col",
-          "[&_li>button]:w-full [&_li>button]:text-left [&_li>button]:rounded [&_li>button]:cursor-pointer [&_li>button]:transition-colors [&_li>button]:hover:bg-hover-bg",
-          "[&_li>button]:focus-visible:outline-none [&_li>button]:focus-visible:ring-2 [&_li>button]:focus-visible:ring-focus-ring [&_li>button]:focus-visible:ring-offset-2",
-          "[&_li>a]:block [&_li>a]:rounded [&_li>a]:cursor-pointer [&_li>a]:transition-colors [&_li>a]:hover:bg-hover-bg",
-          "[&_li>a]:focus-visible:outline-none [&_li>a]:focus-visible:ring-2 [&_li>a]:focus-visible:ring-focus-ring [&_li>a]:focus-visible:ring-offset-2",
+          "[&_li>button]:w-full [&_li>button]:text-left [&_li>button]:rounded [&_li>button]:cursor-pointer [&_li>button]:transition-colors [&_li>button]:hover:bg-slate-50",
+          "[&_li>button]:focus-visible:outline-none [&_li>button]:focus-visible:ring-2 [&_li>button]:focus-visible:ring-blue-300 [&_li>button]:focus-visible:ring-offset-2",
+          "[&_li>a]:block [&_li>a]:rounded [&_li>a]:cursor-pointer [&_li>a]:transition-colors [&_li>a]:hover:bg-slate-50",
+          "[&_li>a]:focus-visible:outline-none [&_li>a]:focus-visible:ring-2 [&_li>a]:focus-visible:ring-blue-300 [&_li>a]:focus-visible:ring-offset-2",
           sizeStyles[size],
           className,
         )}

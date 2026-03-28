@@ -70,7 +70,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
     <fieldset
       className={clsx(
         "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all cursor-text",
-        active ? "border-on-surface" : "border-on-surface/20",
+        active ? "border-slate-800" : "border-slate-800/20",
       )}
       onClick={handleFieldsetClick}
     >

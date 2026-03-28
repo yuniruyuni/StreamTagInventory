@@ -26,7 +26,7 @@ export const Modal: React.FC<Props> = ({ open, onClose, title, children }) => {
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="m-auto rounded-lg shadow-xl bg-surface p-0 backdrop:bg-black/50 max-w-lg w-full"
+      className="m-auto rounded-lg shadow-xl bg-white p-0 backdrop:bg-black/50 max-w-lg w-full"
     >
       <div className="p-6">
         {title && <h3 className="text-lg font-bold mb-4">{title}</h3>}

@@ -8,7 +8,7 @@ type Props = {
 export const DragHandle: React.FC<Props> = ({ listeners }) => (
   <button
     {...listeners}
-    className="absolute top-0 right-0 p-4 cursor-grab focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 rounded"
+    className="absolute top-0 right-0 p-4 cursor-grab focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 rounded"
   >
     <svg viewBox="0 0 20 20" width="20">
       <title>drag handle</title>

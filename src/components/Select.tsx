@@ -21,10 +21,10 @@ export const Select: React.FC<Props> = ({
     <select
       {...rest}
       className={clsx(
-        "rounded-lg transition-colors focus:outline-none focus:border-border-focus cursor-pointer",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2",
+        "rounded-lg transition-colors focus:outline-none focus:border-slate-400 cursor-pointer",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2",
         sizeStyles[size],
-        bordered && "border border-border",
+        bordered && "border border-slate-200",
         className,
       )}
     />

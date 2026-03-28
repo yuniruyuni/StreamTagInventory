@@ -111,7 +111,7 @@ export const MainScreen: React.FC = () => {
             />
           ) : (
             searchQuery.trim() && (
-              <div className="w-full text-center py-8 text-text-muted">
+              <div className="w-full text-center py-8 text-slate-500">
                 {t("template.noResults")}
               </div>
             )

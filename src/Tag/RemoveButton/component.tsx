@@ -14,9 +14,9 @@ export const RemoveButton: React.FC<Props> = ({ onClick }) => {
         "rounded-sm",
         "p-1 ms-2",
         "text-sm",
-        "text-primary-muted bg-transparent",
-        "hover:bg-primary-light hover:text-on-primary-light",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2",
+        "text-blue-400 bg-transparent",
+        "hover:bg-blue-100 hover:text-blue-800",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2",
       )}
       data-dismiss-target="#badge-dismiss-default"
       aria-label="remove tag"

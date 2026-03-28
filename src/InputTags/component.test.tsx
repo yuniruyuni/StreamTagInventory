@@ -127,8 +127,8 @@ test("フォーカス時にアクティブクラスが適用される", async ()
   expect(list).not.toBeNull();
 
   // 初期状態ではアクティブクラスがないことを確認
-  expect(list).toHaveClass("border-on-surface/20");
-  expect(list).not.toHaveClass("border-on-surface");
+  expect(list).toHaveClass("border-slate-800/20");
+  expect(list).not.toHaveClass("border-slate-800");
 
   // 入力フィールドを取得
   const input = getByRole("textbox");
@@ -138,12 +138,12 @@ test("フォーカス時にアクティブクラスが適用される", async ()
   await user.click(input); // focus.
 
   // アクティブ時のボーダー色が適用されることを確認
-  expect(list).toHaveClass("border-on-surface");
+  expect(list).toHaveClass("border-slate-800");
   await user.click(document.body); // unfocus.
 
   // 非アクティブ時のボーダー色に戻ることを確認
-  expect(list).toHaveClass("border-on-surface/20");
-  expect(list).not.toHaveClass("border-on-surface");
+  expect(list).toHaveClass("border-slate-800/20");
+  expect(list).not.toHaveClass("border-slate-800");
 });
 
 test("フィールドセットをクリックすると入力フィールドにフォーカスが当たる", async () => {

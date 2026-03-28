@@ -48,7 +48,7 @@ export const TemplateCard: FC<Props> = memo(
     return (
       <Card
         data-testid={`template-card-${template.id}`}
-        className="w-96 bg-surface shadow-xl"
+        className="w-96 bg-white shadow-xl"
         ref={setNodeRef}
         {...restAttributes}
         style={style}

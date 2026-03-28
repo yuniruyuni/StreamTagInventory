@@ -26,7 +26,7 @@ export const Badge: React.FC<Props> = ({
         sizeStyles[size],
         variant === "outline"
           ? "border border-current bg-transparent"
-          : "bg-hover-bg text-on-neutral",
+          : "bg-slate-50 text-slate-700",
         className,
       )}
     >
