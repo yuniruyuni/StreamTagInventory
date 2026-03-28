@@ -6,8 +6,14 @@ declare global {
   }
 }
 
+type Storage = {
+  set: (token: AuthToken) => void;
+  remove: () => void;
+};
+
 export class MockAuthProvider implements AuthProvider {
   private token: AuthToken | null = null;
+  private storage: Storage | null = null;
 
   constructor() {
     // Check if there's a pre-set token in window
@@ -16,16 +22,22 @@ export class MockAuthProvider implements AuthProvider {
     }
   }
 
+  bindStorage(storage: Storage): void {
+    this.storage = storage;
+  }
+
   getToken(): AuthToken | null {
     return this.token;
   }
 
   setToken(token: AuthToken): void {
     this.token = token;
+    this.storage?.set(token);
   }
 
   clearToken(): void {
     this.token = null;
+    this.storage?.remove();
   }
 
   shouldShowEntrance(): boolean {
