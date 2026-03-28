@@ -15,7 +15,7 @@ const getItemName = (item: Category) => item.name;
 
 const renderItem = (item: Category, isSelected: boolean) => (
   <span
-    className={clsx("flex items-center gap-2", isSelected && "bg-hover-bg")}
+    className={clsx("flex items-center gap-2", isSelected && "bg-slate-50")}
   >
     {item.box_art_url && (
       <img

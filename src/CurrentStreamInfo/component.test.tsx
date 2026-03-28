@@ -174,7 +174,7 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
   // レイアウトに影響するCSSクラスのセレクタ。
   // スケルトンとロード後の両方に存在しなければレイアウトシフトが発生する。
   const layoutSelectors = [
-    ".w-full.bg-surface-alt.rounded-lg.p-4", // 外枠
+    ".w-full.bg-slate-50.rounded-lg.p-4", // 外枠
     ".flex.items-center.justify-between.mb-2", // ヘッダー行
     ".flex.gap-4.items-start", // コンテンツ行
     ".flex-1.min-w-0", // テキスト領域

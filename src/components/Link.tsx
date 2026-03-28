@@ -9,7 +9,7 @@ export const Link: React.FC<Props> = ({ className, ...rest }) => {
       {...rest}
       className={clsx(
         "underline hover:no-underline transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 rounded",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 rounded",
         className,
       )}
     />

@@ -36,14 +36,14 @@ export const Menu: React.FC<Props> = ({
 
   if (isLoading) {
     return (
-      <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
+      <Navbar className="bg-white fixed top-0 left-0 right-0 z-30 shadow-md">
         <div className="flex-1 flex items-center animate-pulse">
-          <div className="bg-surface-muted rounded h-8 w-48 ml-4" />
-          <div className="bg-surface-muted rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
+          <div className="bg-slate-300 rounded h-8 w-48 ml-4" />
+          <div className="bg-slate-300 rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
         </div>
         <div className="flex-none flex gap-4 animate-pulse">
-          <div className="bg-surface-muted rounded h-8 w-20" />
-          <div className="bg-surface-muted rounded-full w-10 h-10" />
+          <div className="bg-slate-300 rounded h-8 w-20" />
+          <div className="bg-slate-300 rounded-full w-10 h-10" />
         </div>
       </Navbar>
     );
@@ -52,11 +52,11 @@ export const Menu: React.FC<Props> = ({
   if (!user) return null;
 
   return (
-    <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
+    <Navbar className="bg-white fixed top-0 left-0 right-0 z-30 shadow-md">
       <div className="flex-1 flex items-center">
         <a
           href="/"
-          className="inline-flex items-center justify-center font-bold rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-hover-bg text-xl whitespace-nowrap"
+          className="inline-flex items-center justify-center font-bold rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-slate-50 text-xl whitespace-nowrap"
         >
           Stream Tag Inventory
         </a>
@@ -68,7 +68,7 @@ export const Menu: React.FC<Props> = ({
             onChange={handleSearchChange}
             aria-label={t("template.search")}
           />
-          <div className="absolute right-3 top-2.5 text-text-subtle">
+          <div className="absolute right-3 top-2.5 text-slate-400">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -110,7 +110,7 @@ export const Menu: React.FC<Props> = ({
           <DropdownContent
             role="menu"
             aria-label="user menu"
-            className="mt-3 w-52 p-2 shadow bg-surface rounded-lg"
+            className="mt-3 w-52 p-2 shadow bg-white rounded-lg"
           >
             <MenuList size="sm">
               <li data-testid="import-templates-menu-item">
@@ -130,7 +130,7 @@ export const Menu: React.FC<Props> = ({
               </li>
               {/* 区切り線をメニュー幅いっぱいに表示 */}
               <div className="py-0.5">
-                <hr className="border-t border-border w-full" />
+                <hr className="border-t border-slate-200 w-full" />
               </div>
               <li>
                 <button type="button" onClick={() => logout()}>

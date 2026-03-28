@@ -29,7 +29,7 @@ bun run e2e       # Playwright e2e テスト
 ```
 src/
 ├── index.tsx              # エントリーポイント
-├── index.css              # Tailwind @theme 定義（カラートークン）
+├── index.css              # Tailwind @theme 定義（パレット制約 + アニメーション）
 ├── components/            # 共有 UI コンポーネント
 │   ├── Button, Badge, Card, Input, Select, Link ...
 │   ├── Navbar, Dropdown, MenuList, Avatar
@@ -53,19 +53,27 @@ e2e/
 
 ## Architecture Patterns
 
-- **共有 UI コンポーネント** (`src/components/`): DaisyUI 不使用。Tailwind + CSS 変数によるカスタムデザインシステム
+- **共有 UI コンポーネント** (`src/components/`): DaisyUI 不使用。Tailwind utility-first + パレット制約によるデザインシステム
 - **Feature ディレクトリ**: 各機能は `component.tsx` + `index.ts` + テスト + サブコンポーネントで構成
 - **カスタムフック**: ビジネスロジックを `use*.ts` に抽出
 - **状態管理**: テンプレートは `localStorage` (`useStorage`)、API データは SWR、認証は React Context
 - **パスエイリアス**: `~/*` → `./src/*` (`tsconfig.json`)
 
-## Theme Colors (`src/index.css`)
+## Color Palette (`src/index.css`) — Utility-First Design
 
-CSS 変数として定義。コンポーネントでは Tailwind クラス (`bg-surface`, `text-primary`, `border-border` 等) で参照する。
-- `surface` / `surface-alt` / `surface-muted`: 背景色
-- `primary` / `secondary` / `error`: アクセントカラー
-- `on-surface` / `text-*` / `neutral-*`: テキスト・中立色
-- `border` / `focus-ring`: ボーダー・フォーカス
+`@theme` で `--color-*: initial` により Tailwind デフォルトをリセットし、許可パレットのみ定義。
+意味論的な名称（`primary`, `surface` 等）は使用禁止。パレット名のみ使用し、意味はコンポーネント側で付与する。
+
+- **Slate** (50–800): 背景・テキスト・ボーダーの中立色（blue-tinted gray）
+- **Blue** (50–800): プライマリアクション
+- **Violet** (50–800): セカンダリアクション（CVD-safe, fuchsia の代替）
+- **Red** (50–800): エラー・破壊的操作
+- **Teal** (50–800): 成功通知（CVD-safe, green の代替）
+- **Amber** (50–800): 警告通知
+- **Purple** (300–700): visited リンク
+- **White / Black**: 基本色
+
+ボタン戦略: pale 背景 (200) + dark テキスト (800) + border (300) + hover (300)
 
 ## Testing
 

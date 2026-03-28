@@ -85,7 +85,7 @@ const SearchComboboxInner = <T,>({
             "relative z-10",
             "w-full h-24",
             renderSelected && "ps-24",
-            "focus:border-on-surface",
+            "focus:border-slate-800",
             showDropdown && "border-b-0 rounded-b-none",
             inputClassName,
           )}
@@ -99,8 +99,8 @@ const SearchComboboxInner = <T,>({
           className={clsx(
             "absolute top-full left-0 z-20",
             "w-full h-fit",
-            "border border-t-0 border-on-surface",
-            "bg-surface",
+            "border border-t-0 border-slate-800",
+            "bg-white",
             "rounded-b",
           )}
         >

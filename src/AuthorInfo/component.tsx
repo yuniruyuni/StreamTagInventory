@@ -20,9 +20,9 @@ export const AuthorInfo: React.FC<Props> = ({ className }) => {
         height={64}
         loading="lazy"
         decoding="async"
-        className="w-16 h-16 rounded-full object-cover shadow-lg ring-2 ring-border group-hover:ring-primary-muted transition-all"
+        className="w-16 h-16 rounded-full object-cover shadow-lg ring-2 ring-slate-200 group-hover:ring-blue-400 transition-all"
       />
-      <span className="text-sm text-text-muted group-hover:text-primary transition-colors">
+      <span className="text-sm text-slate-500 group-hover:text-blue-700 transition-colors">
         Created by {AUTHOR.name}
       </span>
     </a>

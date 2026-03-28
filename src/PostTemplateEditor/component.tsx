@@ -53,10 +53,10 @@ export const PostTemplateEditor: React.FC<Props> = ({
 
   return (
     <Modal open={open} onClose={handleClose} title={t("settings.postTemplate")}>
-      <p className="text-sm text-text-subtle mb-2">
+      <p className="text-sm text-slate-400 mb-2">
         {t("settings.postTemplateDescription")}
       </p>
-      <p className="text-xs text-text-subtle mb-4 font-mono">
+      <p className="text-xs text-slate-400 mb-4 font-mono">
         {t("settings.postTemplatePlaceholders")}
       </p>
 
@@ -69,7 +69,7 @@ export const PostTemplateEditor: React.FC<Props> = ({
 
       <div className="mb-4">
         <p className="text-sm font-medium mb-1">{t("settings.preview")}</p>
-        <pre className="bg-surface-alt rounded-lg p-3 text-sm whitespace-pre-wrap break-words">
+        <pre className="bg-slate-50 rounded-lg p-3 text-sm whitespace-pre-wrap break-words">
           {preview}
         </pre>
       </div>
