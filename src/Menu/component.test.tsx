@@ -232,9 +232,15 @@ test("スケルトンとロード後のレイアウト構造が一致する", ()
     { wrapper: TestWrapper },
   );
 
-  // 両方が .navbar.fixed.top-0 を持つことを検証
-  const skeletonNavbar = skeletonContainer.querySelector(".navbar.fixed.top-0");
-  const loadedNavbar = loadedContainer.querySelector(".navbar.fixed.top-0");
+  // 両方が固定ヘッダーのラッパーを持つことを検証
+  const skeletonWrapper = skeletonContainer.querySelector(".fixed.top-0");
+  const loadedWrapper = loadedContainer.querySelector(".fixed.top-0");
+  expect(skeletonWrapper).not.toBeNull();
+  expect(loadedWrapper).not.toBeNull();
+
+  // 両方のラッパー内に .navbar を持つことを検証
+  const skeletonNavbar = skeletonWrapper?.querySelector(".navbar");
+  const loadedNavbar = loadedWrapper?.querySelector(".navbar");
   expect(skeletonNavbar).not.toBeNull();
   expect(loadedNavbar).not.toBeNull();
 

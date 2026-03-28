@@ -29,46 +29,92 @@ export const Menu: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const { logout } = React.useContext(TwitchAuthContext);
+  const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
+  const mobileSearchInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(event.target.value);
   };
 
+  const toggleMobileSearch = () => {
+    const next = !mobileSearchOpen;
+    setMobileSearchOpen(next);
+    if (next) {
+      // Focus the input after opening
+      requestAnimationFrame(() => mobileSearchInputRef.current?.focus());
+    } else {
+      onSearch("");
+    }
+  };
+
   if (isLoading) {
     return (
-      <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
-        <div className="flex-1 flex items-center animate-pulse">
-          <div className="bg-surface-muted rounded h-8 w-48 ml-4" />
-          <div className="bg-surface-muted rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
-        </div>
-        <div className="flex-none flex gap-4 animate-pulse">
-          <div className="bg-surface-muted rounded h-8 w-20" />
-          <div className="bg-surface-muted rounded-full w-10 h-10" />
-        </div>
-      </Navbar>
+      <div className="fixed top-0 left-0 right-0 z-30">
+        <Navbar className="bg-surface shadow-md">
+          <div className="flex-1 flex items-center animate-pulse">
+            <div className="bg-surface-muted rounded h-8 w-48 ml-4" />
+            <div className="bg-surface-muted rounded h-10 w-64 ml-4 mr-4 hidden md:block" />
+          </div>
+          <div className="flex-none flex gap-4 animate-pulse">
+            <div className="bg-surface-muted rounded-full w-10 h-10 md:hidden" />
+            <div className="bg-surface-muted rounded h-8 w-20" />
+            <div className="bg-surface-muted rounded-full w-10 h-10" />
+          </div>
+        </Navbar>
+      </div>
     );
   }
 
   if (!user) return null;
 
   return (
-    <Navbar className="bg-surface fixed top-0 left-0 right-0 z-30 shadow-md">
-      <div className="flex-1 flex items-center">
-        <a
-          href="/"
-          className="inline-flex items-center justify-center font-bold rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-hover-bg text-xl whitespace-nowrap"
-        >
-          Stream Tag Inventory
-        </a>
-        <div className="ml-4 mr-4 relative hidden md:block flex-grow">
-          <Input
-            type="text"
-            placeholder={t("template.search")}
-            className="h-10 w-full pr-10"
-            onChange={handleSearchChange}
-            aria-label={t("template.search")}
-          />
-          <div className="absolute right-3 top-2.5 text-text-subtle">
+    <div className="fixed top-0 left-0 right-0 z-30">
+      <Navbar className="bg-surface shadow-md">
+        <div className="flex-1 flex items-center">
+          <a
+            href="/"
+            className="inline-flex items-center justify-center font-bold rounded-lg transition-colors px-4 py-2 bg-transparent hover:bg-hover-bg text-xl whitespace-nowrap"
+          >
+            Stream Tag Inventory
+          </a>
+          <div className="ml-4 mr-4 relative hidden md:block flex-grow">
+            <Input
+              type="text"
+              placeholder={t("template.search")}
+              className="h-10 w-full pr-10"
+              onChange={handleSearchChange}
+              aria-label={t("template.search")}
+            />
+            <div className="absolute right-3 top-2.5 text-text-subtle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <title>{t("common.search")}</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div className="flex-none flex gap-4">
+          {/* Mobile search toggle button */}
+          <Button
+            type="button"
+            variant="ghost"
+            shape="circle"
+            className="md:hidden"
+            aria-label={t("common.search")}
+            aria-expanded={mobileSearchOpen}
+            onClick={toggleMobileSearch}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -77,70 +123,109 @@ export const Menu: React.FC<Props> = ({
               stroke="currentColor"
             >
               <title>{t("common.search")}</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
+              {mobileSearchOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              )}
             </svg>
+          </Button>
+          <LanguageSwitcher />
+          <Dropdown align="end">
+            <Button
+              type="button"
+              tabIndex={0}
+              variant="ghost"
+              shape="circle"
+              className="avatar"
+              aria-label="user menu"
+            >
+              <Avatar>
+                <div className="w-10 rounded-full">
+                  <img
+                    alt={`${user.display_name} icon`}
+                    src={user.profile_image_url}
+                  />
+                </div>
+              </Avatar>
+            </Button>
+            <DropdownContent
+              role="menu"
+              aria-label="user menu"
+              className="mt-3 w-52 p-2 shadow bg-surface rounded-lg"
+            >
+              <MenuList size="sm">
+                <li data-testid="import-templates-menu-item">
+                  <button type="button" onClick={onImport}>
+                    {t("template.importTemplates")}
+                  </button>
+                </li>
+                <li data-testid="export-templates-menu-item">
+                  <button type="button" onClick={onExport}>
+                    {t("template.exportTemplates")}
+                  </button>
+                </li>
+                <li data-testid="post-template-menu-item">
+                  <button type="button" onClick={onEditPostTemplate}>
+                    {t("settings.postTemplate")}
+                  </button>
+                </li>
+                {/* 区切り線をメニュー幅いっぱいに表示 */}
+                <div className="py-0.5">
+                  <hr className="border-t border-border w-full" />
+                </div>
+                <li>
+                  <button type="button" onClick={() => logout()}>
+                    {t("auth.logout")}
+                  </button>
+                </li>
+              </MenuList>
+            </DropdownContent>
+          </Dropdown>
+        </div>
+      </Navbar>
+      {/* Mobile search bar */}
+      {mobileSearchOpen && (
+        <div className="md:hidden bg-surface border-t border-border px-4 py-2 shadow-md">
+          <div className="relative">
+            <Input
+              ref={mobileSearchInputRef}
+              type="text"
+              placeholder={t("template.search")}
+              className="h-10 w-full pr-10"
+              onChange={handleSearchChange}
+              aria-label={t("template.search")}
+            />
+            <div className="absolute right-3 top-2.5 text-text-subtle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <title>{t("common.search")}</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex-none flex gap-4">
-        <LanguageSwitcher />
-        <Dropdown align="end">
-          <Button
-            type="button"
-            tabIndex={0}
-            variant="ghost"
-            shape="circle"
-            className="avatar"
-            aria-label="user menu"
-          >
-            <Avatar>
-              <div className="w-10 rounded-full">
-                <img
-                  alt={`${user.display_name} icon`}
-                  src={user.profile_image_url}
-                />
-              </div>
-            </Avatar>
-          </Button>
-          <DropdownContent
-            role="menu"
-            aria-label="user menu"
-            className="mt-3 w-52 p-2 shadow bg-surface rounded-lg"
-          >
-            <MenuList size="sm">
-              <li data-testid="import-templates-menu-item">
-                <button type="button" onClick={onImport}>
-                  {t("template.importTemplates")}
-                </button>
-              </li>
-              <li data-testid="export-templates-menu-item">
-                <button type="button" onClick={onExport}>
-                  {t("template.exportTemplates")}
-                </button>
-              </li>
-              <li data-testid="post-template-menu-item">
-                <button type="button" onClick={onEditPostTemplate}>
-                  {t("settings.postTemplate")}
-                </button>
-              </li>
-              {/* 区切り線をメニュー幅いっぱいに表示 */}
-              <div className="py-0.5">
-                <hr className="border-t border-border w-full" />
-              </div>
-              <li>
-                <button type="button" onClick={() => logout()}>
-                  {t("auth.logout")}
-                </button>
-              </li>
-            </MenuList>
-          </DropdownContent>
-        </Dropdown>
-      </div>
-    </Navbar>
+      )}
+    </div>
   );
 };
