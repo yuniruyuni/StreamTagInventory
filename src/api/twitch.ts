@@ -72,7 +72,7 @@ export const createTwitchApiClient = (): ApiClient => ({
   get: <T>([url, token, language]: [string, string, string]) =>
     fetchForTwitch<T>(url, language, {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}`, "Client-Id": CLIENT_ID },
+      headers: { Authorization: `Bearer ${token}`, "Client-ID": CLIENT_ID },
     }),
   post: <Arg, T>(
     [url, token, language]: [string, string, string],
