@@ -16,7 +16,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   entrance,
   children,
 }) => {
-  const [token, setToken, removeToken] = useSession<AuthToken>(
+  const [token, setToken, removeToken, isHydrated] = useSession<AuthToken>(
     "twitch-auth",
     "",
   );
@@ -34,6 +34,8 @@ export const TwitchAuthProvider: FC<Props> = ({
     clearHash();
     return <>reloading...</>;
   }
+
+  if (!isHydrated) return null;
 
   if (!authProvider.shouldShowEntrance(paramToken, token)) {
     const logout = () => {

@@ -24,11 +24,12 @@ import { TemplateList } from "./TemplateList";
 export const MainScreen: React.FC = () => {
   const { i18n, t } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
-  const [templates, setTemplates] = useStorage<Template[]>("templates", []);
-  const [postTemplate, setPostTemplate] = useStorage<string>(
-    POST_TEMPLATE_KEY,
-    DEFAULT_POST_TEMPLATE,
-  );
+  const [templates, setTemplates, , isTemplatesHydrated] = useStorage<
+    Template[]
+  >("templates", []);
+  const [postTemplate, setPostTemplate, , isPostTemplateHydrated] =
+    useStorage<string>(POST_TEMPLATE_KEY, DEFAULT_POST_TEMPLATE);
+  const isHydrated = isTemplatesHydrated && isPostTemplateHydrated;
   const [postTemplateEditorOpen, setPostTemplateEditorOpen] = useState(false);
 
   const { data: users, isLoading } = useSWR(
@@ -79,6 +80,8 @@ export const MainScreen: React.FC = () => {
       autoClose: true,
     });
   }, [channelInfo, channelCategory, onAddTemplate, addNotification, t]);
+
+  if (!isHydrated) return null;
 
   return (
     <div className="container mx-auto">
