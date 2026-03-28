@@ -117,6 +117,40 @@ test("storageがnullを返す場合は初期値が使用される", () => {
   expect(value).toBe("initialValue");
 });
 
+test("storageに値がある場合、isHydratedがtrueになる", () => {
+  const storage = new MockStorage();
+  storage.setItem("testKey", JSON.stringify("storedValue"));
+
+  const { result } = renderHook(() =>
+    genUseStorage(storage, "testKey", "initialValue"),
+  );
+  const [, , , isHydrated] = result.current;
+  expect(isHydrated).toBe(true);
+});
+
+test("storageに値がない場合でも、isHydratedがtrueになる", () => {
+  const storage = new MockStorage();
+
+  const { result } = renderHook(() =>
+    genUseStorage(storage, "testKey", "initialValue"),
+  );
+  // useEffect実行後にisHydratedがtrueになる
+  const [, , , isHydrated] = result.current;
+  expect(isHydrated).toBe(true);
+});
+
+test("storageに値がある場合、初回レンダリングから正しい値が返る", () => {
+  const storage = new MockStorage();
+  storage.setItem("testKey", JSON.stringify("storedValue"));
+
+  const { result } = renderHook(() =>
+    genUseStorage(storage, "testKey", "initialValue"),
+  );
+  // 同期的にstorageから読み込むため、初回から正しい値
+  const [value] = result.current;
+  expect(value).toBe("storedValue");
+});
+
 test("複雑なオブジェクトも保存と取得ができる", () => {
   const storage = new MockStorage();
   const complexObject = { a: 1, b: "test", c: [1, 2, 3], d: { nested: true } };

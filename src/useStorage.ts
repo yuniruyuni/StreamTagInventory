@@ -1,27 +1,44 @@
 import { type Dispatch, useCallback, useEffect, useState } from "react";
 
+type UseStorageResult<T> = [T, Dispatch<T>, () => void, boolean];
+
+const readStorage = <T>(storage: Storage, key: string): T | undefined => {
+  const loaded = storage.getItem(key);
+  if (loaded == null) return undefined;
+
+  try {
+    const parsed = JSON.parse(loaded);
+    if (!parsed) {
+      storage.removeItem(key);
+      return undefined;
+    }
+    return parsed as T;
+  } catch (_e) {
+    // 無効なJSONの場合は、ストレージから削除
+    storage.removeItem(key);
+    return undefined;
+  }
+};
+
 export const genUseStorage = <T>(
   storage: Storage,
   key: string,
   def: T,
-): [T, Dispatch<T>, () => void] => {
-  const [state, setState] = useState<T>(def);
+): UseStorageResult<T> => {
+  const [state, setState] = useState<T>(
+    () => readStorage<T>(storage, key) ?? def,
+  );
+  const [isHydrated, setIsHydrated] = useState<boolean>(
+    () => readStorage(storage, key) !== undefined,
+  );
 
   useEffect(() => {
-    const loaded = storage.getItem(key);
-    if (loaded == null) return;
-
-    try {
-      const parsed = JSON.parse(loaded);
-      if (!parsed) {
-        storage.removeItem(key);
-        return;
-      }
-      setState(parsed);
-    } catch (_e) {
-      // 無効なJSONの場合は、セッションストレージから削除
-      storage.removeItem(key);
-      return;
+    const value = readStorage<T>(storage, key);
+    if (value !== undefined) {
+      setState(value);
+      setIsHydrated(true);
+    } else {
+      setIsHydrated(true);
     }
   }, [storage, key]);
 
@@ -39,14 +56,10 @@ export const genUseStorage = <T>(
     setState(def);
   }, [storage, key, def]);
 
-  return [state, setStorage, removeStorage];
+  return [state, setStorage, removeStorage, isHydrated];
 };
 
-export const useSession = <T>(
-  key: string,
-  def: T,
-): [T, Dispatch<T>, () => void] => genUseStorage(sessionStorage, key, def);
-export const useStorage = <T>(
-  key: string,
-  def: T,
-): [T, Dispatch<T>, () => void] => genUseStorage(localStorage, key, def);
+export const useSession = <T>(key: string, def: T): UseStorageResult<T> =>
+  genUseStorage(sessionStorage, key, def);
+export const useStorage = <T>(key: string, def: T): UseStorageResult<T> =>
+  genUseStorage(localStorage, key, def);
