@@ -11,6 +11,13 @@ export const getAuthProvider = (storage: {
   if (!authProvider) {
     authProvider = new TwitchAuthProvider(storage);
   }
+  // Bind storage to providers that support it (e.g. MockAuthProvider in E2E)
+  if (
+    "bindStorage" in authProvider &&
+    typeof authProvider.bindStorage === "function"
+  ) {
+    authProvider.bindStorage(storage);
+  }
   return authProvider;
 };
 
