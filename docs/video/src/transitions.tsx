@@ -120,5 +120,5 @@ const transitionMap: Record<string, React.FC<TransitionProps>> = {
   wipe: WipeTransition,
 };
 
-export { TRANSITION_FRAMES, transitionMap };
 export type { TransitionProps };
+export { TRANSITION_FRAMES, transitionMap };

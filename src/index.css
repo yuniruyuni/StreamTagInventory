@@ -28,6 +28,9 @@
   --color-error-border: #ef4444;
   --color-on-error: #450a0a;
 
+  /* Warning (amber-500 系) */
+  --color-warning: #f59e0b;
+
   /* Neutral UI */
   --color-border: #d1d5db;
   --color-border-focus: #6b7280;
