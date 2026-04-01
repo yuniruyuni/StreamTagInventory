@@ -1,5 +1,5 @@
-Bun.serve({
-  port: 3000,
+const server = Bun.serve({
+  port: process.env.PORT != null ? Number(process.env.PORT) : 3000,
   fetch: async (req) => {
     let path = new URL(req.url).pathname;
     if (path === "/") path = "/index.html";
@@ -9,3 +9,4 @@ Bun.serve({
     return new Response(file);
   },
 });
+console.log(`Listening on http://localhost:${server.port}`);
