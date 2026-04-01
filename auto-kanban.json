@@ -1,0 +1,4 @@
+{
+  "prepare": "bun install",
+  "server": "PORT=0 bun run start:backend"
+}
