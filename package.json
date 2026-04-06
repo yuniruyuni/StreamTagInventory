@@ -56,7 +56,7 @@
     "wouter": "^3.9.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.9",
+    "@biomejs/biome": "2.4.10",
     "@happy-dom/global-registrator": "^20.8.9",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/cli": "^4.2.2",
