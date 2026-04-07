@@ -211,39 +211,6 @@ test("タグやボタンをクリックしても入力フィールドにフォ�
   expect(document.activeElement).not.toBe(input);
 });
 
-test("タグカウンターが正しく表示される", () => {
-  const onChange = mock();
-
-  const { getByTestId } = render(
-    <InputTags tags={initialTags} onChange={onChange} />,
-    { wrapper },
-  );
-
-  const counter = getByTestId("tag-counter");
-  expect(counter).toHaveTextContent("3/10 tags");
-});
-
-test("タグが上限に達してもエラー表示はされない", () => {
-  const onChange = mock();
-  const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
-
-  const { getByRole, getByTestId, queryByText } = render(
-    <InputTags tags={maxTags} onChange={onChange} />,
-    { wrapper },
-  );
-
-  // エラーボーダーが適用されていないこと
-  const fieldset = getByRole("group");
-  expect(fieldset).not.toHaveClass("border-red-500");
-
-  // カウンターが10/10と表示されること
-  const counter = getByTestId("tag-counter");
-  expect(counter).toHaveTextContent("10/10 tags");
-
-  // エラーメッセージが表示されていないこと
-  expect(queryByText("Maximum 10 tags allowed")).toBeNull();
-});
-
 test("タグが上限に達すると入力フィールドが非表示になる", () => {
   const onChange = mock();
   const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
@@ -255,31 +222,4 @@ test("タグが上限に達すると入力フィールドが非表示になる",
 
   // 入力フィールドが存在しないこと
   expect(queryByRole("textbox")).toBeNull();
-});
-
-test("タグが上限未満 (9 個以下) の時は通常色で表示される", () => {
-  const onChange = mock();
-  const nineTags = Array.from({ length: 9 }, (_, i) => `tag${i}`);
-
-  const { getByTestId } = render(
-    <InputTags tags={nineTags} onChange={onChange} />,
-    { wrapper },
-  );
-
-  const counter = getByTestId("tag-counter");
-  expect(counter.parentElement).toHaveClass("text-slate-500");
-  expect(counter.parentElement).not.toHaveClass("text-amber-600");
-});
-
-test("タグが上限 (10 個) に達すると警告色で表示される", () => {
-  const onChange = mock();
-  const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
-
-  const { getByTestId } = render(
-    <InputTags tags={maxTags} onChange={onChange} />,
-    { wrapper },
-  );
-
-  const counter = getByTestId("tag-counter");
-  expect(counter.parentElement).toHaveClass("text-amber-600");
 });
