@@ -14,6 +14,7 @@ spec:
               env:
                 - name: DB_APP_NAME
                   value: stream_tag_inventory
+                # NOTE: migration job は owner pw (DDL 必要)。-app- サフィックス付きの app user pw は使わない
                 - name: DB_PASSWORD
                   valueFrom:
                     secretKeyRef:
@@ -22,6 +23,7 @@ spec:
               resources:
                 limits:
                   cpu: "1"
+                  # NOTE: Cloud Run gen2 実行環境の合計最小 memory 要件 (512Mi) を満たすため明示指定必須
                   memory: "512Mi"
             - image: cloudflare/cloudflared:latest
               args:

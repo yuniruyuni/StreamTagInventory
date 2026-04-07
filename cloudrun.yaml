@@ -21,9 +21,11 @@ spec:
             limits:
               cpu: "1"
               memory: "256Mi"
+          # NOTE: PORT env var は Cloud Run が containerPort から自動注入するため設定禁止 (予約環境変数)
           env:
             - name: DB_APP_NAME
               value: stream_tag_inventory
+            # NOTE: service は app user pw (DML のみ)。owner pw (stream-tag-inventory-db-password) は migration job 側で使う
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
