@@ -21,7 +21,7 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
           {t("entrance.description")}
         </p>
         <Link
-          className="text-2xl pt-6 text-sky-400 hover:text-sky-600 visited:text-purple-600"
+          className="text-2xl pt-6 text-sky-600 hover:text-sky-700"
           href={uri}
         >
           {t("auth.login")}

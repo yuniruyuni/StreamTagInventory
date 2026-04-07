@@ -6,9 +6,10 @@ import { TagList } from "./component";
 test("TagListコンポーネントが空の配列の場合、何も表示しない", () => {
   const tags: string[] = [];
   const onRemove = mock();
+  const onEdit = mock();
 
   const { queryAllByRole } = render(
-    <TagList tags={tags} onRemove={onRemove} />,
+    <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />,
   );
 
   // リストのアイテムが存在しないことを確認
@@ -19,8 +20,11 @@ test("TagListコンポーネントが空の配列の場合、何も表示しな�
 test("TagListコンポーネントがタグを正しくレンダリングする", () => {
   const tags = ["タグ1", "タグ2", "タグ3"];
   const onRemove = () => {};
+  const onEdit = () => {};
 
-  const { getAllByRole } = render(<TagList tags={tags} onRemove={onRemove} />);
+  const { getAllByRole } = render(
+    <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />,
+  );
 
   // タグの数を確認
   const tagElements = getAllByRole("listitem");
@@ -36,15 +40,18 @@ test("タグの閉じるボタンをクリックすると、onRemove関数が呼
   // モック関数を使用
   const tags = ["タグ1", "タグ2", "タグ3"];
   const onRemove = mock();
+  const onEdit = mock();
 
   // コンポーネントをレンダリング
-  const { getAllByRole } = render(<TagList tags={tags} onRemove={onRemove} />);
+  const { getAllByRole, getAllByLabelText } = render(
+    <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />,
+  );
 
   // タグの数を確認
   const tagElements = getAllByRole("listitem");
   expect(tagElements.length).toBe(3);
 
-  const removeButtons = getAllByRole("button");
+  const removeButtons = getAllByLabelText("remove tag");
   expect(removeButtons.length).toBe(3);
 
   // 2番目のタグの閉じるボタンを取得

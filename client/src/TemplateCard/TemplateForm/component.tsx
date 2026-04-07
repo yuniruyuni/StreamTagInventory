@@ -20,7 +20,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         id="title"
         name="title"
         type="text"
-        className="w-full focus:border-slate-900"
+        className="w-full"
         onChange={(e) => onChange({ ...template, title: e.target.value })}
         value={template.title}
       />
