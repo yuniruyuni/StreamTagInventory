@@ -235,7 +235,7 @@ test.describe("Capture screenshots for intro video", () => {
     });
 
     // Compute highlights for main.png (container = viewport)
-    const infoPanel = page.locator("div.bg-surface-alt.rounded-lg");
+    const infoPanel = page.locator("div.bg-slate-100.rounded-lg");
     const importBtn = page.locator(
       'button:has-text("テンプレートとして取り込む")',
     );

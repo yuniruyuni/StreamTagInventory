@@ -1,7 +1,7 @@
 apiVersion: run.googleapis.com/v1
 kind: Job
 metadata:
-  name: stream-tag-inventory-migrate
+  name: twitch-tag-inventory-migration
 spec:
   template:
     spec:
@@ -10,19 +10,15 @@ spec:
           maxRetries: 1
           timeoutSeconds: 300
           containers:
-            - image: MIGRATE_IMAGE_PLACEHOLDER
+            - image: IMAGE_PLACEHOLDER
               env:
                 - name: DB_APP_NAME
-                  value: stream_tag_inventory
+                  value: twitch_tag_inventory
                 - name: DB_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       key: latest
-                      name: stream-tag-inventory-db-password
-              resources:
-                limits:
-                  cpu: "1"
-                  memory: "512Mi"
+                      name: twitch-tag-inventory-db-app-password
             - image: cloudflare/cloudflared:latest
               args:
                 - access
@@ -45,4 +41,4 @@ spec:
               resources:
                 limits:
                   cpu: "0.5"
-                  memory: "256Mi"
+                  memory: "128Mi"

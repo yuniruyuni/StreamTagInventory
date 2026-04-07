@@ -48,11 +48,11 @@ jobs:
       - name: Run migration
         run: |
           MIGRATE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${SERVICE_NAME}-migrate:${SHA}"
-          sed -i "s|MIGRATE_IMAGE_PLACEHOLDER|$MIGRATE_TAG|g" cloudrun-job.yaml
+          sed -i "s|IMAGE_PLACEHOLDER|$MIGRATE_TAG|g" cloudrun-job.yaml
           gcloud run jobs replace cloudrun-job.yaml \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID"
-          gcloud run jobs execute "${SERVICE_NAME}-migrate" \
+          gcloud run jobs execute "${SERVICE_NAME}-migration" \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID" \
             --wait

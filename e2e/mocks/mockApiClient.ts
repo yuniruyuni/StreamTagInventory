@@ -1,4 +1,4 @@
-import type { ApiClient } from "../../src/api/types";
+import type { ApiClient } from "../../client/src/api/types";
 import {
   mockCategories,
   mockChannel,

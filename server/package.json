@@ -1,0 +1,28 @@
+{
+  "name": "@twitch-tag-inventory/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "watch:run": "STATIC_DIR=../client/static bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile dist/server",
+    "check:lint": "biome check .",
+    "check:test": "bun test src/",
+    "check:type": "tsc --noEmit",
+    "fix:lint": "biome check --write .",
+    "watch:test": "bun test --watch src/",
+    "watch:type": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@hono/trpc-server": "^0.3.2",
+    "@trpc/server": "^11.10.0",
+    "hono": "^4.4.0",
+    "pg": "^8.20.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11",
+    "@types/pg": "^8.20.0",
+    "typescript": "^5.9.3"
+  }
+}
