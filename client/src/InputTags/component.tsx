@@ -85,11 +85,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       <fieldset
         className={clsx(
           "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all cursor-text",
-          atLimit
-            ? "border-red-500"
-            : active
-              ? "border-slate-900"
-              : "border-slate-900/20",
+          active ? "border-slate-900" : "border-slate-900/20",
         )}
         onClick={handleFieldsetClick}
       >
@@ -106,11 +102,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       <div
         className={clsx(
           "text-xs mt-1 text-right",
-          atLimit
-            ? "text-red-600"
-            : nearLimit
-              ? "text-amber-600"
-              : "text-slate-500",
+          nearLimit ? "text-amber-600" : "text-slate-500",
         )}
       >
         <span data-testid="tag-counter">
@@ -119,7 +111,6 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
             max: MAX_TAGS,
           })}
         </span>
-        {atLimit && <span className="ml-2">{t("template.maxTagsError")}</span>}
       </div>
     </div>
   );

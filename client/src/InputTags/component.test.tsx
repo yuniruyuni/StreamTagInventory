@@ -223,25 +223,25 @@ test("タグカウンターが正しく表示される", () => {
   expect(counter).toHaveTextContent("3/10 tags");
 });
 
-test("タグが上限に達するとエラーボーダーとエラーメッセージが表示される", () => {
+test("タグが上限に達してもエラー表示はされない", () => {
   const onChange = mock();
   const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
 
-  const { getByRole, getByTestId, getByText } = render(
+  const { getByRole, getByTestId, queryByText } = render(
     <InputTags tags={maxTags} onChange={onChange} />,
     { wrapper },
   );
 
-  // エラーボーダーが適用されていること
+  // エラーボーダーが適用されていないこと
   const fieldset = getByRole("group");
-  expect(fieldset).toHaveClass("border-red-500");
+  expect(fieldset).not.toHaveClass("border-red-500");
 
   // カウンターが10/10と表示されること
   const counter = getByTestId("tag-counter");
   expect(counter).toHaveTextContent("10/10 tags");
 
-  // エラーメッセージが表示されること
-  expect(getByText("Maximum 10 tags allowed")).not.toBeNull();
+  // エラーメッセージが表示されていないこと
+  expect(queryByText("Maximum 10 tags allowed")).toBeNull();
 });
 
 test("タグが上限に達すると入力フィールドが非表示になる", () => {
