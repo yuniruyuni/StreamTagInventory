@@ -106,3 +106,37 @@ CSS 変数として定義。コンポーネントでは Tailwind クラス (`bg-
 - `vrt.yml`: Visual Regression Testing (easy-vrt)
 - `deploy.yml`: build-app + build-migration → migrate → deploy (Cloud Run)
 - `schema-plan.yml`: PR 上で pgschema plan をコメント表示
+
+## Cloud Run デプロイの注意点
+
+今後の refactor で再発させてはいけない落とし穴。命名・環境変数・memory・パスワードの扱いを間違えるとデプロイが壊れる。
+
+### 命名の一貫性
+
+`deploy.yml` の `env.SERVICE_NAME` / `cloudrun.yaml` の `metadata.name` / `cloudrun-job.yaml` の `metadata.name` は 3 箇所で対応している必要がある。命名を変更する場合は 3 箇所同時に変更する。
+
+- Service: `${SERVICE_NAME}` (= `stream-tag-inventory`)
+- Migration Job: `${SERVICE_NAME}-migration` (= `stream-tag-inventory-migration`)
+
+`deploy.yml` の `gcloud run jobs execute "${SERVICE_NAME}-migration"` で参照される名前と yaml の `metadata.name` が一致しないとデプロイが失敗する。
+
+### memory の最低要件
+
+Cloud Run **gen2 実行環境は合計 512Mi 以上の memory** が必須 (CPU always allocated の制約)。
+`cloudrun-job.yaml` の migration container は明示的に `memory: "512Mi"` 以上を指定すること。`resources` ブロックを省略すると gen2 要件を満たさずにデプロイが失敗する。
+
+### `PORT` 環境変数
+
+`PORT` は **Cloud Run の予約環境変数** で、`containerPort` から自動注入される。`cloudrun.yaml` の `env` に `PORT` を追加してはいけない (起動失敗の原因)。
+server 側は `process.env.PORT ?? 3000` で受け取るため、開発時は環境変数で上書き可能だが、本番 yaml では設定不要。
+
+### DB パスワードの使い分け
+
+- **migration job**: `stream-tag-inventory-db-password` (owner user — DDL 権限が必要)
+- **service**: `stream-tag-inventory-db-app-password` (app user — DML のみ)
+
+混同すると migration が権限エラーで失敗するか、service に不要な DDL 権限が付与される。`-app-` サフィックスの有無で区別する。
+
+### cloudflared サイドカー
+
+DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続する。`cloudrun.yaml` と `cloudrun-job.yaml` の **両方** に `cloudflared` サイドカーが必要で、`cf-db-access-client-id` / `cf-db-access-client-secret` の secret を参照する。
