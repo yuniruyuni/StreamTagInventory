@@ -29,6 +29,7 @@ export const Tag: React.FC<Props> = ({ value, onEdit, onRemove }) => {
   }, [editing]);
 
   // draft 変更に合わせて input 幅を sizer の実測値に追従させる
+  // biome-ignore lint/correctness/useExhaustiveDependencies: draft は sizer の DOM 更新を経由して offsetWidth に反映されるため、明示的に依存に含める必要がある
   useLayoutEffect(() => {
     if (!editing) return;
     const input = inputRef.current;
