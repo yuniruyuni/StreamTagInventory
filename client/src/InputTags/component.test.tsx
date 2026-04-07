@@ -1,16 +1,28 @@
-import { expect, mock, test } from "bun:test";
+import { beforeAll, expect, mock, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { InputTags } from "./component";
+import type React from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "~/i18n/config";
+import { InputTags, MAX_TAGS } from "./component";
 
 // 初期タグデータ
 const initialTags = ["React", "TypeScript", "Tailwind"];
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+);
+
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 test("InputTagsコンポーネントが初期タグを正しくレンダリングする", () => {
   const onChange = mock();
 
   const { getByRole, getAllByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const tagElements = getAllByRole("listitem");
@@ -30,6 +42,7 @@ test("Enterキーでタグを追加できる", async () => {
 
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const user = userEvent.setup();
@@ -45,6 +58,7 @@ test("タグの前後の空白は削除されて登録される", async () => {
 
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const input = getByRole("textbox");
@@ -67,6 +81,7 @@ test("空の値ではタグが追加されない", async () => {
 
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const input = getByRole("textbox");
@@ -86,6 +101,7 @@ test("Backspaceキーで最後のタグを削除できる", async () => {
 
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const user = userEvent.setup();
@@ -100,6 +116,7 @@ test("閉じるボタンをクリックしてタグを削除できる", async ()
 
   const { getAllByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const removeButtons = getAllByRole("button", { name: "remove tag" });
@@ -121,6 +138,7 @@ test("フォーカス時にアクティブクラスが適用される", async ()
   // コンポーネントをレンダリング
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const list = getByRole("group");
@@ -151,6 +169,7 @@ test("フィールドセットをクリックすると入力フィールドに�
 
   const { getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const fieldset = getByRole("group");
@@ -170,6 +189,7 @@ test("タグやボタンをクリックしても入力フィールドにフォ�
 
   const { getAllByRole, getByRole } = render(
     <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
   );
 
   const tagElements = getAllByRole("listitem");
@@ -189,4 +209,63 @@ test("タグやボタンをクリックしても入力フィールドにフォ�
 
   // 入力フィールドにフォーカスが移動していないことを確認
   expect(document.activeElement).not.toBe(input);
+});
+
+test("タグカウンターが正しく表示される", () => {
+  const onChange = mock();
+
+  const { getByTestId } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  const counter = getByTestId("tag-counter");
+  expect(counter).toHaveTextContent("3/10 tags");
+});
+
+test("タグが上限に達するとエラーボーダーとエラーメッセージが表示される", () => {
+  const onChange = mock();
+  const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
+
+  const { getByRole, getByTestId, getByText } = render(
+    <InputTags tags={maxTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  // エラーボーダーが適用されていること
+  const fieldset = getByRole("group");
+  expect(fieldset).toHaveClass("border-red-500");
+
+  // カウンターが10/10と表示されること
+  const counter = getByTestId("tag-counter");
+  expect(counter).toHaveTextContent("10/10 tags");
+
+  // エラーメッセージが表示されること
+  expect(getByText("Maximum 10 tags allowed")).not.toBeNull();
+});
+
+test("タグが上限に達すると入力フィールドが非表示になる", () => {
+  const onChange = mock();
+  const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
+
+  const { queryByRole } = render(
+    <InputTags tags={maxTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  // 入力フィールドが存在しないこと
+  expect(queryByRole("textbox")).toBeNull();
+});
+
+test("タグが上限近く（8個以上）で警告色が表示される", () => {
+  const onChange = mock();
+  const nearLimitTags = Array.from({ length: 8 }, (_, i) => `tag${i}`);
+
+  const { getByTestId } = render(
+    <InputTags tags={nearLimitTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  const counter = getByTestId("tag-counter");
+  expect(counter.parentElement).toHaveClass("text-amber-600");
 });
