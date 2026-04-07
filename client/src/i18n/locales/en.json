@@ -29,7 +29,6 @@
     "deleteConfirm": "Are you sure you want to delete this?",
     "pickCategory": "Pick a category",
     "tagCount": "{{current}}/{{max}} tags",
-    "maxTagsError": "Maximum 10 tags allowed",
     "applySuccess": "Template applied successfully",
     "applyError": "Error occurred while applying template",
     "search": "Search...",

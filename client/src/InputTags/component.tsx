@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import React from "react";
-import { useTranslation } from "~/i18n";
 import { TagInput } from "./TagInput";
 import { TagList } from "./TagList";
 
@@ -45,7 +44,6 @@ export function handleTagKeyDown(
 export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const [active, setActive] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const { t } = useTranslation();
 
   const atLimit = tags.length >= MAX_TAGS;
 
@@ -79,38 +77,23 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   }
 
   return (
-    <div>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: クリックはフォーカスを移動するだけなのでキーボードイベントは不要 */}
-      <fieldset
-        className={clsx(
-          "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all cursor-text",
-          active ? "border-slate-900" : "border-slate-900/20",
-        )}
-        onClick={handleFieldsetClick}
-      >
-        <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />
-        {!atLimit && (
-          <TagInput
-            ref={inputRef}
-            onFocus={() => setActive(true)}
-            onBlur={() => setActive(false)}
-            onKeyDown={handleKeyDown}
-          />
-        )}
-      </fieldset>
-      <div
-        className={clsx(
-          "text-xs mt-1 text-right",
-          atLimit ? "text-amber-600" : "text-slate-500",
-        )}
-      >
-        <span data-testid="tag-counter">
-          {t("template.tagCount", {
-            current: tags.length,
-            max: MAX_TAGS,
-          })}
-        </span>
-      </div>
-    </div>
+    // biome-ignore lint/a11y/useKeyWithClickEvents: クリックはフォーカスを移動するだけなのでキーボードイベントは不要
+    <fieldset
+      className={clsx(
+        "flex flex-wrap border rounded leading-tight pt-3 pb-2 px-4 transition-all cursor-text",
+        active ? "border-slate-900" : "border-slate-900/20",
+      )}
+      onClick={handleFieldsetClick}
+    >
+      <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />
+      {!atLimit && (
+        <TagInput
+          ref={inputRef}
+          onFocus={() => setActive(true)}
+          onBlur={() => setActive(false)}
+          onKeyDown={handleKeyDown}
+        />
+      )}
+    </fieldset>
   );
 };

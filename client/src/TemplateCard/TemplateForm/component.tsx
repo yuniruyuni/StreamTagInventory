@@ -1,7 +1,8 @@
+import clsx from "clsx";
 import type React from "react";
 import { CategorySelector } from "~/CategorySelector";
 import { Input } from "~/components/Input";
-import { InputTags } from "~/InputTags";
+import { InputTags, MAX_TAGS } from "~/InputTags";
 import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
 
@@ -12,6 +13,8 @@ type Props = {
 
 export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
   const { t } = useTranslation();
+  const tagCount = template.tags?.length ?? 0;
+  const atLimit = tagCount >= MAX_TAGS;
 
   return (
     <>
@@ -31,7 +34,21 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         onChange={(category) => onChange({ ...template, category })}
       />
 
-      <label htmlFor="tags">{t("template.tags")}</label>
+      <div className="flex items-baseline justify-between">
+        <label htmlFor="tags">{t("template.tags")}</label>
+        <span
+          data-testid="tag-counter"
+          className={clsx(
+            "text-xs",
+            atLimit ? "text-amber-600" : "text-slate-500",
+          )}
+        >
+          {t("template.tagCount", {
+            current: tagCount,
+            max: MAX_TAGS,
+          })}
+        </span>
+      </div>
       <InputTags
         tags={template.tags ?? []}
         onChange={(tags) => onChange({ ...template, tags })}
