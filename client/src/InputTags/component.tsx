@@ -48,6 +48,12 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
     onChange(newTags);
   }
 
+  function onEdit(index: number, newValue: string) {
+    const newTags = [...tags];
+    newTags[index] = newValue;
+    onChange(newTags);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     handleTagKeyDown(e, tags, onChange);
   }
@@ -74,7 +80,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       )}
       onClick={handleFieldsetClick}
     >
-      <TagList tags={tags} onRemove={onRemove} />
+      <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />
       <TagInput
         ref={inputRef}
         onFocus={() => setActive(true)}
