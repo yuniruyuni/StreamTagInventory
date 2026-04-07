@@ -1,4 +1,4 @@
-import type { AuthProvider, AuthToken } from "../../src/auth/types";
+import type { AuthProvider, AuthToken } from "../../client/src/auth/types";
 
 declare global {
   interface Window {

@@ -2,7 +2,7 @@ name: Schema Plan
 
 on:
   pull_request:
-    paths: ["db/**"]
+    paths: ["schema/**"]
 
 permissions:
   contents: read
@@ -27,18 +27,18 @@ jobs:
 
       - name: Apply main branch schema (current state)
         run: |
-          if git show origin/main:db/schema.sql > /dev/null 2>&1; then
-            mkdir -p /tmp/main_db
-            git archive origin/main -- db/ | tar -x -C /tmp/main_db
+          if git show origin/main:schema/main.sql > /dev/null 2>&1; then
+            mkdir -p /tmp/main_schema
+            git archive origin/main -- schema/ | tar -x -C /tmp/main_schema
             docker run --rm --network host \
-              -v /tmp/main_db/db:/schema:ro \
+              -v /tmp/main_schema/schema:/schema:ro \
               pgschema/pgschema apply \
-              --file /schema/schema.sql \
+              --file /schema/main.sql \
               --host localhost --port 5432 \
               --user planuser --password planpass --db plandb
             echo "Applied main branch schema as baseline."
           else
-            echo "No db/schema.sql on main branch — planning against empty DB (initial migration)."
+            echo "No schema/main.sql on main branch — planning against empty DB (initial migration)."
           fi
 
       - name: Plan PR schema changes (diff from main)
@@ -46,9 +46,9 @@ jobs:
           WORKSPACE: ${{ github.workspace }}
         run: |
           docker run --rm --network host \
-            -v "${WORKSPACE}/db:/schema:ro" \
+            -v "${WORKSPACE}/schema:/schema:ro" \
             pgschema/pgschema plan \
-            --file /schema/schema.sql \
+            --file /schema/main.sql \
             --host localhost --port 5432 \
             --user planuser --password planpass --db plandb \
             > plan_output.txt 2>&1 || true

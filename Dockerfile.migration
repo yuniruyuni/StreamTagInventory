@@ -2,6 +2,7 @@ FROM pgschema/pgschema:latest
 USER root
 RUN apk add --no-cache postgresql-client
 USER pgschema
-COPY db/ /app/db/
+COPY schema/ /app/schema/
+COPY .pgschemaignore /app/.pgschemaignore
 COPY bin/migrate.sh /app/migrate.sh
 ENTRYPOINT ["/app/migrate.sh"]

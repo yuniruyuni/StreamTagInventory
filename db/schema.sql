@@ -1,7 +1,0 @@
--- pgschema declarative schema
--- Add table definitions here. pgschema will generate DDL to match this state.
---
--- Note: App user DML privileges (GRANT, ALTER DEFAULT PRIVILEGES) are
--- managed by NixOS postgresql-app-credentials service, not pgschema,
--- because pgschema's internal validation uses a temporary schema where
--- application roles don't exist.
