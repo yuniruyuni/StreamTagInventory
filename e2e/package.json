@@ -11,6 +11,7 @@
     "check:e2e:build": "run-p 'check:e2e:build:**'",
     "check:e2e:build:html": "mkdir -p static && cp ../client/src/index.html static/index.html && cp ../client/src/robots.txt static/robots.txt",
     "check:e2e:build:favicon": "bun run ../client/bin/generate-favicon.js",
+    "check:e2e:build:avatar": "bun run ../client/bin/generate-avatar.js",
     "check:e2e:build:tailwind": "tailwindcss --minify --input ../client/src/index.css --output ./static/index.css",
     "check:e2e:build:bundle": "bun build --outdir=static/ --entry-naming='[dir]/index.[ext]' ../client/src/index.e2e.tsx",
     "check:e2e:serve": "STATIC_DIR=./static bun run ../server/src/index.ts",
