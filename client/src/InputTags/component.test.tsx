@@ -257,12 +257,26 @@ test("タグが上限に達すると入力フィールドが非表示になる",
   expect(queryByRole("textbox")).toBeNull();
 });
 
-test("タグが上限近く（8個以上）で警告色が表示される", () => {
+test("タグが上限未満 (9 個以下) の時は通常色で表示される", () => {
   const onChange = mock();
-  const nearLimitTags = Array.from({ length: 8 }, (_, i) => `tag${i}`);
+  const nineTags = Array.from({ length: 9 }, (_, i) => `tag${i}`);
 
   const { getByTestId } = render(
-    <InputTags tags={nearLimitTags} onChange={onChange} />,
+    <InputTags tags={nineTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  const counter = getByTestId("tag-counter");
+  expect(counter.parentElement).toHaveClass("text-slate-500");
+  expect(counter.parentElement).not.toHaveClass("text-amber-600");
+});
+
+test("タグが上限 (10 個) に達すると警告色で表示される", () => {
+  const onChange = mock();
+  const maxTags = Array.from({ length: MAX_TAGS }, (_, i) => `tag${i}`);
+
+  const { getByTestId } = render(
+    <InputTags tags={maxTags} onChange={onChange} />,
     { wrapper },
   );
 

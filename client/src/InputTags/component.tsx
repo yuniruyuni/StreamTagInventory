@@ -48,7 +48,6 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const { t } = useTranslation();
 
   const atLimit = tags.length >= MAX_TAGS;
-  const nearLimit = tags.length >= MAX_TAGS - 2;
 
   function onRemove(index: number) {
     const newTags = [...tags];
@@ -102,7 +101,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       <div
         className={clsx(
           "text-xs mt-1 text-right",
-          nearLimit ? "text-amber-600" : "text-slate-500",
+          atLimit ? "text-amber-600" : "text-slate-500",
         )}
       >
         <span data-testid="tag-counter">
