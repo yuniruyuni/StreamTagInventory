@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: twitch-tag-inventory
+  name: stream-tag-inventory
   annotations:
     run.googleapis.com/ingress: internal
 spec:
@@ -22,15 +22,13 @@ spec:
               cpu: "1"
               memory: "256Mi"
           env:
-            - name: PORT
-              value: "3000"
             - name: DB_APP_NAME
-              value: twitch_tag_inventory
+              value: stream_tag_inventory
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: twitch-tag-inventory-db-app-password
+                  name: stream-tag-inventory-db-app-password
         - image: cloudflare/cloudflared:latest
           args:
             - access
