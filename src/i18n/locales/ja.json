@@ -28,6 +28,7 @@
     "addTemplate": "追加",
     "deleteConfirm": "削除してもよろしいですか？",
     "pickCategory": "カテゴリを選択",
+    "tagCount": "{{current}}/{{max}} タグ",
     "maxTagsError": "タグは最大10個までです",
     "applySuccess": "テンプレートの適用に成功しました",
     "applyError": "テンプレートの適用でエラーが発生しました",
