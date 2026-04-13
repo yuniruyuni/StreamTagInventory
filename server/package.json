@@ -14,7 +14,7 @@
     "watch:type": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@hono/trpc-server": "^0.3.2",
+    "@hono/trpc-server": "^0.4.2",
     "@trpc/server": "^11.10.0",
     "hono": "^4.4.0",
     "pg": "^8.20.0",
