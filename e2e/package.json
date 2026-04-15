@@ -22,7 +22,7 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "@tailwindcss/cli": "^4.2.2",
-    "@types/node": "^25.5.2",
+    "@types/node": "^25.6.0",
     "npm-run-all2": "^8.0.4",
     "typescript": "^5.9.3"
   }
