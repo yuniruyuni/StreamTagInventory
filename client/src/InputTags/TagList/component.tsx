@@ -15,8 +15,7 @@ export const TagList: React.FC<Props> = ({ tags, onRemove, onEdit }) => {
     <ul className="contents">
       {tags.map((tag, i) => (
         <Tag
-          // biome-ignore lint/suspicious/noArrayIndexKey: tags are plain strings without unique IDs; using index preserves component identity during edit
-          key={i}
+          key={tag}
           value={tag}
           onRemove={() => onRemove(i)}
           onEdit={(newValue) => onEdit(i, newValue)}

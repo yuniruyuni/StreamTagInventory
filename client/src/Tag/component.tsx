@@ -1,3 +1,5 @@
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import type React from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -14,6 +16,24 @@ export const Tag: React.FC<Props> = ({ value, onEdit, onRemove }) => {
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const sizerRef = useRef<HTMLSpanElement>(null);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: value });
+
+  // dnd-kit は attributes に role="button" を付与するが、
+  // <li> 本来の listitem role を維持したいので除外する。
+  const { role: _role, ...restAttributes } = attributes;
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   // value が親から変わった場合に draft を同期
   useEffect(() => {
@@ -63,12 +83,13 @@ export const Tag: React.FC<Props> = ({ value, onEdit, onRemove }) => {
     "px-2 py-1 me-2",
     "text-sm font-medium",
     "text-sky-700 bg-sky-100",
-    onEdit && !editing && "hover:bg-sky-200 transition-colors",
+    onEdit && !editing && "hover:bg-sky-200 transition-colors cursor-grab",
+    isDragging && "opacity-50",
   );
 
   if (editing) {
     return (
-      <li className={liClassName}>
+      <li ref={setNodeRef} style={sortableStyle} className={liClassName}>
         {/* hidden sizer: 親 li のフォント継承で描画幅を計算する */}
         <span
           ref={sizerRef}
@@ -104,7 +125,13 @@ export const Tag: React.FC<Props> = ({ value, onEdit, onRemove }) => {
   }
 
   return (
-    <li className={liClassName}>
+    <li
+      ref={setNodeRef}
+      style={sortableStyle}
+      className={liClassName}
+      {...restAttributes}
+      {...listeners}
+    >
       {onEdit ? (
         <button
           type="button"
