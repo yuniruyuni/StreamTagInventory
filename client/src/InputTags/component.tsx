@@ -1,3 +1,17 @@
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
 import clsx from "clsx";
 import React from "react";
 import { TagInput } from "./TagInput";
@@ -35,7 +49,14 @@ export function handleTagKeyDown(
 
   if (e.key !== "Enter" || !value.trim()) return;
   if (tags.length >= MAX_TAGS) return;
-  const newTags = [...tags, value.trim()];
+  const trimmed = value.trim();
+  // 重複タグは追加しない (SortableContext の id として一意性が必要)
+  if (tags.includes(trimmed)) {
+    e.currentTarget.value = "";
+    e.preventDefault();
+    return;
+  }
+  const newTags = [...tags, trimmed];
   onChange(newTags);
   e.currentTarget.value = "";
   e.preventDefault();
@@ -46,6 +67,14 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const atLimit = tags.length >= MAX_TAGS;
+
+  // クリック編集と区別するため distance: 5 で発火させる
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   function onRemove(index: number) {
     const newTags = [...tags];
@@ -61,6 +90,15 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     handleTagKeyDown(e, tags, onChange);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = tags.indexOf(active.id.toString());
+    const to = tags.indexOf(over.id.toString());
+    if (from === -1 || to === -1) return;
+    onChange(arrayMove(tags, from, to));
   }
 
   function handleFieldsetClick(e: React.MouseEvent<HTMLFieldSetElement>) {
@@ -85,7 +123,11 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       )}
       onClick={handleFieldsetClick}
     >
-      <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <SortableContext items={tags} strategy={horizontalListSortingStrategy}>
+          <TagList tags={tags} onRemove={onRemove} onEdit={onEdit} />
+        </SortableContext>
+      </DndContext>
       {!atLimit && (
         <TagInput
           ref={inputRef}

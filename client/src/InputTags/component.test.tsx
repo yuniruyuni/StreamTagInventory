@@ -76,6 +76,29 @@ test("タグの前後の空白は削除されて登録される", async () => {
   ]);
 });
 
+test("重複するタグは追加されない", async () => {
+  const onChange = mock();
+
+  const { getByRole } = render(
+    <InputTags tags={initialTags} onChange={onChange} />,
+    { wrapper },
+  );
+
+  const input = getByRole("textbox") as HTMLInputElement;
+  expect(input).not.toBeNull();
+
+  const user = userEvent.setup();
+
+  await user.click(input);
+  // 前後空白をトリム後に既存タグと一致するケースも含めて重複扱いとする
+  await user.keyboard(" React ");
+  await user.keyboard("[Enter]");
+
+  expect(onChange).not.toHaveBeenCalled();
+  // 重複入力は追加されないが、入力欄はクリアされる
+  expect(input.value).toBe("");
+});
+
 test("空の値ではタグが追加されない", async () => {
   const onChange = mock();
 
