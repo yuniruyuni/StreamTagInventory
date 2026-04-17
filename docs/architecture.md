@@ -63,6 +63,18 @@ Repository の integration test は `server/test/helpers/db.ts` の `createTestD
 
 pgschema のバージョンは test 側で明示 pin (`PGSCHEMA_VERSION` 定数) し、`Dockerfile.migration` との乖離は CI で検知する方針。
 
+### Architecture testing (dependency-cruiser)
+
+依存方向・パッケージ利用ルールは **自動検証する**。`bun run check:arch` で以下を検査:
+
+1. **レイヤー依存方向**: Model は他に依存しない / Repository は上位に依存しない / Usecase は Repository/Presentation を直接 import しない / Presentation は Repository を直接 import しない / 循環依存禁止
+2. **test-only 依存**: `embedded-postgres` のような test 専用パッケージは `src/**/*.test.ts` からのみ参照可 (production src は禁止)
+3. **Usecase 間の横串禁止**: `usecases/<feature>/*.ts` が別 feature を直接 import しない (barrel index のみ許可)
+
+ルール定義: [`server/.dependency-cruiser.cjs`](../server/.dependency-cruiser.cjs)
+
+新しい test-only dependency を追加する場合は `.dependency-cruiser.cjs` の `embedded-postgres-only-in-test` ルールを参考に同様の制約を追加する。新しいレイヤーを追加する場合も同ファイルで依存方向を明示する。
+
 ---
 
 ## Repository 層
