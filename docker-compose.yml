@@ -7,6 +7,9 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+      # Twitch OIDC: 開発時は既存ハードコードと同じ値で OK、本番は別 app を使用
+      - TWITCH_CLIENT_ID=d2kz8x5se7k6b1n0picux0r7kaozi3
+      - APP_BASE_URL=http://localhost:3000
     depends_on:
       migration:
         condition: service_completed_successfully
