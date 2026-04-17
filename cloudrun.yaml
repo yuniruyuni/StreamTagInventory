@@ -31,6 +31,14 @@ spec:
                 secretKeyRef:
                   key: latest
                   name: stream-tag-inventory-db-app-password
+            # Twitch OIDC 用。secret は PR 8 で `gcloud secrets create stream-tag-inventory-twitch-client-id` を実行
+            - name: TWITCH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: stream-tag-inventory-twitch-client-id
+            - name: APP_BASE_URL
+              value: https://tags.yuniruyuni.net
         - image: cloudflare/cloudflared:latest
           args:
             - access
