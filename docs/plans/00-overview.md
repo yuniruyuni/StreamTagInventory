@@ -176,8 +176,9 @@ PR 6 は PR 5 完了時点で着手可能 (PR 5 の AppRouter 型を参照する
 - `BUN_PUBLIC_APP_BASE_URL`: redirect_uri 構築用
 
 ### Cloud Run シークレット命名 (CLAUDE.md 規約)
-- `stream-tag-inventory-twitch-client-id` (新規)
+- 本シリーズで新規追加する secret は **無し**
 - 既存: `stream-tag-inventory-db-password`, `stream-tag-inventory-db-app-password`, `cf-db-access-client-id`, `cf-db-access-client-secret`
+- `TWITCH_CLIENT_ID` は OAuth の仕様上公開値 (client bundle / authorize URL に出る) のため `cloudrun.yaml` に平文 value で埋める。secret manager は使わない
 
 ---
 

@@ -164,24 +164,22 @@ docker compose exec postgres psql -U twitch_tag_inventory -d twitch_tag_inventor
 - 開発用 Twitch app を別に作成する場合は別値に差し替える (00-overview.md の「環境変数規約」参照)
 - client への埋込み (`BUN_PUBLIC_TWITCH_CLIENT_ID`) は PR 6 で対応
 
-### 7. `cloudrun.yaml` に環境変数雛形追加
+### 7. `cloudrun.yaml` に環境変数追加
 
 `spec.template.spec.containers[0].env` に以下を追加 (既存の `DB_*` env 群の隣):
 
 ```yaml
 - name: TWITCH_CLIENT_ID
-  valueFrom:
-    secretKeyRef:
-      name: stream-tag-inventory-twitch-client-id
-      key: latest
+  value: d2kz8x5se7k6b1n0picux0r7kaozi3
 - name: APP_BASE_URL
   value: https://tags.yuniruyuni.net
 ```
 
 **注意**:
-- 本 PR ではこの yaml 変更だけ行い、**実際の `gcloud secrets create stream-tag-inventory-twitch-client-id` は PR 8 で実施**
-- `APP_BASE_URL` は secret ではなく素の文字列 (公開情報、CDN/redirect 検証用)
+- **`TWITCH_CLIENT_ID` は plain value で管理する (secret 化しない)**: OAuth client_id は公開値で `client/src/constant.ts` / `static/index.js` (bundle) / authorize URL の query に既に出ている。secret manager に格納しても実質的な機密保護にならず、運用上のオーバーヘッドだけが増える。同理由で `BUN_PUBLIC_TWITCH_CLIENT_ID` も build-time 埋込みで問題ない
+- `APP_BASE_URL` も素の文字列 (公開情報、CDN/redirect 検証用)
 - `cloudrun-job.yaml` (migration job 用) は env 追加不要 (Twitch 認証情報は migration には使わない)
+- 本番用に別 Twitch app を作る場合でも値自体は公開情報のため repo にコミット可能
 
 ### 8. `.env.example` を新規作成 (リポジトリ root)
 
