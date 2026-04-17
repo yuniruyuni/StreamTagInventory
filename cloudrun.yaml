@@ -31,12 +31,11 @@ spec:
                 secretKeyRef:
                   key: latest
                   name: stream-tag-inventory-db-app-password
-            # Twitch OIDC 用。secret は PR 8 で `gcloud secrets create stream-tag-inventory-twitch-client-id` を実行
+            # Twitch OIDC 用。client_id は OAuth の仕様上公開値 (client/src/constant.ts にも平文)、
+            # かつ static/index.js に焼き込まれてブラウザから可視なので平文 value で扱う。
+            # 本番用に別 Twitch app を作る場合も値自体は公開情報のため repo に commit してよい。
             - name: TWITCH_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: stream-tag-inventory-twitch-client-id
+              value: d2kz8x5se7k6b1n0picux0r7kaozi3
             - name: APP_BASE_URL
               value: https://tags.yuniruyuni.net
         - image: cloudflare/cloudflared:latest

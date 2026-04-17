@@ -12,11 +12,12 @@
 
 ### この PR の目的
 1. **E2E (Playwright) テストの修正**: 既存テストを Cookie ベース認証に書き換え
-2. **本番シークレットの登録**: `gcloud secrets create stream-tag-inventory-twitch-client-id` 手順を README に追加
-3. **Cloudflare Cache Rule の設定手順**: ダッシュボード操作を README に明記
-4. **CLAUDE.md の更新**: 新フロー / 環境変数 / Twitch app 登録手順を追記
-5. **localStorage cleanup**: 移行から 1 ヶ月経過したユーザーの旧 localStorage データ削除を起動時実行
-6. **GitHub Actions の env 注入**: client build 時に `BUN_PUBLIC_TWITCH_CLIENT_ID` / `BUN_PUBLIC_APP_BASE_URL` を埋め込む
+2. **Cloudflare Cache Rule の設定手順**: ダッシュボード操作を README に明記
+3. **CLAUDE.md の更新**: 新フロー / 環境変数 / Twitch app 登録手順を追記
+4. **localStorage cleanup**: 移行から 1 ヶ月経過したユーザーの旧 localStorage データ削除を起動時実行
+5. **GitHub Actions の env 注入**: client build 時に `BUN_PUBLIC_TWITCH_CLIENT_ID` / `BUN_PUBLIC_APP_BASE_URL` を埋め込む
+
+**Note**: `TWITCH_CLIENT_ID` は client bundle / authorize URL に既に出ている公開値のため **Secret Manager への登録は不要**。PR 1 時点で `cloudrun.yaml` に plain value として埋め込み済。旧計画にあった `gcloud secrets create stream-tag-inventory-twitch-client-id` 手順は廃止。
 
 ### 後続
 - 本 PR 完了で本機能はリリース可能
@@ -255,19 +256,18 @@ cleanupLegacyTemplates();
 // ... 既存の React render
 ```
 
-### 6. `cloudrun.yaml` の secret env を完成
+### 6. `cloudrun.yaml` の env 確認
 
-PR 1 で雛形を作ったが、本 PR で実値が secret 経由で取れることを確認:
+PR 1 で `TWITCH_CLIENT_ID` / `APP_BASE_URL` は plain value として投入済。本 PR では追加作業なし。以下のみ確認:
 
 ```yaml
 - name: TWITCH_CLIENT_ID
-  valueFrom:
-    secretKeyRef:
-      name: stream-tag-inventory-twitch-client-id
-      key: latest
+  value: d2kz8x5se7k6b1n0picux0r7kaozi3
 - name: APP_BASE_URL
   value: https://tags.yuniruyuni.net
 ```
+
+本番用に別 Twitch app を作成する場合は `cloudrun.yaml` の value を差し替えて commit する (client_id は公開値のため repo にコミット可)。
 
 ### 7. `.github/workflows/deploy.yml` の改修
 
@@ -276,12 +276,12 @@ build job で client 側に env を注入:
 ```yaml
 - name: Build production
   env:
-    BUN_PUBLIC_TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+    BUN_PUBLIC_TWITCH_CLIENT_ID: d2kz8x5se7k6b1n0picux0r7kaozi3
     BUN_PUBLIC_APP_BASE_URL: https://tags.yuniruyuni.net
   run: bun run build
 ```
 
-`secrets.TWITCH_CLIENT_ID` は GitHub Secrets に予め登録 (本 PR の作業として手動設定の手順を README に書く)。
+`BUN_PUBLIC_TWITCH_CLIENT_ID` も公開値なので GitHub Secret ではなく workflow に直接書く。本番 app を別にする場合は repository variable (`vars.TWITCH_CLIENT_ID`) に寄せる選択肢もあるが、必須ではない。
 
 ### 8. `README.md` のセクション追加
 
@@ -297,10 +297,11 @@ build job で client 側に env を注入:
    - 本番: `https://tags.yuniruyuni.net/`
    - 開発: `http://localhost:3000/`
 4. **Client Type** は **Public** を選択 (Implicit Hybrid Flow を使用、Client Secret 不要)
-5. 取得した Client ID を以下に設定:
-   - GitHub Secrets: `TWITCH_CLIENT_ID`
-   - Google Secret Manager: `gcloud secrets create stream-tag-inventory-twitch-client-id --data-file=- <<< "$CLIENT_ID"`
-   - ローカル: `.env.local` の `TWITCH_CLIENT_ID` および `BUN_PUBLIC_TWITCH_CLIENT_ID`
+5. 取得した Client ID は公開値なので以下のいずれにも平文で記載可:
+   - `cloudrun.yaml` の `TWITCH_CLIENT_ID` の value
+   - `.github/workflows/deploy.yml` の build env `BUN_PUBLIC_TWITCH_CLIENT_ID`
+   - ローカル開発: `.env.local` の `TWITCH_CLIENT_ID` / `BUN_PUBLIC_TWITCH_CLIENT_ID`
+   - Twitch OAuth の仕様上、authorize URL / client bundle にも出るため secret 管理の実効性は無い
 ```
 
 #### 「Cloudflare Cache Rule 設定」セクション
@@ -326,19 +327,13 @@ curl -I https://tags.yuniruyuni.net/api/trpc/auth.me
 ```markdown
 ## Secret Manager (Google Cloud) 初期セットアップ
 
-本アプリは以下のシークレットを必要とする:
+本アプリが利用する secret はすべて **既存の DB / Cloudflare 関連のみ** (本 PR シリーズでは新規追加なし)。参考:
 
-\`\`\`bash
-# Twitch Client ID (本番 app の値)
-echo -n "$TWITCH_CLIENT_ID" | gcloud secrets create stream-tag-inventory-twitch-client-id --data-file=-
+- `stream-tag-inventory-db-password` (migration job 用、owner user)
+- `stream-tag-inventory-db-app-password` (service 用、app user)
+- `cf-db-access-client-id` / `cf-db-access-client-secret` (cloudflared サイドカー用)
 
-# 既存: DB password 等は別途
-\`\`\`
-
-シークレットの ローテーション:
-\`\`\`bash
-echo -n "$NEW_CLIENT_ID" | gcloud secrets versions add stream-tag-inventory-twitch-client-id --data-file=-
-\`\`\`
+Twitch `client_id` は OAuth の仕様上公開値のため secret 化しない方針 (`cloudrun.yaml` に平文 value として埋め込み済)。
 ```
 
 ### 9. `CLAUDE.md` の更新
@@ -364,17 +359,17 @@ OIDC Implicit Hybrid Flow (`response_type=token id_token`) を使用:
 ## 環境変数
 
 ### Server
-- `TWITCH_CLIENT_ID`: id_token の `aud` 検証用 (本番は Cloud Run Secret Manager 経由)
+- `TWITCH_CLIENT_ID`: id_token の `aud` 検証用 (公開値、`cloudrun.yaml` に平文 value)
 - `APP_BASE_URL`: 自身の base URL (本番 `https://tags.yuniruyuni.net`)
 - (既存) `PGHOST`, `PGPORT`, `DB_APP_NAME`, `DB_PASSWORD`
 
 ### Client (build 時埋込)
-- `BUN_PUBLIC_TWITCH_CLIENT_ID`: Twitch OAuth authorize URL 構築用
+- `BUN_PUBLIC_TWITCH_CLIENT_ID`: Twitch OAuth authorize URL 構築用 (公開値、deploy.yml に直接記述)
 - `BUN_PUBLIC_APP_BASE_URL`: redirect_uri 構築用
 
 ### Cloud Run シークレット命名
-新規: `stream-tag-inventory-twitch-client-id`
-既存: `stream-tag-inventory-db-password`, `stream-tag-inventory-db-app-password`, `cf-db-access-client-id`, `cf-db-access-client-secret`
+既存のみ: `stream-tag-inventory-db-password`, `stream-tag-inventory-db-app-password`, `cf-db-access-client-id`, `cf-db-access-client-secret`
+(本シリーズで新規追加する secret は無し。Twitch `client_id` は公開値のため平文管理)
 ```
 
 #### 「Cloudflare Cache 制御」セクション (新規)
@@ -419,8 +414,8 @@ OIDC Implicit Hybrid Flow (`response_type=token id_token`) を使用:
 
 ### Manual Verification
 1. 本番デプロイ手順を nondestructive に確認:
-   - `gcloud secrets describe stream-tag-inventory-twitch-client-id` で secret 存在確認
-   - GitHub Actions の `deploy.yml` を読み、env 注入が正しく書かれているか確認
+   - `cloudrun.yaml` の `TWITCH_CLIENT_ID` / `APP_BASE_URL` が期待値
+   - GitHub Actions の `deploy.yml` を読み、build env (`BUN_PUBLIC_*`) が正しく書かれているか確認
 2. 本番デプロイ後の確認:
    - `curl -I https://tags.yuniruyuni.net/api/trpc/auth.me` で `Cache-Control: no-store` と `cf-cache-status: BYPASS|DYNAMIC` を確認
    - Twitch ログイン成功
@@ -451,12 +446,11 @@ OIDC Implicit Hybrid Flow (`response_type=token id_token`) を使用:
 
 本 PR をマージ後、本番反映前に以下を順に実行:
 
-1. [ ] `gcloud secrets create stream-tag-inventory-twitch-client-id --data-file=-` で本番 Twitch app の Client ID を登録
-2. [ ] GitHub Secrets `TWITCH_CLIENT_ID` を設定 (本番 app の値)
-3. [ ] Twitch Developer Console で本番 app の Redirect URL に `https://tags.yuniruyuni.net/` が登録されていること確認
-4. [ ] Cloudflare ダッシュボードで `/api/*` の Cache Rule (Bypass) が設定されていること確認
-5. [ ] `.github/workflows/deploy.yml` を手動 trigger でデプロイ
-6. [ ] migration job が成功 (5 テーブル + インデックス)
+1. [ ] 本番 Twitch app を dev と分ける場合、`cloudrun.yaml` の `TWITCH_CLIENT_ID` と `.github/workflows/deploy.yml` の `BUN_PUBLIC_TWITCH_CLIENT_ID` を本番値に更新 (どちらも公開値なので平文 commit で OK)
+2. [ ] Twitch Developer Console で本番 app の Redirect URL に `https://tags.yuniruyuni.net/` が登録されていること確認
+3. [ ] Cloudflare ダッシュボードで `/api/*` の Cache Rule (Bypass) が設定されていること確認
+4. [ ] `.github/workflows/deploy.yml` を手動 trigger でデプロイ
+5. [ ] migration job が成功 (4 テーブル + インデックス)
 7. [ ] service が起動 (`/health` が 200)
 8. [ ] `https://tags.yuniruyuni.net` でログイン成功
 9. [ ] Cloud SQL の `users` / `sessions` テーブルに行が挿入される
