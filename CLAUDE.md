@@ -80,11 +80,14 @@ bun run fix:lint      # Biome auto-fix (全ワークスペース)
 - **Hono サーバー**: API + 静的ファイル配信を単一サーバーで処理（Nginx 廃止）
 - **クリーンアーキテクチャ** (server): models → repositories → usecases → presentation
 - **能力マーカー**: `DbReadCtx` / `DbWriteCtx` / `ServiceCtx` でリポジトリメソッドのスコープ制御
+- **Repository は標準メソッド + spec object**: `findByXxx` 等を生やさず `get(spec)` / `list(spec, cursor)` / `count(spec)` / `upsert(model)` / `delete(spec)` のみ。詳細は `docs/architecture.md`
 - **共有 UI コンポーネント** (`client/src/components/`): Tailwind + CSS 変数によるカスタムデザインシステム
 - **Feature ディレクトリ**: 各機能は `component.tsx` + `index.ts` + テスト + サブコンポーネントで構成
 - **カスタムフック**: ビジネスロジックを `use*.ts` に抽出
 - **状態管理**: テンプレートは `localStorage` (`useStorage`)、API データは SWR、認証は React Context
 - **パスエイリアス**: `~/*` → `./src/*` (`client/tsconfig.json`)
+
+**新規 Repository / Usecase / Model を追加する前に必ず [`docs/architecture.md`](./docs/architecture.md) を読むこと**。Spec パターン / 標準メソッド / Pagination / Usecase phase / Result-Fail の規約をまとめてある。
 
 ## Theme Colors (`client/src/index.css`)
 
