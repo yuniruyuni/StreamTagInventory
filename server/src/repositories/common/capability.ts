@@ -1,4 +1,4 @@
-import type { Database } from "../../infra/db/database";
+import type { Database } from "@/infra/db/database";
 
 const _dbRead: unique symbol = Symbol("dbRead");
 const _dbWrite: unique symbol = Symbol("dbWrite");
@@ -15,6 +15,10 @@ export interface DbWriteCtx extends DbReadCtx {
 
 export interface ServiceCtx {
   readonly [_service]: true;
+}
+
+export function isDbWriteCtx(ctx: DbReadCtx | DbWriteCtx): ctx is DbWriteCtx {
+  return _dbWrite in ctx;
 }
 
 export type ExtractMethods<T, Marker> = {

@@ -28,6 +28,41 @@ server 側のクリーンアーキテクチャ規約。**Repository / Usecase �
 
 **依存方向**: 上位は下位を呼ぶ。Model は誰にも依存しない。**全レイヤー間のデータ受け渡しは Model 型で行う** — Presentation/Usecase/Repository が独自の DTO を定義してはならない。
 
+### Import パスの規約
+
+同一ワークスペース内では以下のルールに統一する:
+
+- **レイヤーをまたぐ参照** (2 階層以上上がる import) は **必ず path alias** を使う:
+  - 例: `"@/models/user"`、`"@/repositories/common"`、`"@/infra/db/sql"`
+  - `"../../../models/user"` のような `../` の連続は書かない (可読性・リファクタ耐性)
+- **同一パッケージ内の兄弟 / 子要素** (1 階層の `./` / `../`) は **相対パス** のまま:
+  - 例: `"./postgres"` (child)、`"../repository"` (entity 内の sibling)、`"./common"`
+- **test helpers** のように src 外から src を参照する場合も alias 経由:
+  - 例: `"@test/factories"` (server/test/ から) → server/src/ への参照は `"@/..."` / server/test/ 内への参照は `"@test/..."`
+
+各ワークスペースの `tsconfig.json` で `paths` を宣言する:
+
+```jsonc
+// server/tsconfig.json (例)
+"paths": {
+  "@/*":     ["./src/*"],
+  "@test/*": ["./test/*"]
+}
+// client/tsconfig.json は歴史的に "~/*" → "./src/*" を使用。新規追加時は既存の prefix に従う
+```
+
+### Integration test DB 基盤
+
+Repository の integration test は `server/test/helpers/db.ts` の `createTestDB()` 経由で embedded-postgres インスタンスに繋ぐ。schema 適用は **本番 migration と同じ `pgschema` バイナリ** を呼び出す (`server/test/helpers/pgschema.ts` が初回に GitHub リリースからダウンロード → `~/.stream-tag-inventory/bin/pgschema` にキャッシュ)。
+
+自作の `\i tables/` 展開パーサなどは使わない。理由:
+
+- 本番の declarative diff / shadow schema / FK 順序解決を再現できる
+- 独自 SQL 実行ロジック由来のテスト失敗と、schema / Repository 側の失敗を切り分けやすい
+- schema 変更で本番 pgschema apply が失敗するケースがテストで早期検知できる
+
+pgschema のバージョンは test 側で明示 pin (`PGSCHEMA_VERSION` 定数) し、`Dockerfile.migration` との乖離は CI で検知する方針。
+
 ---
 
 ## Repository 層
@@ -38,13 +73,16 @@ DB アクセス Repository は以下 5 メソッドのみを公開する。**新
 
 ```typescript
 export interface XxxRepository {
-  get(ctx: DbReadCtx, spec: Xxx.Spec): Promise<Xxx | null>;
-  list(ctx: DbReadCtx, spec: Xxx.Spec, cursor: Cursor<Xxx.SortKey>): Promise<Page<Xxx>>;
-  count(ctx: DbReadCtx, spec: Xxx.Spec): Promise<number>;
+  get(ctx: DbReadCtx, spec: Comp<Xxx.Spec>): Promise<Xxx | null>;
+  list(ctx: DbReadCtx, spec: Comp<Xxx.Spec>, cursor: Cursor<Xxx.SortKey>): Promise<Page<Xxx>>;
+  count(ctx: DbReadCtx, spec: Comp<Xxx.Spec>): Promise<number>;
   upsert(ctx: DbWriteCtx, model: Xxx): Promise<void>;
-  delete(ctx: DbWriteCtx, spec: Xxx.Spec): Promise<number>;
+  delete(ctx: DbWriteCtx, spec: Comp<Xxx.Spec>): Promise<number>;
 }
 ```
+
+- `Xxx.Spec` は leaf discriminated union (`{ type, ...data }` の直和)
+- Repository interface の `spec` 引数は **必ず `Comp<Xxx.Spec>` で明示**。これにより「leaf と合成の違い」を型名で隠さない
 
 - メソッド第 1 引数は **必ず capability marker** (`DbReadCtx` / `DbWriteCtx` / `ServiceCtx`)。`bindCtx` Proxy が自動注入する
 - `upsert` は INSERT or UPDATE をひとつにまとめる。Model 全体を受け取る (差分 update を作らない)
@@ -64,8 +102,8 @@ interface UserRepository {
 
 // ✅ OK: 標準メソッド + spec
 interface UserRepository {
-  get(ctx: DbReadCtx, spec: User.Spec): Promise<User | null>;
-  list(ctx: DbReadCtx, spec: User.Spec, cursor: Cursor<User.SortKey>): Promise<Page<User>>;
+  get(ctx: DbReadCtx, spec: Comp<User.Spec>): Promise<User | null>;
+  list(ctx: DbReadCtx, spec: Comp<User.Spec>, cursor: Cursor<User.SortKey>): Promise<Page<User>>;
   // ...
 }
 // 呼出側
@@ -151,7 +189,11 @@ export namespace User {
   export const ByEmail = _specs.ByEmail;
   export const ByIds = _specs.ByIds;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<User.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(user: User, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -167,7 +209,7 @@ export namespace User {
 ポイント:
 - `interface User` (entity 型) と `namespace User` (spec / sortKey / factory / helper) を **同名で並置**
 - `defineSpecs` のキー名 (`ById`, `ByEmail`, `ByIds`) がそのまま spec の type 識別子になる
-- `Spec = Comp<SpecsOf<typeof _specs>>` で spec 全体に AND/OR/NOT 合成機能を付与
+- **`User.Spec` は leaf discriminated union** (`SpecsOf<typeof _specs>`)。Repository の interface / 各 get/list/count/delete の signature では `Comp<User.Spec>` で明示的に合成形を要求する。「ラップの有無を型名で隠さない」方針
 - `cursor` 関数で任意の sortKey 配列から cursor 値を生成
 
 ### 合成
@@ -189,15 +231,13 @@ repos.user.list(ctx, not(User.ById("u1")), cursor);
 
 ### Spec → SQL 変換
 
-`server/src/infra/db/sql-helpers.ts` の `compToSQL(spec, converter)` が AND/OR/NOT を再帰的に SQL に展開する。entity 個別の変換は `repositories/<entity>/postgres/common.ts` に書く:
+`server/src/infra/db/sql-helpers.ts` の `compToSQL(spec, converter)` が AND/OR/NOT を再帰的に SQL に展開する。entity 個別の変換は `repositories/<entity>/postgres/common.ts` に書く。**leaf の discriminated union は model 側 `User.Spec` をそのまま使い、repository 側で再定義しない** (重複を避け、spec 追加時に specToSQL の switch が非網羅エラーになるため):
 
 ```typescript
-type UserSpecData =
-  | { type: "ById"; id: string }
-  | { type: "ByEmail"; email: string }
-  | { type: "ByIds"; ids: string[] };
+// repositories/user/postgres/common.ts
+import type { User } from "@/models/user";
 
-export function userSpecToSQL(spec: UserSpecData): SQLFragment {
+export function userSpecToSQL(spec: User.Spec): SQLFragment {
   switch (spec.type) {
     case "ById":    return sql`id = ${spec.id}`;
     case "ByEmail": return sql`email = ${spec.email}`;
@@ -206,14 +246,25 @@ export function userSpecToSQL(spec: UserSpecData): SQLFragment {
 }
 ```
 
-`get.ts` 等での使用:
+`get.ts` 等での使用: **`db.queryXxx()` には必ず `sql\`\`` タグ経由で SQLFragment を構築して渡す**。直接 `{ query: ..., params: ... }` オブジェクトを組み立てると、where 句の query 文字列を素の文字列連結で混ぜることになり、`sql` タグの placeholder 合成規約が崩れる (SQL injection 的な事故の温床):
+
 ```typescript
+// ✅ OK: sql タグで合成
 const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
+const row = await db.queryGet<UserRow>(
+  sql`SELECT * FROM users WHERE ${where} LIMIT 1`,
+);
+
+// ❌ NG: 直接オブジェクト構築 (placeholder index のズレや SQL 注入の余地)
 const row = await db.queryGet<UserRow>({
   query: `SELECT * FROM users WHERE ${where.query} LIMIT 1`,
   params: where.params,
 });
 ```
+
+`sql` タグは値が `SQLFragment` なら query と params を安全に合成、プリミティブなら `?` + param に展開する。ORDER BY のカラム名など placeholder 化できない要素は `sql.raw(...)` で明示的に生の文字列として混ぜる。
+
+**`SQLFragment` は型レベルで直接構築を禁止**: `server/src/infra/db/sql.ts` 内部に隔離された `unique symbol` ブランドを持ち、外部から `{ query, params }` 形の素オブジェクトを渡しても型エラーになる (構造互換が成立しない)。ファクトリは `sql\`\`` タグ / `sql.raw` / `sql.empty` / `sql.list` / `sql.join` の 5 種類だけ。このうち生文字列を扱うのは **`sql.raw(...)` だけ** なので、コード上で「ここは呼出側が安全性を保証した raw 文字列」が一目でわかる。
 
 新しい spec を増やすときは:
 1. `models/<entity>/index.ts` の `_specs` に 1 行追加
@@ -258,18 +309,20 @@ export interface Page<T> {
 ```typescript
 export async function list(
   db: Database,
-  spec: User.Spec,
+  spec: Comp<User.Spec>,
   cursor: Cursor<User.SortKey>,
 ): Promise<Page<User>> {
   const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
   const sort = cursor.sort ?? { keys: ["createdAt", "id"] as const, order: "desc" as const };
-  const orderBy = sort.keys.map((k) => `${columnName(k)} ${sort.order.toUpperCase()}`).join(", ");
+  // ORDER BY は orderByClause(sort, columnName) で組み立てる。sort.order /
+  // sort.keys が外部由来の不正文字列でも、sortDirection / columnName の switch +
+  // throw で閉じた値にしか展開されず、SQL injection の入口にならない。
+  const orderBy = orderByClause(sort, columnName);
   const limit = cursor.limit + 1;
 
-  const rows = await db.queryAll<UserRow>({
-    query: `SELECT * FROM users WHERE ${where.query} ORDER BY ${orderBy} LIMIT ${limit}`,
-    params: where.params,
-  });
+  const rows = await db.queryAll<UserRow>(
+    sql`SELECT * FROM users WHERE ${where} ORDER BY ${orderBy} LIMIT ${limit}`,
+  );
 
   const hasMore = rows.length > cursor.limit;
   const items = rows.slice(0, cursor.limit).map(rowToUser);
@@ -278,7 +331,21 @@ export async function list(
 
   return { items, hasMore, nextCursor };
 }
+
+// repositories/user/postgres/common.ts
+// columnName は SQLFragment を返す。sql.raw の引数は常にリテラルで、key が
+// dynamic cast で不正値だった場合は switch のどこにも到達せず throw で fail-closed。
+export function columnName(key: User.SortKey): SQLFragment {
+  switch (key) {
+    case "createdAt":  return sql.raw("created_at");
+    case "lastLoginAt": return sql.raw("last_login_at");
+    case "id":         return sql.raw("id");
+  }
+  throw new Error(`Invalid sort key: ${String(key)}`);
+}
 ```
+
+**ポイント**: `sql.raw(...)` の引数は **ソースコード上の文字列リテラルだけ** にする。`Sort.order` や `Sort.keys` は TypeScript で型付けされているが JSON パースなどで runtime に任意値が入りうるため、必ず switch を通して閉じた SQLFragment に変換する。dynamic 値を直接 `sql.raw` に渡してはいけない。
 
 `cursor.after` を WHERE 条件に変換するロジックは省略 (一般的には複合 sortKey の tuple 比較。後日必要に応じて `infra/db/sql-helpers.ts` にヘルパー追加)。
 

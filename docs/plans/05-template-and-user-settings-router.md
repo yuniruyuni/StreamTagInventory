@@ -62,7 +62,11 @@ export namespace TemplateDoc {
   });
   export const ByUserId = _specs.ByUserId;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<TemplateDoc.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(d: TemplateDoc, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -80,7 +84,7 @@ Y.Doc の shape / サイズ検証を 1 ファイルに集約する。
 
 ```typescript
 import type * as Y from "yjs";
-import { fail, type Fail } from "../../../models/common";
+import { fail, type Fail } from "@/models/common";
 
 // 設定値は定数として集約、後で env 化する余地を残す
 export const SYNC_LIMITS = {
@@ -176,9 +180,9 @@ function validateTemplateMap(item: unknown): Fail | null {
 
 ```typescript
 import * as Y from "yjs";
-import { ok, type Result, type Fail } from "../../../models/common";
-import { TemplateDoc } from "../../../models/templateDoc";
-import { usecase } from "../../runner";
+import { ok, type Result, type Fail } from "@/models/common";
+import { TemplateDoc } from "@/models/templateDoc";
+import { usecase } from "@/usecases/runner";
 import {
   SYNC_LIMITS,
   validateDocShape,
@@ -254,7 +258,7 @@ export const createSyncTemplateDocUsecase = (input: SyncTemplateDocInput) =>
 import { z } from "zod";
 import { router, protectedProcedure } from "../init";
 import { handleResult } from "../handle-result";
-import { createSyncTemplateDocUsecase } from "../../../usecases/template/sync";
+import { createSyncTemplateDocUsecase } from "@/usecases/template/sync";
 
 const BYTES_B64_SCHEMA = z.string()
   .min(0)

@@ -24,7 +24,10 @@ export class PgDatabase implements Database {
     fragment: SQLFragment,
   ): Promise<T | null> {
     const { query, params } = finalize(fragment);
-    const result = await this.queryable.query<T>(query, params);
+    // pg の型は mutable unknown[] を要求。SQLFragment の params は readonly なので、
+    // ドライバ境界でだけ mutable に castする (readonly 化は呼出側の誤変更防止が目的で、
+    // pg 内部での mutation は起きない)。
+    const result = await this.queryable.query<T>(query, params as unknown[]);
     return result.rows[0] ?? null;
   }
 
@@ -32,13 +35,16 @@ export class PgDatabase implements Database {
     fragment: SQLFragment,
   ): Promise<T[]> {
     const { query, params } = finalize(fragment);
-    const result = await this.queryable.query<T>(query, params);
+    // pg の型は mutable unknown[] を要求。SQLFragment の params は readonly なので、
+    // ドライバ境界でだけ mutable に castする (readonly 化は呼出側の誤変更防止が目的で、
+    // pg 内部での mutation は起きない)。
+    const result = await this.queryable.query<T>(query, params as unknown[]);
     return result.rows;
   }
 
   async queryRun(fragment: SQLFragment): Promise<{ rowCount: number }> {
     const { query, params } = finalize(fragment);
-    const result = await this.queryable.query(query, params);
+    const result = await this.queryable.query(query, params as unknown[]);
     return { rowCount: result.rowCount ?? 0 };
   }
 
@@ -82,7 +88,7 @@ export class PgDatabase implements Database {
 
 export function finalize(fragment: SQLFragment): {
   query: string;
-  params: unknown[];
+  params: readonly unknown[];
 } {
   let index = 0;
   const query = fragment.query.replace(/\?/g, () => {
