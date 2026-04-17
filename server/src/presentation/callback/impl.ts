@@ -1,5 +1,5 @@
-import type { CallbackClient } from "../../infra/callback/client";
-import type { Context } from "../../usecases/context";
+import type { CallbackClient } from "@/infra/callback/client";
+import type { Context } from "@/usecases/context";
 
 // CallbackClientImpl は presentation 層に属し、
 // コールバック発火時に Context 経由で usecase を呼び出す。

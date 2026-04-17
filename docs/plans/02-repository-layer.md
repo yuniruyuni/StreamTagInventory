@@ -109,7 +109,7 @@ export type { Result } from "./result";
 AutoKanban の `server/src/infra/db/sql-helpers.ts` を参考に:
 
 ```typescript
-import { type Comp, isCompLogical } from "../../models/common";
+import { type Comp, isCompLogical } from "@/models/common";
 import { type SQLFragment, sql } from "./sql";
 
 export function compToSQL<T>(
@@ -173,7 +173,11 @@ export namespace User {
   export const ById = _specs.ById;
   export const ByTwitchUserId = _specs.ByTwitchUserId;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<Xxx.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(u: User, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -233,7 +237,11 @@ export namespace Session {
   export const ActiveAt = _specs.ActiveAt;
   export const Expired = _specs.Expired;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<Xxx.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(s: Session, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -285,7 +293,11 @@ export namespace OidcNonce {
   export const Expired = _specs.Expired;
   export const ActiveAt = _specs.ActiveAt;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<Xxx.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(n: OidcNonce, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -328,7 +340,11 @@ export namespace TemplateDoc {
   });
   export const ByUserId = _specs.ByUserId;
 
-  export type Spec = Comp<SpecsOf<typeof _specs>>;
+  /**
+   * Spec のデータ形状 (leaf discriminated union)。
+   * 合成可能な形が必要な呼出側は `Comp<Xxx.Spec>` と明示する。
+   */
+  export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(d: TemplateDoc, keys: readonly SortKey[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -351,25 +367,25 @@ export namespace TemplateDoc {
 #### `server/src/repositories/user/repository.ts`
 
 ```typescript
-import type { Cursor, Page } from "../../models/common";
-import type { User } from "../../models/user";
+import type { Comp, Cursor, Page } from "@/models/common";
+import type { User } from "@/models/user";
 import type { DbReadCtx, DbWriteCtx } from "../common/capability";
 
 export interface UserRepository {
-  get(ctx: DbReadCtx, spec: User.Spec): Promise<User | null>;
-  list(ctx: DbReadCtx, spec: User.Spec, cursor: Cursor<User.SortKey>): Promise<Page<User>>;
-  count(ctx: DbReadCtx, spec: User.Spec): Promise<number>;
+  get(ctx: DbReadCtx, spec: Comp<User.Spec>): Promise<User | null>;
+  list(ctx: DbReadCtx, spec: Comp<User.Spec>, cursor: Cursor<User.SortKey>): Promise<Page<User>>;
+  count(ctx: DbReadCtx, spec: Comp<User.Spec>): Promise<number>;
   upsert(ctx: DbWriteCtx, user: User): Promise<void>;
-  delete(ctx: DbWriteCtx, spec: User.Spec): Promise<number>;
+  delete(ctx: DbWriteCtx, spec: Comp<User.Spec>): Promise<number>;
 }
 ```
 
 #### `server/src/repositories/user/postgres/common.ts`
 
 ```typescript
-import { type SQLFragment, sql } from "../../../infra/db/sql";
-import { dateFromSQL } from "../../../infra/db/sql-helpers";
-import type { User } from "../../../models/user";
+import { type SQLFragment, sql } from "@/infra/db/sql";
+import { dateFromSQL } from "@/infra/db/sql-helpers";
+import type { User } from "@/models/user";
 
 export interface UserRow {
   id: string;
@@ -381,11 +397,9 @@ export interface UserRow {
   last_login_at: Date | string;
 }
 
-type UserSpecData =
-  | { type: "ById"; id: string }
-  | { type: "ByTwitchUserId"; twitchUserId: string };
-
-export function userSpecToSQL(spec: UserSpecData): SQLFragment {
+// leaf union は model 側 `User.Spec` をそのまま使い、repository 側で再定義しない
+// (新 spec 追加時にこの switch が非網羅エラーで検知される)
+export function userSpecToSQL(spec: User.Spec): SQLFragment {
   switch (spec.type) {
     case "ById":
       return sql`id = ${spec.id}`;
@@ -406,61 +420,70 @@ export function rowToUser(row: UserRow): User {
   };
 }
 
-export function columnName(key: User.SortKey): string {
-  const map: Record<User.SortKey, string> = {
-    createdAt: "created_at",
-    lastLoginAt: "last_login_at",
-    id: "id",
-  };
-  return map[key];
+/**
+ * ORDER BY 等で使うカラム識別子。sql.raw の引数は **リテラル文字列だけ** に
+ * 限定し、dynamic cast で不正な key が入ってきた場合は switch のどこにも
+ * 到達せず throw で fail-closed にする。
+ */
+export function columnName(key: User.SortKey): SQLFragment {
+  switch (key) {
+    case "createdAt":
+      return sql.raw("created_at");
+    case "lastLoginAt":
+      return sql.raw("last_login_at");
+    case "id":
+      return sql.raw("id");
+  }
+  throw new Error(`Invalid sort key: ${String(key)}`);
 }
 ```
 
 #### `server/src/repositories/user/postgres/get.ts`
 
 ```typescript
-import type { Database } from "../../../infra/db/database";
-import type { SQLFragment } from "../../../infra/db/sql";
-import { compToSQL } from "../../../infra/db/sql-helpers";
-import type { User } from "../../../models/user";
+import type { Database } from "@/infra/db/database";
+import { type SQLFragment, sql } from "@/infra/db/sql";
+import { compToSQL } from "@/infra/db/sql-helpers";
+import type { Comp } from "@/models/common";
+import type { User } from "@/models/user";
 import { rowToUser, type UserRow, userSpecToSQL } from "./common";
 
-export async function get(db: Database, spec: User.Spec): Promise<User | null> {
+export async function get(db: Database, spec: Comp<User.Spec>): Promise<User | null> {
   const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
-  const row = await db.queryGet<UserRow>({
-    query: `SELECT * FROM users WHERE ${where.query} LIMIT 1`,
-    params: where.params,
-  });
+  const row = await db.queryGet<UserRow>(
+    sql`SELECT * FROM users WHERE ${where} LIMIT 1`,
+  );
   return row ? rowToUser(row) : null;
 }
 ```
 
+**重要**: `db.queryXxx()` には必ず `sql\`\`` タグ経由で SQLFragment を渡す。直接 `{ query: ..., params: ... }` オブジェクトを組み立てると where 句を生文字列で合成することになり `sql` タグの安全網を回避する。
+
 #### `server/src/repositories/user/postgres/list.ts`
 
 ```typescript
-import type { Database } from "../../../infra/db/database";
-import type { SQLFragment } from "../../../infra/db/sql";
-import { compToSQL } from "../../../infra/db/sql-helpers";
-import type { Cursor, Page } from "../../../models/common";
-import { User } from "../../../models/user";
+import type { Database } from "@/infra/db/database";
+import { type SQLFragment, sql } from "@/infra/db/sql";
+import { compToSQL, orderByClause } from "@/infra/db/sql-helpers";
+import type { Comp, Cursor, Page } from "@/models/common";
+import { User } from "@/models/user";
 import { columnName, rowToUser, type UserRow, userSpecToSQL } from "./common";
 
 export async function list(
   db: Database,
-  spec: User.Spec,
+  spec: Comp<User.Spec>,
   cursor: Cursor<User.SortKey>,
 ): Promise<Page<User>> {
   const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
   const sort = cursor.sort ?? { keys: ["createdAt", "id"] as const, order: "desc" as const };
-  const orderBy = sort.keys
-    .map((k) => `${columnName(k)} ${sort.order.toUpperCase()}`)
-    .join(", ");
+  // sort.order / sort.keys が dynamic cast で不正値でも、orderByClause 内の
+  // sortDirection / columnName の switch で閉じた SQLFragment にしか展開されない
+  const orderBy = orderByClause(sort, columnName);
   const limit = cursor.limit + 1;
 
-  const rows = await db.queryAll<UserRow>({
-    query: `SELECT * FROM users WHERE ${where.query} ORDER BY ${orderBy} LIMIT ${limit}`,
-    params: where.params,
-  });
+  const rows = await db.queryAll<UserRow>(
+    sql`SELECT * FROM users WHERE ${where} ORDER BY ${orderBy} LIMIT ${limit}`,
+  );
 
   const hasMore = rows.length > cursor.limit;
   const items = rows.slice(0, cursor.limit).map(rowToUser);
@@ -474,18 +497,18 @@ export async function list(
 #### `server/src/repositories/user/postgres/count.ts`
 
 ```typescript
-import type { Database } from "../../../infra/db/database";
-import type { SQLFragment } from "../../../infra/db/sql";
-import { compToSQL } from "../../../infra/db/sql-helpers";
-import type { User } from "../../../models/user";
+import type { Database } from "@/infra/db/database";
+import { type SQLFragment, sql } from "@/infra/db/sql";
+import { compToSQL } from "@/infra/db/sql-helpers";
+import type { Comp } from "@/models/common";
+import type { User } from "@/models/user";
 import { userSpecToSQL } from "./common";
 
-export async function count(db: Database, spec: User.Spec): Promise<number> {
+export async function count(db: Database, spec: Comp<User.Spec>): Promise<number> {
   const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
-  const row = await db.queryGet<{ count: string }>({
-    query: `SELECT COUNT(*)::text AS count FROM users WHERE ${where.query}`,
-    params: where.params,
-  });
+  const row = await db.queryGet<{ count: string }>(
+    sql`SELECT COUNT(*)::text AS count FROM users WHERE ${where}`,
+  );
   return Number(row?.count ?? 0);
 }
 ```
@@ -493,29 +516,29 @@ export async function count(db: Database, spec: User.Spec): Promise<number> {
 #### `server/src/repositories/user/postgres/upsert.ts`
 
 ```typescript
-import type { Database } from "../../../infra/db/database";
-import { dateToSQL } from "../../../infra/db/sql-helpers";
-import type { User } from "../../../models/user";
+import type { Database } from "@/infra/db/database";
+import { sql } from "@/infra/db/sql";
+import { dateToSQL } from "@/infra/db/sql-helpers";
+import type { User } from "@/models/user";
 
 export async function upsert(db: Database, user: User): Promise<void> {
-  await db.queryRun({
-    query: `INSERT INTO users (id, twitch_user_id, login, display_name, created_at, updated_at, last_login_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (twitch_user_id) DO UPDATE SET
-              login = EXCLUDED.login,
-              display_name = EXCLUDED.display_name,
-              updated_at = EXCLUDED.updated_at,
-              last_login_at = EXCLUDED.last_login_at`,
-    params: [
-      user.id,
-      user.twitchUserId,
-      user.login,
-      user.displayName,
-      dateToSQL(user.createdAt),
-      dateToSQL(user.updatedAt),
-      dateToSQL(user.lastLoginAt),
-    ],
-  });
+  await db.queryRun(sql`
+    INSERT INTO users (id, twitch_user_id, login, display_name, created_at, updated_at, last_login_at)
+    VALUES (
+      ${user.id},
+      ${user.twitchUserId},
+      ${user.login},
+      ${user.displayName},
+      ${dateToSQL(user.createdAt)},
+      ${dateToSQL(user.updatedAt)},
+      ${dateToSQL(user.lastLoginAt)}
+    )
+    ON CONFLICT (twitch_user_id) DO UPDATE SET
+      login = EXCLUDED.login,
+      display_name = EXCLUDED.display_name,
+      updated_at = EXCLUDED.updated_at,
+      last_login_at = EXCLUDED.last_login_at
+  `);
 }
 ```
 
@@ -527,18 +550,16 @@ export async function upsert(db: Database, user: User): Promise<void> {
 #### `server/src/repositories/user/postgres/delete.ts`
 
 ```typescript
-import type { Database } from "../../../infra/db/database";
-import type { SQLFragment } from "../../../infra/db/sql";
-import { compToSQL } from "../../../infra/db/sql-helpers";
-import type { User } from "../../../models/user";
+import type { Database } from "@/infra/db/database";
+import { type SQLFragment, sql } from "@/infra/db/sql";
+import { compToSQL } from "@/infra/db/sql-helpers";
+import type { Comp } from "@/models/common";
+import type { User } from "@/models/user";
 import { userSpecToSQL } from "./common";
 
-export async function del(db: Database, spec: User.Spec): Promise<number> {
+export async function del(db: Database, spec: Comp<User.Spec>): Promise<number> {
   const where = compToSQL(spec, userSpecToSQL as (s: unknown) => SQLFragment);
-  const { rowCount } = await db.queryRun({
-    query: `DELETE FROM users WHERE ${where.query}`,
-    params: where.params,
-  });
+  const { rowCount } = await db.queryRun(sql`DELETE FROM users WHERE ${where}`);
   return rowCount;
 }
 ```
@@ -546,9 +567,9 @@ export async function del(db: Database, spec: User.Spec): Promise<number> {
 #### `server/src/repositories/user/postgres/index.ts`
 
 ```typescript
-import type { Cursor, Page } from "../../../models/common";
-import type { User } from "../../../models/user";
-import type { DbReadCtx, DbWriteCtx } from "../../common/capability";
+import type { Comp, Cursor, Page } from "@/models/common";
+import type { User } from "@/models/user";
+import type { DbReadCtx, DbWriteCtx } from "@/repositories/common";
 import type { UserRepository as IUserRepository } from "../repository";
 import { count } from "./count";
 import { del } from "./delete";
@@ -557,19 +578,19 @@ import { list } from "./list";
 import { upsert } from "./upsert";
 
 export class UserRepository implements IUserRepository {
-  async get(ctx: DbReadCtx, spec: User.Spec): Promise<User | null> {
+  async get(ctx: DbReadCtx, spec: Comp<User.Spec>): Promise<User | null> {
     return get(ctx.db, spec);
   }
-  async list(ctx: DbReadCtx, spec: User.Spec, cursor: Cursor<User.SortKey>): Promise<Page<User>> {
+  async list(ctx: DbReadCtx, spec: Comp<User.Spec>, cursor: Cursor<User.SortKey>): Promise<Page<User>> {
     return list(ctx.db, spec, cursor);
   }
-  async count(ctx: DbReadCtx, spec: User.Spec): Promise<number> {
+  async count(ctx: DbReadCtx, spec: Comp<User.Spec>): Promise<number> {
     return count(ctx.db, spec);
   }
   async upsert(ctx: DbWriteCtx, user: User): Promise<void> {
     return upsert(ctx.db, user);
   }
-  async delete(ctx: DbWriteCtx, spec: User.Spec): Promise<number> {
+  async delete(ctx: DbWriteCtx, spec: Comp<User.Spec>): Promise<number> {
     return del(ctx.db, spec);
   }
 }
@@ -578,9 +599,19 @@ export class UserRepository implements IUserRepository {
 #### `server/src/repositories/user/index.ts`
 
 ```typescript
-export type { UserRepository } from "./repository";
-export { UserRepository as PgUserRepository } from "./postgres";
+import { UserRepository as PgUserRepository } from "./postgres";
+import type { UserRepository } from "./repository";
+
+export type { UserRepository };
+
+/** このエンティティの標準 Repository 実装 (Postgres) を生成する */
+export function createDefault(): UserRepository {
+  return new PgUserRepository();
+}
 ```
+
+- 外部からは `./postgres` や `./repository` を直接触らせず、この `./user` モジュール経由で interface と factory を取得する
+- 将来 in-memory / mock 実装を切替えたくなったら `createDefault` の実装だけ差し替える
 
 ### 10. 同パターンで session / oidcNonce / templateDoc を実装
 
@@ -624,42 +655,40 @@ server/src/repositories/<entity>/
 
 ### 11. `server/src/repositories/index.ts` を更新
 
+各 entity モジュール (`./<entity>`) の `createDefault()` と interface 型だけに依存する。**`./postgres` や `./repository` を直接 import しない**:
+
 ```typescript
-import { PgOidcNonceRepository } from "./oidcNonce";
-import { PgSessionRepository } from "./session";
-import { PgTemplateDocRepository } from "./templateDoc";
-import { PgUserRepository } from "./user";
-import type { OidcNonceRepository } from "./oidcNonce/repository";
-import type { SessionRepository } from "./session/repository";
-import type { TemplateDocRepository } from "./templateDoc/repository";
-import type { UserRepository } from "./user/repository";
+import * as oidcNonce from "./oidcNonce";
+import * as session from "./session";
+import * as templateDoc from "./templateDoc";
+import * as user from "./user";
 
 export type Repos = {
-  user: UserRepository;
-  session: SessionRepository;
-  oidcNonce: OidcNonceRepository;
-  templateDoc: TemplateDocRepository;
+  user: user.UserRepository;
+  session: session.SessionRepository;
+  oidcNonce: oidcNonce.OidcNonceRepository;
+  templateDoc: templateDoc.TemplateDocRepository;
 };
 
 export function createRawRepos(): Repos {
   return {
-    user: new PgUserRepository(),
-    session: new PgSessionRepository(),
-    oidcNonce: new PgOidcNonceRepository(),
-    templateDoc: new PgTemplateDocRepository(),
+    user: user.createDefault(),
+    session: session.createDefault(),
+    oidcNonce: oidcNonce.createDefault(),
+    templateDoc: templateDoc.createDefault(),
   };
 }
 ```
 
-`bindAllRepos` が ctx 注入を自動化するため、Repository class はステートレス (`new` するだけで OK)。
+`bindAllRepos` が ctx 注入を自動化するため、Repository 実装はステートレス。`createDefault()` を各 entity 側でカプセル化することで、`./postgres` の `Pg*Repository` クラスは外部に露出しない。
 
 `TemplateDocRepository` の interface は `list` / `count` を持たない点が他と異なる:
 
 ```typescript
 export interface TemplateDocRepository {
-  get(ctx: DbReadCtx | DbWriteCtx, spec: TemplateDoc.Spec): Promise<TemplateDoc | null>;
+  get(ctx: DbReadCtx | DbWriteCtx, spec: Comp<TemplateDoc.Spec>): Promise<TemplateDoc | null>;
   upsert(ctx: DbWriteCtx, doc: TemplateDoc): Promise<void>;
-  delete(ctx: DbWriteCtx, spec: TemplateDoc.Spec): Promise<number>;
+  delete(ctx: DbWriteCtx, spec: Comp<TemplateDoc.Spec>): Promise<number>;
 }
 ```
 

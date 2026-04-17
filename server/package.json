@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/bun": "^1.3.12",
     "@types/pg": "^8.20.0",
+    "embedded-postgres": "18.3.0-beta.16",
     "typescript": "^6.0.2"
   }
 }

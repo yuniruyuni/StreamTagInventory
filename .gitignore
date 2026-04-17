@@ -57,3 +57,6 @@ typings/
 # Test coverage
 /coverage/
 /client/coverage/
+
+# Embedded postgres test data (server integration tests)
+/server/.test-pg-data/

@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import type { Fail } from "../../models/common/fail";
-import type { Result } from "../../models/common/result";
+import type { Fail } from "@/models/common/fail";
+import type { Result } from "@/models/common/result";
 
 const FAIL_CODE_MAP: Record<string, TRPCError["code"]> = {
   NOT_FOUND: "NOT_FOUND",
