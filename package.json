@@ -5,6 +5,7 @@
   "scripts": {
     "build": "bun run --filter '*' build",
     "check": "bun run --parallel 'check:*'",
+    "check:arch": "bun run --filter '@twitch-tag-inventory/server' check:arch",
     "check:lint": "bun run --filter '*' check:lint",
     "check:test": "bun run --filter '*' check:test",
     "check:type": "bun run --filter '*' check:type",
