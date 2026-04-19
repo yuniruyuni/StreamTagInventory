@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./trpc-types": "./src/presentation/trpc/routers/index.ts"
+  },
   "scripts": {
     "watch:run": "STATIC_DIR=../client/static bun run --watch src/index.ts",
     "build": "bun build src/index.ts --compile --outfile dist/server",
