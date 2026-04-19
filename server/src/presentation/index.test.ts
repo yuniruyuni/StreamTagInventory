@@ -41,7 +41,7 @@ describe("presentation/createApp smoke", () => {
     expect(body.result.data.nonce).toMatch(/^[A-Za-z0-9_-]{43}$/);
   });
 
-  test("GET /api/trpc/auth.me returns UNAUTHORIZED when no cookie", async () => {
+  test("GET /api/trpc/auth.me returns UNAUTHORIZED without Bearer header", async () => {
     // tRPC v11 HTTP: query は GET /path?input=<json>
     const res = await buildApp().request(
       `/api/trpc/auth.me?input=${encodeURIComponent("{}")}`,
@@ -53,14 +53,14 @@ describe("presentation/createApp smoke", () => {
     expect(body.error.data.code).toBe("UNAUTHORIZED");
   });
 
-  test("/api/* response carries Cache-Control: no-store header", async () => {
+  test("/api/* response carries Cache-Control: no-store + Vary: Authorization", async () => {
     const res = await buildApp().request(
       `/api/trpc/auth.me?input=${encodeURIComponent("{}")}`,
     );
     expect(res.headers.get("Cache-Control")).toBe(
       "no-store, no-cache, must-revalidate, private, max-age=0",
     );
-    expect(res.headers.get("Vary")).toBe("Cookie, Authorization");
+    expect(res.headers.get("Vary")).toBe("Authorization");
   });
 
   test("non-/api/* path does not carry no-store (serves static / SPA)", async () => {

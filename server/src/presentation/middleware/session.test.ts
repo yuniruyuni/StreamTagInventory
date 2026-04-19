@@ -9,7 +9,7 @@ import { createDbWriteCtx } from "@/repositories/common";
 import { createDefault as createSessionRepo } from "@/repositories/session";
 import { createDefault as createUserRepo } from "@/repositories/user";
 import type { SessionContext, UserContext } from "@/usecases/context";
-import { createSessionMiddleware, SESSION_COOKIE_NAME } from "./session";
+import { createSessionMiddleware } from "./session";
 
 let db: Database;
 
@@ -39,8 +39,8 @@ async function seedActiveSession(userId: string, rawToken: Token) {
   return session;
 }
 
-describe("sessionMiddleware", () => {
-  test("no cookie → ctx has no session/user", async () => {
+describe("sessionMiddleware (Bearer)", () => {
+  test("no Authorization header → ctx has no session/user", async () => {
     const res = await buildApp().request("/");
     const body = (await res.json()) as {
       hasSession: boolean;
@@ -50,14 +50,14 @@ describe("sessionMiddleware", () => {
     expect(body.hasUser).toBe(false);
   });
 
-  test("valid cookie → ctx has session/user", async () => {
+  test("valid Bearer token → ctx has session/user", async () => {
     const user = createTestUser();
     await createUserRepo().upsert(createDbWriteCtx(db), user);
     const raw = Token.generate();
     await seedActiveSession(user.id, raw);
 
     const res = await buildApp().request("/", {
-      headers: { cookie: `${SESSION_COOKIE_NAME}=${raw.toBase64url()}` },
+      headers: { authorization: `Bearer ${raw.toBase64url()}` },
     });
     const body = (await res.json()) as {
       hasSession: boolean;
@@ -69,14 +69,14 @@ describe("sessionMiddleware", () => {
     expect(body.userId).toBe(user.id);
   });
 
-  test("cookie with wrong token → ctx has no session", async () => {
+  test("Bearer with wrong token → ctx has no session", async () => {
     const user = createTestUser();
     await createUserRepo().upsert(createDbWriteCtx(db), user);
     await seedActiveSession(user.id, Token.generate());
 
     const res = await buildApp().request("/", {
       headers: {
-        cookie: `${SESSION_COOKIE_NAME}=${Token.generate().toBase64url()}`,
+        authorization: `Bearer ${Token.generate().toBase64url()}`,
       },
     });
     const body = (await res.json()) as { hasSession: boolean };
@@ -95,7 +95,15 @@ describe("sessionMiddleware", () => {
     await createSessionRepo().upsert(createDbWriteCtx(db), expired);
 
     const res = await buildApp().request("/", {
-      headers: { cookie: `${SESSION_COOKIE_NAME}=${raw.toBase64url()}` },
+      headers: { authorization: `Bearer ${raw.toBase64url()}` },
+    });
+    const body = (await res.json()) as { hasSession: boolean };
+    expect(body.hasSession).toBe(false);
+  });
+
+  test("malformed Authorization header → ctx has no session", async () => {
+    const res = await buildApp().request("/", {
+      headers: { authorization: "NotBearer abc" },
     });
     const body = (await res.json()) as { hasSession: boolean };
     expect(body.hasSession).toBe(false);

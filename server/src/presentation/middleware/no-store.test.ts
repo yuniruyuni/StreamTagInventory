@@ -17,7 +17,7 @@ describe("noStoreMiddleware", () => {
       "no-store, no-cache, must-revalidate, private, max-age=0",
     );
     expect(res.headers.get("Pragma")).toBe("no-cache");
-    expect(res.headers.get("Vary")).toBe("Cookie, Authorization");
+    expect(res.headers.get("Vary")).toBe("Authorization");
   });
 
   test("does not touch responses outside /api/*", async () => {

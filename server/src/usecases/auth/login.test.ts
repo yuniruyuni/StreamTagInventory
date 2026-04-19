@@ -101,11 +101,7 @@ describe("loginUsecase", () => {
     if (!result.ok) return;
     expect(result.value.user.twitchUserId).toBe(SUB);
     expect(result.value.user.login).toBe("test_user");
-    // csrfToken は 32 bytes 相当 (base64url no-padding で 43 文字)
-    expect(result.value.session.csrfToken.toBase64url()).toMatch(
-      /^[A-Za-z0-9_-]{43}$/,
-    );
-    // rawSessionToken は cookie 出力用 (ADR 0005)。43 文字 base64url、
+    // rawSessionToken は Bearer header 送信用 (ADR 0006)。43 文字 base64url、
     // DB 側は hash のみ保持するため raw は戻り値だけに現れる。
     expect(result.value.rawSessionToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
     // session.tokenHash は rawSessionToken の sha256(base64url) と一致する

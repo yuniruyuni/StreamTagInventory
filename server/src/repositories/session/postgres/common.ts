@@ -1,15 +1,12 @@
 import { type SQLFragment, sql } from "@/infra/db/sql";
 import { dateFromSQL, dateToSQL } from "@/infra/db/sql-helpers";
-import { Token } from "@/models/common";
 import type { Session } from "@/models/session";
 
 export interface SessionRow {
   id: string;
   user_id: string;
-  /** sha256(raw cookie) の base64url。ADR 0005。 */
+  /** sha256(raw bearer token) の base64url。ADR 0006。 */
   token_hash: string;
-  /** csrf_token は TEXT。Model の Token 内部表現 (base64url) と 1:1 対応。 */
-  csrf_token: string;
   created_at: Date | string;
   expires_at: Date | string;
   last_seen_at: Date | string;
@@ -35,7 +32,6 @@ export function rowToSession(row: SessionRow): Session {
     id: row.id,
     userId: row.user_id,
     tokenHash: row.token_hash,
-    csrfToken: Token.fromBase64url(row.csrf_token),
     createdAt: dateFromSQL(row.created_at),
     expiresAt: dateFromSQL(row.expires_at),
     lastSeenAt: dateFromSQL(row.last_seen_at),

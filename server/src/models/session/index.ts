@@ -1,15 +1,15 @@
-import { defineSpecs, generateId, type SpecsOf, Token } from "../common";
+import { defineSpecs, generateId, type SpecsOf } from "../common";
 
 export interface Session {
   id: string;
   userId: string;
   /**
-   * Cookie に出す raw bearer token の sha256(base64url) ハッシュ。ADR 0005 に
-   * より、raw 値は DB に置かない。middleware は cookie 値を hash してから
-   * `Session.ByTokenHash(hash)` で照合する。
+   * `Authorization: Bearer` で運ばれる raw 32B token の sha256(base64url) ハッシュ。
+   * ADR 0006 により raw 値は DB に置かず、middleware は Bearer header を
+   * `Token.fromBase64url(...).hash()` してから `Session.ByTokenHash(hash)` で
+   * 照合する。
    */
   tokenHash: string;
-  csrfToken: Token;
   createdAt: Date;
   expiresAt: Date;
   lastSeenAt: Date;
@@ -19,16 +19,16 @@ export namespace Session {
   export type SortKey = "createdAt" | "lastSeenAt" | "id";
 
   /**
-   * 24 時間 absolute。client 側 CSRF は memory-only で browser restart と共に消え、
-   * 再接続時は OIDC silent re-auth で新 session を立てる運用のため、server 側で
-   * sliding 延長はしない。`lastSeenAt` は観測・cleanup 判断用に残す。
+   * 24 時間 absolute。client 側 session token は sessionStorage 保管で
+   * tab close と共に消えるため、server 側は sliding 延長をしない。
+   * `lastSeenAt` は観測・cleanup 判断用に残す。
    */
   export const TTL_MS = 24 * 60 * 60 * 1000;
 
   const _specs = defineSpecs({
     ById: (id: string) => ({ id }),
     ByUserId: (userId: string) => ({ userId }),
-    /** cookie 値を sha256 した hash で照合 (ADR 0005)。 */
+    /** Bearer token を sha256 した hash で照合 (ADR 0006)。 */
     ByTokenHash: (hash: string) => ({ tokenHash: hash }),
     /** expires_at > at */
     ActiveAt: (at: Date) => ({ activeAt: at }),
@@ -41,10 +41,6 @@ export namespace Session {
   export const ActiveAt = _specs.ActiveAt;
   export const Expired = _specs.Expired;
 
-  /**
-   * Spec のデータ形状 (leaf discriminated union)。
-   * 合成可能な形が必要な呼出側は `Comp<Session.Spec>` と明示する。
-   */
   export type Spec = SpecsOf<typeof _specs>;
 
   export function cursor(
@@ -62,13 +58,10 @@ export namespace Session {
   export function create(params: {
     userId: string;
     /**
-     * 必須。ADR 0005 に従い cookie 値の sha256(base64url) ハッシュを渡す。
-     * 呼出側 (login usecase) で `Token.generate().hash()` を計算し、raw Token
-     * は戻り値として cookie に出すが DB には置かない。
+     * 必須。呼出側 (login usecase) で `Token.generate().hash()` を計算して渡す。
+     * raw Token は戻り値として client に返すが DB には置かない (ADR 0006)。
      */
     tokenHash: string;
-    /** 省略時は CSPRNG で新しい Token を発行。test で固定値を使う場合のみ渡す。 */
-    csrfToken?: Token;
     /** 省略時は `now + TTL_MS`。test で期限切れ検証をする場合のみ渡す。 */
     expiresAt?: Date;
     now: Date;
@@ -77,7 +70,6 @@ export namespace Session {
       id: generateId(),
       userId: params.userId,
       tokenHash: params.tokenHash,
-      csrfToken: params.csrfToken ?? Token.generate(),
       createdAt: params.now,
       expiresAt: params.expiresAt ?? new Date(params.now.getTime() + TTL_MS),
       lastSeenAt: params.now,
