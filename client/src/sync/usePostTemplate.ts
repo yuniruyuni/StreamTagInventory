@@ -2,7 +2,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { TemplateDocContext } from "./TemplateDocContext";
 import {
   getSettingsMap,
-  POST_TEMPLATE_KEY,
   readPostTemplate,
   writePostTemplate,
 } from "./templateDoc";
@@ -20,15 +19,15 @@ export interface UsePostTemplateResult {
  */
 export const usePostTemplate = (): UsePostTemplateResult => {
   const { doc } = useContext(TemplateDocContext);
-  const [postTemplate, setLocal] = useState<string>("");
+  const [postTemplate, setPostTemplateState] = useState<string>("");
 
   useEffect(() => {
     if (!doc) {
-      setLocal("");
+      setPostTemplateState("");
       return;
     }
     const settings = getSettingsMap(doc);
-    const refresh = () => setLocal(readPostTemplate(doc));
+    const refresh = () => setPostTemplateState(readPostTemplate(doc));
     refresh();
     settings.observe(refresh);
     return () => settings.unobserve(refresh);
@@ -44,6 +43,3 @@ export const usePostTemplate = (): UsePostTemplateResult => {
 
   return { postTemplate, setPostTemplate };
 };
-
-// re-export for callers that want the storage key constant
-export { POST_TEMPLATE_KEY };

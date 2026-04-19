@@ -120,8 +120,10 @@ export const useTemplates = (): UseTemplatesResult => {
         // 別 op になるが、本ツールの並び替え頻度では許容範囲。
         const moving = yMapToTemplate(arr.get(srcIdx));
         arr.delete(srcIdx, 1);
-        const insertAt = dstIdx > srcIdx ? dstIdx : dstIdx;
-        arr.insert(insertAt, [templateToYMap(moving)]);
+        // dnd-kit の arrayMove と同じ意味 (delete 後の配列に dstIdx で挿入すると
+        // 結果的に「元の dstIdx 位置」に来る)。src < dst で位置がズレないのは
+        // splice insert 後に長さが元に戻るため。
+        arr.insert(dstIdx, [templateToYMap(moving)]);
       });
     },
     [doc],

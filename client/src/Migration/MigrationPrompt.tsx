@@ -30,19 +30,25 @@ export const MigrationPrompt: FC = () => {
 
   useEffect(() => {
     if (!isReady) return;
-    // Y.Doc に既にデータがあるなら別端末から sync 済 → 移行不要
+    // Y.Doc に既にテンプレートが入っているなら別端末から sync 済 → 移行不要。
+    // `templates` は useTemplates が observe → state で遅れて入るため、length を
+    // deps に入れて mount 直後 + 到達時の 2 フェーズで判定する必要がある。
     if (templates.length > 0) {
       setLegacy(null);
       return;
     }
     setLegacy(readLegacyData());
-    // templates の length 変化での再判定は無くて良い (一度判定したら open のみ)
   }, [isReady, templates.length]);
+
+  const hasPostTemplate =
+    legacy !== null &&
+    legacy.postTemplate !== null &&
+    legacy.postTemplate !== "";
 
   const handleAccept = useCallback(() => {
     if (!legacy) return;
     bulkReplace(legacy.templates);
-    if (legacy.postTemplate !== null && legacy.postTemplate !== "") {
+    if (hasPostTemplate && legacy.postTemplate) {
       setPostTemplate(legacy.postTemplate);
     }
     markMigrated();
@@ -55,7 +61,14 @@ export const MigrationPrompt: FC = () => {
       }),
       autoClose: true,
     });
-  }, [legacy, bulkReplace, setPostTemplate, addNotification, t]);
+  }, [
+    legacy,
+    hasPostTemplate,
+    bulkReplace,
+    setPostTemplate,
+    addNotification,
+    t,
+  ]);
 
   const handleDismiss = useCallback(() => {
     // 旧 data は残したまま「今は移行しない」。MIGRATED_AT_KEY は立てない。
@@ -76,9 +89,7 @@ export const MigrationPrompt: FC = () => {
               count: legacy.templates.length,
             })}
           </li>
-          {legacy.postTemplate !== null && legacy.postTemplate !== "" && (
-            <li>{t("migration.detectedPostTemplate")}</li>
-          )}
+          {hasPostTemplate && <li>{t("migration.detectedPostTemplate")}</li>}
         </ul>
       )}
       <div className="flex justify-end gap-2">
