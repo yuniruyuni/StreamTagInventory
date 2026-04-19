@@ -4,15 +4,21 @@ import type { AppRouter } from "@twitch-tag-inventory/server/trpc-types";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-/** ADR 0007: Twitch id_token を sessionStorage に保管し Bearer として送信する */
-export const ID_TOKEN_STORAGE_KEY = "twitch-id-token";
+/**
+ * 現在の Twitch id_token を保持する mutable slot (ADR 0007)。
+ *
+ * sessionStorage への read/write は `useSession` が所有しており、trpc link は
+ * このモジュールスコープの slot から最新値を読むだけ。`TwitchAuthProvider` が
+ * useEffect で `setIdTokenForTrpc(idToken)` を呼んで同期する。
+ *
+ * こうすることで sessionStorage のシリアライズ形式 (JSON.stringify 経由か生文字列か)
+ * の知識を trpc link 側に漏らさずに済む。
+ */
+let currentIdToken: string | null = null;
 
-export const getIdToken = (): string | null =>
-  sessionStorage.getItem(ID_TOKEN_STORAGE_KEY);
-export const setIdToken = (token: string): void =>
-  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
-export const clearIdToken = (): void =>
-  sessionStorage.removeItem(ID_TOKEN_STORAGE_KEY);
+export const setIdTokenForTrpc = (token: string | null): void => {
+  currentIdToken = token;
+};
 
 export const trpcClient = trpc.createClient({
   links: [
@@ -20,10 +26,8 @@ export const trpcClient = trpc.createClient({
       url: "/api/trpc",
       // ADR 0007: Twitch id_token を Authorization: Bearer で手動送信。サーバーは
       // 毎リクエスト jose で署名 / iss / aud / exp を検証して identity を resolve する。
-      headers: () => {
-        const idToken = getIdToken();
-        return idToken ? { authorization: `Bearer ${idToken}` } : {};
-      },
+      headers: () =>
+        currentIdToken ? { authorization: `Bearer ${currentIdToken}` } : {},
     }),
   ],
 });
