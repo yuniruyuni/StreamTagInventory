@@ -2,9 +2,9 @@
 set -eu
 export PGHOST="${PGHOST:-localhost}"
 export PGPORT="${PGPORT:-5432}"
-export PGUSER="$DB_APP_NAME"
+export PGUSER="$DB_USER"
 export PGPASSWORD="$DB_PASSWORD"
-export PGDATABASE="$DB_APP_NAME"
+export PGDATABASE="$DB_NAME"
 
 # Wait for DB (cloudflared sidecar in Cloud Run, or direct in docker-compose)
 for i in $(seq 1 30); do

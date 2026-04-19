@@ -29,8 +29,9 @@ services:
       context: .
       dockerfile: Dockerfile.migration
     environment:
-      - DB_APP_NAME=twitch_tag_inventory
-      - DB_PASSWORD=twitch_tag_inventory
+      - DB_USER=stream_tag_inventory
+      - DB_NAME=stream_tag_inventory
+      - DB_PASSWORD=stream_tag_inventory
       - PGHOST=postgres
     depends_on:
       postgres:
@@ -45,11 +46,11 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: twitch_tag_inventory
-      POSTGRES_PASSWORD: twitch_tag_inventory
-      POSTGRES_DB: twitch_tag_inventory
+      POSTGRES_USER: stream_tag_inventory
+      POSTGRES_PASSWORD: stream_tag_inventory
+      POSTGRES_DB: stream_tag_inventory
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U twitch_tag_inventory"]
+      test: ["CMD-SHELL", "pg_isready -U stream_tag_inventory"]
       interval: 2s
       timeout: 5s
       retries: 10
