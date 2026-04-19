@@ -163,3 +163,18 @@ server (`server/src/infra/db/index.ts`) / migration (`bin/migrate.sh`) は以下
 ### cloudflared サイドカー
 
 DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続する。`cloudrun.yaml` と `cloudrun-job.yaml` の **両方** に `cloudflared` サイドカーが必要で、`cf-db-access-client-id` / `cf-db-access-client-secret` の secret を参照する。
+
+### schema 変更の migration 落とし穴
+
+`schema/tables/` を declarative 編集して `pgschema` で反映する構造のため、**既存行がある状態で NOT NULL 列を追加すると migration が fail する**。具体的には:
+
+- 新しい列を `NOT NULL` で追加 → 既存行の値を埋められず `ALTER TABLE ... ADD COLUMN ... NOT NULL` が ERROR
+- 同様に型を互換性のない形に変える (TEXT → BYTEA など) も既存値で fail する可能性
+
+対策 (先に検討すべき順):
+
+1. **`DEFAULT` 付きで追加** — 安全かつ自動。値が意味を持たない時のみ使える (例: hash 列など "意味的に空" が許されない列には不向き)
+2. **2 段階 migration** — PR を分けて NULL 許容で追加 → backfill → NOT NULL に変更
+3. **`TRUNCATE <table>` を deploy 前に実行** — ユーザーデータが失われてもよい段階 (pre-GA / session / nonce 等の ephemeral 表) でのみ許容
+
+PR 4 時点の `sessions.token_hash NOT NULL` 追加では、production の `sessions` が空だったため migration が通った。同様の変更で行が既にある場合は上記のいずれかを選ぶこと。
