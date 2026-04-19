@@ -1,10 +1,10 @@
 ---
 id: "0006"
 title: "session token は Authorization: Bearer ヘッダで運び client は sessionStorage に保管する"
-status: "accepted"
+status: "superseded"
 date: "2026-04-19"
 supersedes: "0005"
-superseded_by: null
+superseded_by: "0007"
 related_specres: []
 tags: ["auth", "security", "session", "cookie"]
 ---

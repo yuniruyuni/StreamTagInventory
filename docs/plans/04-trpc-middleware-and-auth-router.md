@@ -1,6 +1,6 @@
 # PR 4: tRPC 拡張 + middleware + auth ルーター
 
-> **Updated 2026-04-19**: 本プランは当初 HttpOnly Cookie + CSRF double-submit で書かれていたが、[ADR 0006](../adr/0006-session-token-via-bearer-header.md) により session token は `Authorization: Bearer` ヘッダで運ぶ設計に変更された。以下の記述のうち「CSRF middleware」「`__Host-sid` Cookie」「cookieJar 抽象」「`csrf_token` 列 / `Session.csrfToken` field」は **全て不要** になっている。code 側が authoritative。本 plan は歴史資料として残置。
+> **Updated 2026-04-19**: 本プランは当初 HttpOnly Cookie + CSRF double-submit で書かれていたが、[ADR 0006](../adr/0006-session-token-via-bearer-header.md) により session token は `Authorization: Bearer` ヘッダで運ぶ設計に変更された。さらに [ADR 0007](../adr/0007-stateless-jwt-bearer-no-server-session.md) でサーバー側 session を全廃し、Twitch id_token を直接 Bearer として毎リクエスト検証する方式に切り替えた。以下の記述のうち「CSRF middleware」「`__Host-sid` Cookie」「cookieJar 抽象」「`csrf_token` 列 / `Session.csrfToken` field」「session middleware による DB lookup」「`auth.startNonce` / `auth.login` / `auth.logout` ルーター」は **全て不要** になっている。code 側が authoritative。本 plan は歴史資料として残置。
 
 ## コンテキスト
 

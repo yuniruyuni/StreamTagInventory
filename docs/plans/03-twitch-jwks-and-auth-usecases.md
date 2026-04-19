@@ -1,5 +1,7 @@
 # PR 3: Twitch JWKS + id_token 検証 + auth ユースケース
 
+> **🔄 ADR 0007 で大幅に縮約された** — `startNonce` / `login` / `logout` のユースケースは廃止 (server 側 session を持たないため)。本 PR で意義が残るのは「JWKS infra + id_token 検証関数」のみ。`me` は usecase ではなく JWT middleware が context に乗せる pure projection になる。`expectedNonce` パラメータは削除し、nonce 検証は client 側担当に移動。本 PR ドキュメント本文は歴史的記録として残す。
+
 ## コンテキスト
 
 ### このシリーズについて
