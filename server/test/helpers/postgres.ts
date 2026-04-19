@@ -5,9 +5,9 @@ import { join } from "node:path";
 import EmbeddedPostgres from "embedded-postgres";
 import type pg from "pg";
 
-const DEFAULT_USER = "twitch_tag_inventory";
-const DEFAULT_PASSWORD = "twitch_tag_inventory";
-const DEFAULT_DATABASE = "twitch_tag_inventory";
+const DEFAULT_USER = "stream_tag_inventory";
+const DEFAULT_PASSWORD = "stream_tag_inventory";
+const DEFAULT_DATABASE = "stream_tag_inventory";
 
 /**
  * Find a free TCP port by binding to port 0 and releasing.

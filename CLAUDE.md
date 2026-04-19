@@ -142,10 +142,21 @@ Cloud Run **gen2 実行環境は合計 512Mi 以上の memory** が必須 (CPU a
 `PORT` は **Cloud Run の予約環境変数** で、`containerPort` から自動注入される。`cloudrun.yaml` の `env` に `PORT` を追加してはいけない (起動失敗の原因)。
 server 側は `process.env.PORT ?? 3000` で受け取るため、開発時は環境変数で上書き可能だが、本番 yaml では設定不要。
 
+### DB 接続用の環境変数
+
+server (`server/src/infra/db/index.ts`) / migration (`bin/migrate.sh`) は以下の env で接続情報を受け取る:
+
+- `PGHOST` / `PGPORT`: libpq 標準。cloudflared サイドカー経由で `localhost:5432` を参照
+- `DB_USER`: DB ロール名 (現状 service / migration 共に `stream_tag_inventory`)
+- `DB_NAME`: データベース名 (同上)
+- `DB_PASSWORD`: 下記のとおり owner / app user で secret を切り替える
+
+`DB_USER` と `DB_NAME` を分離しているのは、将来 app user を owner と分ける際に user 名だけ差し替えられるようにするため。現状は同値でも env は別々に供給する。
+
 ### DB パスワードの使い分け
 
-- **migration job**: `stream-tag-inventory-db-password` (owner user — DDL 権限が必要)
-- **service**: `stream-tag-inventory-db-app-password` (app user — DML のみ)
+- **migration job** (`cloudrun-job.yaml`): `stream-tag-inventory-db-password` (owner user — DDL 権限が必要)
+- **service** (`cloudrun.yaml`): `stream-tag-inventory-db-app-password` (app user — DML のみ)
 
 混同すると migration が権限エラーで失敗するか、service に不要な DDL 権限が付与される。`-app-` サフィックスの有無で区別する。
 
