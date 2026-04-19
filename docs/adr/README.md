@@ -10,7 +10,8 @@
 | [0002](./0002-server-does-not-hold-twitch-tokens.md) | サーバは Twitch の access/refresh token を保持しない | accepted | 2026-04-17 |
 | [0003](./0003-templates-use-fractional-indexing.md) | テンプレートの並び順は fractional indexing で管理する | superseded → 0004 | 2026-04-17 |
 | [0004](./0004-local-first-sync-with-yjs.md) | テンプレートデータは Yjs による local-first 同期で管理する | accepted | 2026-04-17 |
-| [0005](./0005-session-cookie-hashed-at-rest.md) | session cookie は raw 32B トークン、DB は SHA-256 ハッシュで分離保管する | accepted | 2026-04-19 |
+| [0005](./0005-session-cookie-hashed-at-rest.md) | session cookie は raw 32B トークン、DB は SHA-256 ハッシュで分離保管する | superseded → 0006 | 2026-04-19 |
+| [0006](./0006-session-token-via-bearer-header.md) | session token は Authorization: Bearer で運び client は sessionStorage に保管する | accepted | 2026-04-19 |
 
 ## ADR に書くこと / 書かないこと
 

@@ -45,8 +45,8 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 | Twitch `access_token` | ❌ | ❌ |
 | Twitch `refresh_token` | ❌ (Implicit Hybrid は発行しない) | ❌ |
 | Twitch user id (`sub`) | ✅ | ✅ `users.twitch_user_id` |
-| サーバセッション ID (UUID) | ✅ Cookie には出さない | ✅ `sessions.id` (FK / 監査用) |
-| サーバセッション bearer token (32B raw) | ✅ login 応答で cookie に発行 | ❌ 平文は保存せず `sessions.token_hash` = `sha256(raw)` のみ (ADR 0005) |
+| サーバセッション ID (UUID) | ✅ client に露出させない | ✅ `sessions.id` (FK / 監査用) |
+| サーバセッション bearer token (32B raw) | ✅ login 応答 body で返す | ❌ 平文は保存せず `sessions.token_hash` = `sha256(raw)` のみ (ADR 0005 / 0006) |
 | テンプレート / postTemplate | ✅ Y.Doc バイナリの sync のみ | ✅ `template_docs` (Yjs CRDT、1 ユーザー 1 行) |
 
 → **サーバ DB が漏洩しても Twitch アカウント侵害につながらない**。
@@ -60,19 +60,18 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 | 脅威 | 対策 |
 |---|---|
 | XSS による Twitch トークン窃取 | sessionStorage 保管継続のため現状と同水準のリスクが残る (受容) |
-| XSS によるサーバセッション窃取 | `__Host-sid` Cookie は `HttpOnly` で JS 不可触 |
-| CSRF | `SameSite=Lax` + 全 mutation に `x-csrf-token` 必須、session 紐付け、`crypto.timingSafeEqual` で比較 |
+| XSS によるサーバセッション窃取 | server session token も sessionStorage 保管 (Twitch token と同等の XSS リスク、ADR 0006) |
+| CSRF | **CSRF 固有対策は不要**。raw session token は `Authorization: Bearer` で手動送信 = browser が cross-site で自動付与しない (CORS preflight が custom header を弾く)。ADR 0006 |
 | id_token 改ざん | jose による RS256 + JWKS 検証、iss/aud/exp/nonce 全検証 |
 | リプレイ攻撃 (id_token 再利用) | `nonce` を DB consume で削除 (1 度限り)、10 分 expire |
-| セッションハイジャック | `__Host-` prefix + Secure + HttpOnly + SameSite=Lax、24h absolute expire、cookie = raw / DB = `sha256` 分離 (ADR 0005) |
+| セッションハイジャック | 24h absolute expire、raw token は `Authorization: Bearer` で送信、DB = `sha256` 分離 (ADR 0005/0006)。Cookie を使わないので subdomain 流用や CSRF 起点のセッション窃取は不成立 |
 | オープンリダイレクト | Twitch app 事前登録済 URL のみ受付、サーバ側で `redirect_to` 受付なし |
-| Cookie 流用 (subdomain) | `__Host-` prefix で Domain 指定不可、Path=/、Secure 必須 |
 | DB injection | 既存 `sql` タグ + プレースホルダーで完全防御済 |
-| タイミング攻撃 | session_id / csrf_token / nonce 比較は `crypto.timingSafeEqual` |
-| ログ漏洩 | logger は `id_token` / `session_id` / `csrf_token` を出力禁止 |
-| 中間 CDN (Cloudflare) によるユーザー情報露呈 | アプリ層 `Cache-Control: no-store` + Cloudflare Cache Rule で `/api/*` Bypass、`Vary: Cookie` で保険 |
+| タイミング攻撃 | session_id / nonce 比較は `crypto.timingSafeEqual` |
+| ログ漏洩 | logger は `id_token` / `session_id` / bearer token を出力禁止 |
+| 中間 CDN (Cloudflare) によるユーザー情報露呈 | アプリ層 `Cache-Control: no-store` + Cloudflare Cache Rule で `/api/*` Bypass、`Vary: Authorization` で保険 |
 | サーバ DB 漏洩時の Twitch アカウント連鎖 | **設計上排除** — DB に Twitch トークンを一切持たない |
-| サーバ DB 漏洩時の session なりすまし | cookie 値は DB に無く `sha256` ハッシュのみ保存 (ADR 0005)。preimage 探索 (2^256) は非現実的 |
+| サーバ DB 漏洩時の session なりすまし | raw bearer は DB に無く `sha256` ハッシュのみ保存 (ADR 0005/0006)。preimage 探索 (2^256) は非現実的 |
 | ドメイン乗っ取り (active phishing / passive theft) | 防御不可能 (受容)。運用層で Redirect URL 厳格化 + ユーザー教育 |
 
 ### 受容するリスクと根拠

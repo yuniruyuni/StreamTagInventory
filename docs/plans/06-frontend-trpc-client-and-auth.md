@@ -1,5 +1,15 @@
 # PR 6: Frontend tRPC client + auth provider 改修
 
+> **Updated 2026-04-19**: 本プランは当初「HttpOnly Cookie + CSRF token を memory 保持」で書かれていたが、[ADR 0006](../adr/0006-session-token-via-bearer-header.md) により session token は **sessionStorage 保管 + `Authorization: Bearer` ヘッダ送信** の設計に変更された。要点:
+>
+> - server の login 応答 body に `sid` (raw 32B base64url) を含める → client が sessionStorage に保存
+> - tRPC link の `headers` で `Authorization: Bearer ${sid}` を自動付与
+> - CSRF token / `x-csrf-token` header / csrf memory store は **不要 (全削除)**
+> - logout は sessionStorage から sid を消す + server の `auth.logout` を呼んで DB 行を削除
+> - tab close で sessionStorage が消える = server session も実質無効化される (Twitch token と同ライフサイクル)
+>
+> 以下の記述のうち cookie / CSRF に関する部分は ADR 0006 が上書きしている。code 側が authoritative。
+
 ## コンテキスト
 
 ### このシリーズについて
