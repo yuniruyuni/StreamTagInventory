@@ -27,12 +27,16 @@ spec:
               value: stream_tag_inventory
             - name: DB_NAME
               value: stream_tag_inventory
-            # NOTE: service は app user pw (DML のみ)。owner pw (stream-tag-inventory-db-password) は migration job 側で使う
+            # 当面は migration と同じ owner pw を使う。本来は app user (DML のみ) を
+            # DB 側に作って app password と紐付けるべきだが、現状 production には
+            # stream_tag_inventory user (= owner) のみ存在し、app user が未作成。
+            # owner pw で起動時 SELECT 1 が通る形にしておき、app user 分離は別 PR
+            # で対応する (DB に CREATE USER + GRANT + secret 紐付けが必要)。
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: stream-tag-inventory-db-app-password
+                  name: stream-tag-inventory-db-password
             # Twitch OIDC 用。client_id は OAuth の仕様上公開値 (client/src/constant.ts にも平文)、
             # かつ static/index.js に焼き込まれてブラウザから可視なので平文 value で扱う。
             # 本番用に別 Twitch app を作る場合も値自体は公開情報のため repo に commit してよい。
