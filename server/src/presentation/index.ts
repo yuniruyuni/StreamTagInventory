@@ -26,10 +26,22 @@ export function createApp(ctx: Context) {
       referrerPolicy: "strict-origin-when-cross-origin",
       contentSecurityPolicy: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // Cloudflare proxy 経由 (本番) では Cloudflare Insights の beacon.min.js が
+        // 自動注入されるため static.cloudflareinsights.com を許可。許可しないと
+        // browser console にエラーが出続けて UX 上ノイズになる (機能影響は無い)。
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://static.cloudflareinsights.com",
+        ],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https://api.twitch.tv"],
+        // Twitch API 直接呼出 + Cloudflare Insights の telemetry 送信先。
+        connectSrc: [
+          "'self'",
+          "https://api.twitch.tv",
+          "https://cloudflareinsights.com",
+        ],
         frameAncestors: ["'none'"],
       },
     }),
