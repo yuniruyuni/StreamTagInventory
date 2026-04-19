@@ -50,19 +50,16 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
     const doc = createTemplateDoc();
     const namespace = `templates:${user.id}`;
     let persistence: IndexeddbPersistence | null = null;
-    let isReady = false;
-    setValue({ doc, isReady });
 
-    // IndexedDB が利用可能な環境のみ persistence を起動 (test 環境は skip)
+    // IndexedDB が利用可能な環境のみ persistence を起動 (test 環境は skip)。
+    // isReady は whenSynced (IndexedDB ロード完了) まで false。IndexedDB 無し環境は
+    // 即 true で render を進めさせる。
     if (typeof window !== "undefined" && "indexedDB" in window) {
+      setValue({ doc, isReady: false });
       persistence = new IndexeddbPersistence(namespace, doc);
-      persistence.whenSynced.then(() => {
-        isReady = true;
-        setValue({ doc, isReady });
-      });
+      persistence.whenSynced.then(() => setValue({ doc, isReady: true }));
     } else {
-      isReady = true;
-      setValue({ doc, isReady });
+      setValue({ doc, isReady: true });
     }
 
     const sync: SyncMutator = {

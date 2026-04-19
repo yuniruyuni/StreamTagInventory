@@ -72,14 +72,11 @@ describe("readLegacyData", () => {
     expect(data?.templates).toEqual(sample);
   });
 
-  test("returns null for invalid JSON", () => {
+  test("returns null for invalid JSON (both templates + postTemplate)", () => {
     localStorage.setItem(LEGACY_TEMPLATES_KEY, "{not json");
     localStorage.setItem(LEGACY_POST_TEMPLATE_KEY, "}also bad{");
-    // Both invalid → templates = [], postTemplate from raw "}also bad{" via fallback
-    const data = readLegacyData();
-    // postTemplate fallback to raw string is non-empty → not null
-    expect(data?.templates).toEqual([]);
-    expect(data?.postTemplate).toBe("}also bad{");
+    // 両方 parse 失敗 → 全体として「migrate する価値の無いデータ」と判定
+    expect(readLegacyData()).toBeNull();
   });
 });
 

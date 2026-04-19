@@ -65,8 +65,6 @@ function parseString(raw: string | null): string | null {
     const parsed: unknown = JSON.parse(raw);
     return typeof parsed === "string" ? parsed : null;
   } catch {
-    // useStorage は JSON.stringify で書くが、初期手書きデータが裸の string の
-    // 可能性も考慮 (歴史的データの取り込み)。
-    return raw;
+    return null;
   }
 }
