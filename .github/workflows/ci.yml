@@ -54,6 +54,13 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        # e2e は client 側で MockApiClient / MockAuthProvider を使うため server
+        # 側の DB は触らない。SKIP_DB_VERIFY=1 で起動時 SELECT 1 を skip する
+        # (server/src/infra/db/index.ts 参照)。TWITCH_CLIENT_ID は必須 env なので
+        # ダミー値を渡す。
+        env:
+          SKIP_DB_VERIFY: "1"
+          TWITCH_CLIENT_ID: ci-e2e-dummy
         run: bun run check:e2e
 
       - name: Upload test results
@@ -95,11 +102,12 @@ jobs:
 
       - name: Test Docker image
         # TWITCH_CLIENT_ID は server/src/index.ts の REQUIRED_ENV 検査を通す
-        # ためのダミー。この smoke test は /health が 200 を返すかを確認する
-        # だけで、OIDC 実通信は行わない。
+        # ためのダミー。SKIP_DB_VERIFY=1 で server 起動時 SELECT 1 を skip する
+        # (この smoke test は /health 200 のみ確認、DB に触る endpoint は叩かない)。
         run: |
           docker run --rm -d -p 3000:3000 --name test-container \
             -e TWITCH_CLIENT_ID=ci-smoke-dummy \
+            -e SKIP_DB_VERIFY=1 \
             stream-tag-inventory
           sleep 5
           curl -f http://localhost:3000/health || exit 1
