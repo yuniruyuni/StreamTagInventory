@@ -1,7 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { createTestUser } from "@test/factories";
+import { beforeAll, describe, expect, test } from "bun:test";
 import { createTestContext } from "@test/helpers/context";
-import { createTestDB } from "@test/helpers/db";
 import { Hono } from "hono";
 import {
   createLocalJWKSet,
@@ -12,10 +10,6 @@ import {
   type KeyLike,
   SignJWT,
 } from "jose";
-import type { Database } from "@/infra/db/database";
-import { User } from "@/models/user";
-import { createDbReadCtx, createDbWriteCtx } from "@/repositories/common";
-import { createDefault as createUserRepo } from "@/repositories/user";
 import type { UserContext } from "@/usecases/context";
 import { createJwtAuthMiddleware } from "./jwt-auth";
 
@@ -24,7 +18,6 @@ const AUDIENCE = "test-client-id";
 const SUB = "987654321";
 const KID = "test-key-jwt-auth";
 
-let db: Database;
 let privateKey: KeyLike;
 let jwks: JWTVerifyGetKey;
 
@@ -36,10 +29,6 @@ beforeAll(async () => {
   pub.use = "sig";
   pub.kid = KID;
   jwks = createLocalJWKSet({ keys: [pub] });
-});
-
-beforeEach(async () => {
-  db = await createTestDB();
 });
 
 interface SignOpts {
@@ -63,33 +52,36 @@ async function signIdToken(opts: SignOpts = {}): Promise<string> {
 }
 
 function buildApp() {
-  const ctx = createTestContext(db, {
-    twitch: { clientId: AUDIENCE, jwks },
-  });
+  // ADR 0007: middleware は DB I/O を行わないので test では db を使わない。
+  // createTestContext は db を要求するが渡した値は middleware からは参照されない。
+  const ctx = createTestContext(
+    // biome-ignore lint/suspicious/noExplicitAny: dummy db not accessed by jwt-auth
+    null as any,
+    { twitch: { clientId: AUDIENCE, jwks } },
+  );
   const app = new Hono();
   app.use("*", createJwtAuthMiddleware({ ctx }));
   app.get("/", (c) => {
     const user = c.get("user") as UserContext | undefined;
     return c.json({
       hasUser: user !== undefined,
+      id: user?.id ?? null,
       twitchUserId: user?.twitchUserId ?? null,
       login: user?.login ?? null,
     });
   });
-  return { app, ctx };
+  return app;
 }
 
 describe("jwtAuthMiddleware (ADR 0007)", () => {
   test("no Authorization header → ctx has no user", async () => {
-    const { app } = buildApp();
-    const res = await app.request("/");
+    const res = await buildApp().request("/");
     const body = (await res.json()) as { hasUser: boolean };
     expect(body.hasUser).toBe(false);
   });
 
   test("malformed Authorization header → ctx has no user", async () => {
-    const { app } = buildApp();
-    const res = await app.request("/", {
+    const res = await buildApp().request("/", {
       headers: { authorization: "NotBearer xyz" },
     });
     const body = (await res.json()) as { hasUser: boolean };
@@ -97,8 +89,7 @@ describe("jwtAuthMiddleware (ADR 0007)", () => {
   });
 
   test("invalid jwt → ctx has no user", async () => {
-    const { app } = buildApp();
-    const res = await app.request("/", {
+    const res = await buildApp().request("/", {
       headers: { authorization: "Bearer not.a.jwt" },
     });
     const body = (await res.json()) as { hasUser: boolean };
@@ -106,66 +97,50 @@ describe("jwtAuthMiddleware (ADR 0007)", () => {
   });
 
   test("expired jwt → ctx has no user", async () => {
-    const { app } = buildApp();
     const token = await signIdToken({ expDelta: -60 });
-    const res = await app.request("/", {
+    const res = await buildApp().request("/", {
       headers: { authorization: `Bearer ${token}` },
     });
     const body = (await res.json()) as { hasUser: boolean };
     expect(body.hasUser).toBe(false);
   });
 
-  test("valid jwt for new user → upserts user and sets ctx.user", async () => {
-    const { app } = buildApp();
+  test("valid jwt → ctx.user.id is Twitch user id (sub)", async () => {
     const token = await signIdToken({ preferredUsername: "freshuser" });
-    const res = await app.request("/", {
+    const res = await buildApp().request("/", {
       headers: { authorization: `Bearer ${token}` },
     });
     const body = (await res.json()) as {
       hasUser: boolean;
+      id: string | null;
       twitchUserId: string | null;
       login: string | null;
     };
     expect(body.hasUser).toBe(true);
+    expect(body.id).toBe(SUB);
     expect(body.twitchUserId).toBe(SUB);
     expect(body.login).toBe("freshuser");
-
-    // 実際に DB に行が出来ていること
-    const stored = await createUserRepo().get(
-      createDbReadCtx(db),
-      User.ByTwitchUserId(SUB),
-    );
-    expect(stored?.twitchUserId).toBe(SUB);
-    expect(stored?.login).toBe("freshuser");
   });
 
-  test("valid jwt for existing user → reuses id and updates login", async () => {
-    const existing = createTestUser({
-      twitchUserId: SUB,
-      login: "old_login",
-      displayName: "Old Display",
-    });
-    await createUserRepo().upsert(createDbWriteCtx(db), existing);
+  test("valid jwt without preferred_username → login is empty string", async () => {
+    // preferred_username を省いた signing で signIdToken を作り直す
+    const builder = new SignJWT({})
+      .setProtectedHeader({ alg: "RS256", kid: KID })
+      .setIssuer(ISSUER)
+      .setAudience(AUDIENCE)
+      .setIssuedAt()
+      .setExpirationTime("300s")
+      .setSubject(SUB);
+    const token = await builder.sign(privateKey);
 
-    const { app } = buildApp();
-    const token = await signIdToken({ preferredUsername: "new_login" });
-    const res = await app.request("/", {
+    const res = await buildApp().request("/", {
       headers: { authorization: `Bearer ${token}` },
     });
     const body = (await res.json()) as {
       hasUser: boolean;
-      twitchUserId: string | null;
       login: string | null;
     };
     expect(body.hasUser).toBe(true);
-    expect(body.twitchUserId).toBe(SUB);
-    expect(body.login).toBe("new_login");
-
-    const stored = await createUserRepo().get(
-      createDbReadCtx(db),
-      User.ByTwitchUserId(SUB),
-    );
-    expect(stored?.id).toBe(existing.id);
-    expect(stored?.login).toBe("new_login");
+    expect(body.login).toBe("");
   });
 });

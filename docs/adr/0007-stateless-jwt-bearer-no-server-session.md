@@ -92,12 +92,29 @@ ADR 0006 の核 (「raw token は sessionStorage、転送は Authorization: Bear
 | Authorization: Bearer の中身 | サーバー発行の sid | Twitch 発行の id_token |
 | サーバー側の session table | あり | **削除** |
 | oidc_nonces table | あり (server で atomic consume) | **削除** (nonce は client local) |
+| users table / User model / UserRepository | あり (UUID PK + twitch_user_id UNIQUE) | **削除** (template_docs.user_id が Twitch user id を直接 PK にする) |
 | auth.startNonce / login / logout | あり | **すべて削除** |
 | auth.me | session middleware が resolve した user | JWT middleware が resolve した user |
-| session middleware | sid → DB lookup で session/user 復元 | id_token → JWT 検証 + users find-or-create で user 復元 |
+| session middleware | sid → DB lookup で session/user 復元 | id_token → JWT 検証で user 復元 (**DB I/O ゼロ**) |
 | nonce 検証 | server (DB delete with row count) | client (sessionStorage 値と id_token nonce claim の文字列比較) |
 | 即時 revoke | DELETE FROM sessions ... | 不可 (id_token の exp まで replay 可能) |
 | id_token TTL に対する取扱 | server session が独自 TTL (24h) で支配 | id_token の exp (~1h) がそのまま session 寿命 |
+
+### users 表を撤去する根拠
+
+users 表が持っていた役割を棚卸ししたところ、本ツールの脅威モデル / 機能要件では
+すべて不要だった:
+
+- **内部 UUID ↔ twitch_user_id マッピング**: JWT の `sub` をそのまま internal id として
+  使えば UUID 層そのものが不要
+- **FK で template_docs を CASCADE 削除**: 「user 削除 API」を持たないため運用上未使用
+- **login / display_name / last_login_at の保存**: UI 表示は毎リクエスト JWT claim
+  (`preferred_username`) から取れる。履歴保持の要求は無い
+- **毎リクエスト UPSERT で identity 更新**: JWT 検証だけで完結するなら write 自体が不要
+
+したがって `template_docs.user_id` を `TEXT PRIMARY KEY` (Twitch user id 直接) に
+差し替え、users 表を撤去する。Twitch user id は OAuth 仕様上「誰でも取得できる公開
+識別子」なので、内部 id として使っても privacy / security 上の劣化は無い。
 
 ## 帰結
 
@@ -119,22 +136,23 @@ ADR 0006 の核 (「raw token は sessionStorage、転送は Authorization: Bear
 - **schema**:
   - `schema/tables/sessions.sql` 削除
   - `schema/tables/oidc_nonces.sql` 削除
+  - `schema/tables/01_users.sql` 削除
+  - `schema/tables/template_docs.sql` — `user_id UUID REFERENCES users(id)` → `user_id TEXT PRIMARY KEY`
 - **server**:
-  - `server/src/models/session/` 削除
-  - `server/src/models/oidcNonce/` 削除
-  - `server/src/repositories/session/` 削除
-  - `server/src/repositories/oidcNonce/` 削除
-  - `server/src/repositories/index.ts` から session / oidcNonce を撤去
+  - `server/src/models/session/` / `oidcNonce/` / `user/` 削除
+  - `server/src/repositories/session/` / `oidcNonce/` / `user/` 削除
+  - `server/src/repositories/index.ts` を `templateDoc` のみに
   - `server/src/usecases/auth/login.{ts,test.ts}` 削除
   - `server/src/usecases/auth/logout.{ts,test.ts}` 削除
   - `server/src/usecases/auth/startNonce.{ts,test.ts}` 削除
-  - `server/src/usecases/auth/me.ts` — JWT context をそのまま返す (実質変更なし)
-  - `server/src/usecases/context.ts` — `SessionContext` 削除、`Context.session` 削除
-  - `server/src/presentation/middleware/session.{ts,test.ts}` を `jwt-auth.{ts,test.ts}` に置換 — id_token verify + users find-or-create
+  - `server/src/usecases/auth/me.ts` — JWT context をそのまま返す
+  - `server/src/usecases/context.ts` — `SessionContext` 削除、`Context.session` 削除、`UserContext.id` の意味論が「内部 UUID」→「Twitch user id」に変更
+  - `server/src/presentation/middleware/session.{ts,test.ts}` を `jwt-auth.{ts,test.ts}` に置換 — **DB I/O を持たない** pure な JWT 検証 + claim 投影
   - `server/src/presentation/trpc/init.ts` — `protectedProcedure` の guard を `ctx.user` のみに
   - `server/src/presentation/trpc/routers/auth.ts` — `me` のみ。`startNonce` / `login` / `logout` 撤去
   - `server/src/presentation/index.ts` — middleware 差し替え、CSP の connectSrc 等は不変
   - `server/src/infra/twitch/verify-id-token.ts` — `expectedNonce` パラメータ削除 (nonce は client 側担当)
+  - `server/test/factories/index.ts` — `createTestUser` を削除、`generateTestTwitchUserId` に置換
 - **client**:
   - `client/src/TwitchAuth/provider.tsx` — Phase 1 (login mutation) / Phase 3 (startNonce mutation) を削除し、callback で id_token を取り込む / nonce 照合する単純なフローに置換
   - `client/src/trpc/client.ts` — `Authorization: Bearer ${idToken}` を sessionStorage から付与

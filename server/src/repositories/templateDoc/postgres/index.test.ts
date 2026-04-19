@@ -1,24 +1,21 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { createTestTemplateDoc, createTestUser } from "@test/factories";
+import {
+  createTestTemplateDoc,
+  generateTestTwitchUserId,
+} from "@test/factories";
 import { createTestDB } from "@test/helpers/db";
 import type { Database } from "@/infra/db/database";
 import { TemplateDoc } from "@/models/templateDoc";
-import { User } from "@/models/user";
 import {
   createDbReadCtx,
   createDbWriteCtx,
   type DbReadCtx,
   type DbWriteCtx,
 } from "@/repositories/common";
-import {
-  createDefault as createUserRepo,
-  type UserRepository,
-} from "@/repositories/user";
 import { createDefault, type TemplateDocRepository } from "..";
 
 let db: Database;
 let repo: TemplateDocRepository;
-let userRepo: UserRepository;
 let rCtx: DbReadCtx;
 let wCtx: DbWriteCtx;
 let userId: string;
@@ -26,13 +23,12 @@ let userId: string;
 beforeEach(async () => {
   db = await createTestDB();
   repo = createDefault();
-  userRepo = createUserRepo();
   rCtx = createDbReadCtx(db);
   wCtx = createDbWriteCtx(db);
 
-  const user = createTestUser();
-  await userRepo.upsert(wCtx, user);
-  userId = user.id;
+  // ADR 0007: template_docs.user_id は Twitch user id を直接 PK として持つ。
+  // test ごとに衝突しない id を生成して使う。
+  userId = generateTestTwitchUserId();
 });
 
 describe("TemplateDocRepository upsert + get", () => {
@@ -70,19 +66,12 @@ describe("TemplateDocRepository upsert + get", () => {
   });
 });
 
-describe("TemplateDocRepository delete + CASCADE", () => {
+describe("TemplateDocRepository delete", () => {
   test("delete(ByUserId) removes the row", async () => {
     await repo.upsert(wCtx, createTestTemplateDoc({ userId }));
 
     const deleted = await repo.delete(wCtx, TemplateDoc.ByUserId(userId));
     expect(deleted).toBe(1);
-    expect(await repo.get(rCtx, TemplateDoc.ByUserId(userId))).toBeNull();
-  });
-
-  test("user CASCADE delete removes the user's doc", async () => {
-    await repo.upsert(wCtx, createTestTemplateDoc({ userId }));
-
-    await userRepo.delete(wCtx, User.ById(userId));
     expect(await repo.get(rCtx, TemplateDoc.ByUserId(userId))).toBeNull();
   });
 });
