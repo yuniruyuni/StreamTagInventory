@@ -84,5 +84,15 @@
   "entrance": {
     "tagline": "Easily manage and apply stream templates",
     "description": "Save your titles, categories, and tags as templates and apply them to Twitch with one click"
+  },
+  "migration": {
+    "title": "Move templates to the server",
+    "description": "Older templates were stored only in this browser. Sync them to your account so they appear on every device.",
+    "detectedTemplates": "{{count}} templates",
+    "detectedPostTemplate": "Custom post template",
+    "accept": "Migrate",
+    "later": "Later",
+    "successTitle": "Migration complete",
+    "successMessage": "{{count}} templates moved to the server"
   }
 }

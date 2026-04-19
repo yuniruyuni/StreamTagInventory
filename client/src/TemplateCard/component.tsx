@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { FC } from "react";
 import React, { memo } from "react";
 import { Card, CardBody } from "~/components/Card";
-import type { Template } from "~/model/template";
+import { isTemplateEqual, type Template } from "~/model/template";
 
 import { DragHandle } from "./DragHandle";
 import { TemplateActions } from "./TemplateActions";
@@ -43,7 +43,7 @@ export const TemplateCard: FC<Props> = memo(
     };
 
     const [temp, setTemp] = React.useState<Template>(template);
-    const changed = JSON.stringify(template) !== JSON.stringify(temp);
+    const changed = !isTemplateEqual(template, temp);
 
     return (
       <Card

@@ -4,6 +4,7 @@ import "./i18n";
 
 import { Entrance } from "./Entrance";
 import { MainScreen } from "./MainScreen";
+import { MigrationPrompt } from "./Migration";
 import { NotificationContainer, NotificationProvider } from "./Notification";
 import { TemplateDocProvider } from "./sync/TemplateDocProvider";
 import { TwitchAuthProvider } from "./TwitchAuth";
@@ -25,6 +26,7 @@ if (root) {
             entrance={(uri) => <Entrance uri={uri} />}
           >
             <TemplateDocProvider>
+              <MigrationPrompt />
               <MainScreen />
             </TemplateDocProvider>
           </TwitchAuthProvider>

@@ -84,5 +84,15 @@
   "entrance": {
     "tagline": "配信テンプレートを簡単に管理・適用",
     "description": "タイトル・カテゴリ・タグをテンプレートとして保存し、ワンクリックでTwitchに適用できます"
+  },
+  "migration": {
+    "title": "テンプレートをサーバへ移行",
+    "description": "古いテンプレートはこのブラウザにだけ保存されています。アカウントに紐付けて他の端末からも使えるようにしましょう。",
+    "detectedTemplates": "{{count}} 件のテンプレート",
+    "detectedPostTemplate": "カスタム投稿フォーマット",
+    "accept": "移行する",
+    "later": "あとで",
+    "successTitle": "移行完了",
+    "successMessage": "{{count}} 件のテンプレートをサーバに移行しました"
   }
 }
