@@ -633,21 +633,21 @@ curl -I http://localhost:3000/api/trpc/auth.me
 
 ## Definition of Done
 
-- [ ] **ADR 0005 実装**: `schema/tables/sessions.sql` に `token_hash` 列追加、`Session.tokenHash` / `Session.ByTokenHash` / `Token.hash()` 追加、Repository の read/write 対応
-- [ ] `login.ts` が `rawSessionToken` を戻り値に含める
-- [ ] `logout` の入力を `{ sessionId: string }` に縮小 (PR 3 の logout と test を微修正)
-- [ ] `server/src/usecases/context.ts` に `session?` / `user?` / `cookieJar?` 追加
-- [ ] `server/src/presentation/middleware/{session,csrf,no-store}.ts` 作成 + test
-- [ ] `server/src/presentation/trpc/init.ts` に `protectedProcedure` 追加
-- [ ] `server/src/usecases/auth/me.ts` を `meHandler` に置換
-- [ ] `server/src/presentation/trpc/routers/auth.ts` 作成 (4 endpoint)
-- [ ] `server/src/presentation/trpc/routers/index.ts` で `auth` 統合
-- [ ] `server/src/presentation/index.ts` に middleware 配線、CSP は既存維持
-- [ ] tRPC context builder で Hono context (`c`) を注入 → `cookieJar` 抽象を埋める
-- [ ] Deploy 手順に `sessions TRUNCATE` を追記 (token_hash 必須化で既存 row は使えなくなるため)
-- [ ] `bun run check` 全緑
-- [ ] `bun run build` 成功
-- [ ] 手動確認: `auth.startNonce` で nonce が返る、`auth.me` で UNAUTHORIZED が返る、`Cache-Control: no-store` が付与される
+- [x] **ADR 0005 実装**: `schema/tables/sessions.sql` に `token_hash` 列追加、`Session.tokenHash` / `Session.ByTokenHash` / `Token.hash()` 追加、Repository の read/write 対応
+- [x] `login.ts` が `rawSessionToken` を戻り値に含める
+- [x] `logout` の入力を `{ sessionId: string }` に縮小
+- [x] `server/src/usecases/context.ts` に `session?` / `user?` / `cookieJar?` 追加
+- [x] `server/src/presentation/middleware/{session,csrf,no-store}.ts` 作成 + test
+- [x] `server/src/presentation/trpc/init.ts` に `protectedProcedure` 追加
+- [x] `server/src/usecases/auth/me.ts` を `meHandler` に置換
+- [x] `server/src/presentation/trpc/routers/auth.ts` 作成 (4 endpoint)
+- [x] `server/src/presentation/trpc/routers/index.ts` で `auth` 統合
+- [x] `server/src/presentation/index.ts` に middleware 配線、CSP は既存維持
+- [x] tRPC context builder で Hono context (`c`) を注入 → `cookieJar` 抽象を埋める
+- [x] `CLAUDE.md` に schema NOT NULL 列追加時の migration 落とし穴を注記 (`sessions.token_hash` の前例を含む)
+- [x] `bun run check` 全緑
+- [x] `bun run build` 成功
+- [x] 手動確認相当: `presentation/index.test.ts` で `auth.startNonce` が nonce を返す / `auth.me` が UNAUTHORIZED を返す / `Cache-Control: no-store` が付与されることを integration test として固定
 
 ---
 
