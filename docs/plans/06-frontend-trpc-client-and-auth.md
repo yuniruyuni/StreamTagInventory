@@ -1,12 +1,13 @@
 # PR 6: Frontend tRPC client + auth provider 改修
 
-> **Updated 2026-04-19**: 本プランは当初「HttpOnly Cookie + CSRF token を memory 保持」で書かれていたが、[ADR 0006](../adr/0006-session-token-via-bearer-header.md) により session token は **sessionStorage 保管 + `Authorization: Bearer` ヘッダ送信** の設計に変更された。要点:
+> **Updated 2026-04-19 (二回目)**: ADR 0006 で「sid を sessionStorage + Bearer」に切り替えた後、[ADR 0007](../adr/0007-stateless-jwt-bearer-no-server-session.md) で **サーバー側 session を全廃** し Twitch id_token そのものを Bearer として毎リクエスト送信する方式に再変更した。最終形:
 >
-> - server の login 応答 body に `sid` (raw 32B base64url) を含める → client が sessionStorage に保存
-> - tRPC link の `headers` で `Authorization: Bearer ${sid}` を自動付与
-> - CSRF token / `x-csrf-token` header / csrf memory store は **不要 (全削除)**
-> - logout は sessionStorage から sid を消す + server の `auth.logout` を呼んで DB 行を削除
-> - tab close で sessionStorage が消える = server session も実質無効化される (Twitch token と同ライフサイクル)
+> - **client が保管**: `twitch-auth` (access_token) と `twitch-id-token` (id_token JWT) の 2 値。`sid` は廃止
+> - **tRPC link**: `Authorization: Bearer ${idToken}` を sessionStorage から付与
+> - **nonce**: client 生成 (crypto.randomUUID 等) → sessionStorage に保管 → authorize URL に埋込 → callback で id_token の nonce claim と照合
+> - **login mutation / logout mutation / startNonce mutation は不要 (全削除)**。auth provider の state machine は「id_token あり / なし」の 2 値に縮約
+> - **logout**: sessionStorage から id_token を消すだけ (server 通知不要)
+> - tab close で sessionStorage が消える = id_token も消滅 = 自動 logout (access_token と同ライフサイクル)
 >
 > 以下の記述のうち cookie / CSRF に関する部分は ADR 0006 が上書きしている。code 側が authoritative。
 

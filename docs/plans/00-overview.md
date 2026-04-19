@@ -24,32 +24,34 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 
 ---
 
-## 採用フロー: OIDC Implicit Hybrid Flow
+## 採用フロー: OIDC Implicit Hybrid Flow + Stateless JWT Bearer (ADR 0007)
 
 `response_type=token id_token` を使い、access_token と id_token を **同時取得**:
 
 - **access_token**: 従来通り client の sessionStorage に保管、Twitch API 直接呼出に使用
-- **id_token**: サーバへ POST → JWKS 検証 → identity 確立 → HttpOnly Cookie でセッション発行
+- **id_token**: client が sessionStorage に保管し、`Authorization: Bearer <id_token>` で **毎リクエスト送信**。サーバはリクエストごとに `jose.jwtVerify` で署名 / iss / aud / exp を検証し、`sub` から users 表を find-or-create して identity を resolve する
 - サーバは Twitch トークン (access / refresh) に **一切触れない・保持しない・転送しない**
-- サーバはユーザーごとのテンプレート / 設定を DB に保存し CRUD API を提供
+- サーバはユーザーごとの Y.Doc を DB に保存し sync API を提供
+- **サーバー側に session / nonce 表は持たない** (ADR 0007)。replay 防止は client 側で nonce を生成して id_token claim と照合することで担保
 
 ### 認証シーケンス図
 
 ![OIDC Implicit Hybrid Flow 認証シーケンス](./auth-sequence.svg)
 
+> シーケンス図は ADR 0006 時点のまま (server 側 login mutation を含む) で未更新。テキスト記述が正。
+
 ### 「触れる」もの / 「触れない」もの
 
 | 種類 | サーバが見る | DB 保存 |
 |---|---|---|
-| `id_token` (JWT, ~5分有効) | ✅ 検証のみ即破棄 | ❌ |
+| `id_token` (JWT, ~1時間有効) | ✅ 毎リクエスト署名検証 | ❌ |
 | Twitch `access_token` | ❌ | ❌ |
 | Twitch `refresh_token` | ❌ (Implicit Hybrid は発行しない) | ❌ |
 | Twitch user id (`sub`) | ✅ | ✅ `users.twitch_user_id` |
-| サーバセッション ID (UUID) | ✅ client に露出させない | ✅ `sessions.id` (FK / 監査用) |
-| サーバセッション bearer token (32B raw) | ✅ login 応答 body で返す | ❌ 平文は保存せず `sessions.token_hash` = `sha256(raw)` のみ (ADR 0005 / 0006) |
+| OIDC nonce | ❌ (client local) | ❌ |
 | テンプレート / postTemplate | ✅ Y.Doc バイナリの sync のみ | ✅ `template_docs` (Yjs CRDT、1 ユーザー 1 行) |
 
-→ **サーバ DB が漏洩しても Twitch アカウント侵害につながらない**。
+→ **サーバ DB が漏洩しても Twitch アカウント侵害につながらない**。さらに ADR 0007 によりサーバー側に長寿命の session credential が存在しないため、漏洩時の悪用面も狭い。
 
 テンプレートおよびユーザー設定 (postTemplate) は [ADR 0004](../adr/0004-local-first-sync-with-yjs.md) により Yjs CRDT に統合され、1 ユーザー 1 Y.Doc (= DB 上 1 行の BYTEA) に集約される。サーバは中身の構造を直接クエリせず、state の読み書きと shape / サイズ検証のみを行う。
 
@@ -60,37 +62,37 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 | 脅威 | 対策 |
 |---|---|
 | XSS による Twitch トークン窃取 | sessionStorage 保管継続のため現状と同水準のリスクが残る (受容) |
-| XSS によるサーバセッション窃取 | server session token も sessionStorage 保管 (Twitch token と同等の XSS リスク、ADR 0006) |
-| CSRF | **CSRF 固有対策は不要**。raw session token は `Authorization: Bearer` で手動送信 = browser が cross-site で自動付与しない (CORS preflight が custom header を弾く)。ADR 0006 |
-| id_token 改ざん | jose による RS256 + JWKS 検証、iss/aud/exp/nonce 全検証 |
-| リプレイ攻撃 (id_token 再利用) | `nonce` を DB consume で削除 (1 度限り)、10 分 expire |
-| セッションハイジャック | 24h absolute expire、raw token は `Authorization: Bearer` で送信、DB = `sha256` 分離 (ADR 0005/0006)。Cookie を使わないので subdomain 流用や CSRF 起点のセッション窃取は不成立 |
+| XSS による id_token 窃取 | id_token も sessionStorage 保管 (access_token と同等の XSS リスク、ADR 0007)。漏洩時は `exp` (~1h) まで replay 可能 |
+| CSRF | **CSRF 固有対策は不要**。id_token は `Authorization: Bearer` で手動送信 = browser が cross-site で自動付与しない (ADR 0006/0007) |
+| id_token 改ざん | jose による RS256 + JWKS 検証、iss/aud/exp 全検証 (毎リクエスト) |
+| リプレイ攻撃 (id_token 再利用) | id_token の `exp` (Twitch 既定 ~1h) を超えたら自動失効。client は受領時に nonce claim と stored nonce を照合し mix-up を防ぐ。サーバー側 nonce DB consume は ADR 0007 で廃止 |
+| 即時セッション無効化 | **不可** (ADR 0007 で受容)。個人配信者向けで運用要件無し。緊急時は Twitch app 側で client_id を再発行する運用に倒す |
 | オープンリダイレクト | Twitch app 事前登録済 URL のみ受付、サーバ側で `redirect_to` 受付なし |
 | DB injection | 既存 `sql` タグ + プレースホルダーで完全防御済 |
-| タイミング攻撃 | session_id / nonce 比較は `crypto.timingSafeEqual` |
-| ログ漏洩 | logger は `id_token` / `session_id` / bearer token を出力禁止 |
+| タイミング攻撃 | nonce 比較は client の文字列等価で十分 (server 側比較は不要) |
+| ログ漏洩 | logger は `id_token` / `access_token` を出力禁止 |
 | 中間 CDN (Cloudflare) によるユーザー情報露呈 | アプリ層 `Cache-Control: no-store` + Cloudflare Cache Rule で `/api/*` Bypass、`Vary: Authorization` で保険 |
 | サーバ DB 漏洩時の Twitch アカウント連鎖 | **設計上排除** — DB に Twitch トークンを一切持たない |
-| サーバ DB 漏洩時の session なりすまし | raw bearer は DB に無く `sha256` ハッシュのみ保存 (ADR 0005/0006)。preimage 探索 (2^256) は非現実的 |
+| サーバ DB 漏洩時の session なりすまし | **設計上排除** — DB に session credential を持たない (ADR 0007) |
 | ドメイン乗っ取り (active phishing / passive theft) | 防御不可能 (受容)。運用層で Redirect URL 厳格化 + ユーザー教育 |
 
 ### 受容するリスクと根拠
+- **即時 revoke 不能** を受容する代わりに、サーバー側の session 状態管理を全廃して race / 状態管理コードを大幅削減 (ADR 0007)
+- **id_token の XSS exfiltrate** は access_token と同水準のリスク。後者は元々 sessionStorage 露出 (ADR 0002) なので実効的な regression なし
 - **Passive theft (ドメイン乗っ取り時のみ)** を受容する代わりに、実装複雑度・レイテンシ・サーバ侵害時の攻撃面拡大を回避
-- 元々の Implicit Flow と同じセキュリティ水準を維持しつつ、サーバセッション (HttpOnly) の追加で **Twitch トークン以外の攻撃面は強化** されている
 
 ---
 
 ## DB スキーマ概要
 
-`schema/tables/` 配下に **4 ファイル** を新規作成 (詳細は 01-db-schema-and-env.md):
+`schema/tables/` 配下に **2 ファイル** (ADR 0007 で sessions / oidc_nonces を撤去):
 
-- `users.sql` — Twitch user id ↔ 内部 UUID マッピング
-- `sessions.sql` — HttpOnly Cookie のセッション、CSRF token 同梱
-- `oidc_nonces.sql` — リプレイ防止の nonce 一時保管
+- `01_users.sql` — Twitch user id ↔ 内部 UUID マッピング
 - `template_docs.sql` — ユーザーごとの Y.Doc バイナリ (テンプレート配列と postTemplate を同居) 。1 ユーザー 1 行
 
 **oauth_tokens / oauth_states テーブルは作らない** — サーバが Twitch トークンを保持しないため。
 **`templates` / `user_settings` テーブルは作らない** — ADR 0004 により Y.Doc に統合されたため。
+**`sessions` / `oidc_nonces` テーブルは作らない** — ADR 0007 により stateless JWT bearer 化、サーバー側 session 状態を持たない。
 
 ---
 
@@ -199,13 +201,13 @@ PR 6 は PR 5 完了時点で着手可能 (PR 5 の AppRouter 型を参照する
 
 | 用語 | 意味 |
 |---|---|
-| **id_token** | OIDC で発行される JWT。Twitch user identity の証明書。`sub`, `iss`, `aud`, `exp`, `nonce` claim を含む |
+| **id_token** | OIDC で発行される JWT。Twitch user identity の証明書。`sub`, `iss`, `aud`, `exp`, `nonce` claim を含む。ADR 0007 でサーバー認証の bearer credential として毎リクエスト送信する |
 | **access_token** | Twitch API 呼出用 bearer token。client が sessionStorage に保管、サーバは触れない |
 | **JWKS** | JSON Web Key Set。Twitch の公開鍵集合。`https://id.twitch.tv/oauth2/keys` |
-| **nonce** | リプレイ攻撃防止の一回限り使い捨てトークン。サーバが発行し、id_token claim と照合して consume |
+| **nonce** | id_token mix-up 防止のためのワンタイム値。ADR 0007 で **client が生成**し、authorize URL に埋込み、callback で id_token の `nonce` claim と照合する |
 | **PKCE** | Proof Key for Code Exchange。本案では Implicit Hybrid Flow を使うため不要 |
-| **CSRF token** | session 行に紐付け、mutation で `x-csrf-token` ヘッダー必須。Cookie には出さない (XSS 耐性) |
-| **`__Host-` prefix** | Cookie のセキュリティ制約 prefix。Domain 指定不可、Path=/、Secure 必須 |
+| **CSRF token** | 〔ADR 0006 で廃止〕Bearer 認証は browser が cross-site で自動送信しないため CSRF 固有対策は不要 |
+| **`__Host-` prefix** | 〔ADR 0006 / 0007 で廃止〕Cookie を使わないため不要 |
 | **fractional indexing** | 〔ADR 0003 で採用 → ADR 0004 で撤廃〕テンプレート並び替えで前後の position の中間値を割り当てる手法。本プロジェクトでは Y.Array に置き換わり未使用 |
 | **CRDT** | Conflict-free Replicated Data Type。並行編集が自動収束するデータ型の総称。本プロジェクトでは Yjs を使う |
 | **Y.Doc / Y.Array / Y.Map** | Yjs の CRDT プリミティブ。テンプレートは Y.Doc 内の `Y.Array<Y.Map>`、postTemplate は `Y.Map` の string フィールドで保持 |
