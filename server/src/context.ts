@@ -1,11 +1,16 @@
 import type { Database } from "./infra/db/database";
 import type { ILogger } from "./infra/logger/types";
+import { twitchJwks } from "./infra/twitch/jwks";
 import { CallbackClientImpl } from "./presentation/callback/impl";
 import { createRawRepos } from "./repositories";
 import { bindAllRepos, createFullCtx } from "./repositories/common/capability";
-import type { Context } from "./usecases/context";
+import type { Context, TwitchConfig } from "./usecases/context";
 
-export function createContext(db: Database, logger: ILogger): Context {
+export function createContext(
+  db: Database,
+  logger: ILogger,
+  twitch?: TwitchConfig,
+): Context {
   // 1. CallbackClient を repos 構築前に作成
   const callbackClient = new CallbackClientImpl();
 
@@ -19,6 +24,11 @@ export function createContext(db: Database, logger: ILogger): Context {
     db,
     rawRepos,
     repos,
+    // TWITCH_CLIENT_ID の存在は index.ts の起動チェックで保証される。
+    twitch: twitch ?? {
+      clientId: process.env.TWITCH_CLIENT_ID ?? "",
+      jwks: twitchJwks,
+    },
   };
 
   // 3. Context 構築後に遅延初期化

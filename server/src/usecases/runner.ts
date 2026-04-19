@@ -20,11 +20,20 @@ import type {
 type MaybePromise<T> = T | Promise<T>;
 type Unfail<T> = Exclude<T, Fail>;
 
-export interface Usecase<T> {
-  run(ctx: Context): Promise<Result<T, Fail>>;
+/**
+ * `run` の引数。`TInput = undefined` の usecase は `run(ctx)` で呼べる。
+ * 入力を持つ usecase は `run(ctx, input)` が必須。
+ */
+type RunArgs<TInput> = undefined extends TInput
+  ? [ctx: Context]
+  : [ctx: Context, input: TInput];
+
+export interface Usecase<TInput, TResult> {
+  run(...args: RunArgs<TInput>): Promise<Result<TResult, Fail>>;
 }
 
 interface UsecaseDefinition<
+  TInput,
   TPre,
   TRead,
   TProcess,
@@ -33,7 +42,12 @@ interface UsecaseDefinition<
   TFinish,
   TResult,
 > {
-  pre?: (ctx: PreContext) => MaybePromise<TPre | Fail>;
+  /**
+   * 入力のバリデーションと初期 state 組み立て。input は `run(ctx, input)` で
+   * 受け取った値が渡される (入力なしの usecase では undefined)。返り値が
+   * `Fail` なら実行は即中断し `Result<_, Fail>` が返る。
+   */
+  pre?: (ctx: PreContext, input: TInput) => MaybePromise<TPre | Fail>;
   read?: (ctx: ReadContext, state: Unfail<TPre>) => MaybePromise<TRead | Fail>;
   process?: (
     ctx: ProcessContext,
@@ -54,8 +68,18 @@ interface UsecaseDefinition<
   result?: (state: Unfail<TFinish>) => MaybePromise<TResult>;
 }
 
-export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
+export function usecase<
+  TInput = undefined,
+  TPre = TInput extends undefined ? Record<string, never> : TInput,
+  TRead = TPre,
+  TProcess = TRead,
+  TWrite = TProcess,
+  TPost = TWrite,
+  TFinish = TPost,
+  TResult = TFinish,
+>(
   def: UsecaseDefinition<
+    TInput,
     TPre,
     TRead,
     TProcess,
@@ -64,15 +88,23 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
     TFinish,
     TResult
   >,
-): Usecase<TResult> {
+): Usecase<TInput, TResult> {
   return {
-    async run(ctx: Context): Promise<Result<TResult, Fail>> {
+    async run(...args: RunArgs<TInput>): Promise<Result<TResult, Fail>> {
+      const [ctx, maybeInput] = args as [Context, TInput | undefined];
+      const input = maybeInput as TInput;
       try {
         // Phase 1: pre (outside transaction)
-        let state: unknown = await (def.pre?.({
-          now: ctx.now,
-          logger: ctx.logger,
-        }) ?? {});
+        let state: unknown = def.pre
+          ? await def.pre(
+              {
+                now: ctx.now,
+                logger: ctx.logger,
+                twitch: ctx.twitch,
+              },
+              input,
+            )
+          : (input ?? {});
         if (isFail(state)) return { ok: false, error: state };
 
         // Phase 2-4: read → process → write
@@ -86,6 +118,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
                 now: ctx.now,
                 logger: ctx.logger,
                 repos: bindAllRepos(ctx.rawRepos, createDbReadCtx(tx)),
+                twitch: ctx.twitch,
               };
               s = await def.read(readCtx, s as Unfail<TPre>);
               if (isFail(s)) return s;
@@ -93,7 +126,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
 
             if (def.process) {
               s = await def.process(
-                { now: ctx.now, logger: ctx.logger },
+                { now: ctx.now, logger: ctx.logger, twitch: ctx.twitch },
                 s as Unfail<TRead>,
               );
               if (isFail(s)) return s;
@@ -103,6 +136,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
               now: ctx.now,
               logger: ctx.logger,
               repos: bindAllRepos(ctx.rawRepos, createDbWriteCtx(tx)),
+              twitch: ctx.twitch,
             };
             s = await writeFn(writeCtx, s as Unfail<TProcess>);
             return s;
@@ -115,6 +149,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
               now: ctx.now,
               logger: ctx.logger,
               repos: bindAllRepos(ctx.rawRepos, createDbReadCtx(tx)),
+              twitch: ctx.twitch,
             };
             return readFn(readCtx, state as Unfail<TPre>);
           });
@@ -122,14 +157,14 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
 
           if (def.process) {
             state = await def.process(
-              { now: ctx.now, logger: ctx.logger },
+              { now: ctx.now, logger: ctx.logger, twitch: ctx.twitch },
               state as Unfail<TRead>,
             );
             if (isFail(state)) return { ok: false, error: state };
           }
         } else if (def.process) {
           state = await def.process(
-            { now: ctx.now, logger: ctx.logger },
+            { now: ctx.now, logger: ctx.logger, twitch: ctx.twitch },
             state as Unfail<TRead>,
           );
           if (isFail(state)) return { ok: false, error: state };
@@ -141,6 +176,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
             now: ctx.now,
             logger: ctx.logger,
             repos: bindAllRepos(ctx.rawRepos, createServiceCtx()),
+            twitch: ctx.twitch,
           };
           state = await def.post(postCtx, state as Unfail<TWrite>);
           if (isFail(state)) return { ok: false, error: state };
@@ -154,6 +190,7 @@ export function usecase<TPre, TRead, TProcess, TWrite, TPost, TFinish, TResult>(
               now: ctx.now,
               logger: ctx.logger,
               repos: bindAllRepos(ctx.rawRepos, createDbWriteCtx(tx)),
+              twitch: ctx.twitch,
             };
             return finishFn(finishCtx, state as Unfail<TPost>);
           });

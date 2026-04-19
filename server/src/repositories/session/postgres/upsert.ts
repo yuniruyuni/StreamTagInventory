@@ -9,7 +9,7 @@ export async function upsert(db: Database, session: Session): Promise<void> {
     VALUES (
       ${session.id},
       ${session.userId},
-      ${session.csrfToken},
+      ${session.csrfToken.toBase64url()},
       ${dateToSQL(session.createdAt)},
       ${dateToSQL(session.expiresAt)},
       ${dateToSQL(session.lastSeenAt)}

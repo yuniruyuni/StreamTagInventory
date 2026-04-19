@@ -1,7 +1,7 @@
-import { defineSpecs, type SpecsOf } from "../common";
+import { defineSpecs, type SpecsOf, Token } from "../common";
 
 export interface OidcNonce {
-  nonce: string;
+  nonce: Token;
   createdAt: Date;
   expiresAt: Date;
 }
@@ -9,8 +9,11 @@ export interface OidcNonce {
 export namespace OidcNonce {
   export type SortKey = "createdAt" | "nonce";
 
+  /** OIDC authorize → callback の往復想定で十分に短く、リプレイ窓を小さく保つ。 */
+  export const TTL_MS = 10 * 60 * 1000;
+
   const _specs = defineSpecs({
-    ByValue: (nonce: string) => ({ nonce }),
+    ByValue: (nonce: Token) => ({ nonce }),
     /** expires_at > at */
     ActiveAt: (at: Date) => ({ activeAt: at }),
     /** expires_at <= at */
@@ -33,20 +36,28 @@ export namespace OidcNonce {
     const result: Record<string, string> = {};
     for (const key of keys) {
       const value = n[key];
-      result[key] = value instanceof Date ? value.toISOString() : String(value);
+      if (value instanceof Date) {
+        result[key] = value.toISOString();
+      } else if (value instanceof Token) {
+        result[key] = value.toBase64url();
+      } else {
+        result[key] = String(value);
+      }
     }
     return result;
   }
 
   export function create(params: {
-    nonce: string;
-    expiresAt: Date;
+    /** 省略時は CSPRNG で新しい Token を発行。test で固定値を使う場合のみ渡す。 */
+    nonce?: Token;
+    /** 省略時は `now + TTL_MS`。test で期限切れ検証をする場合のみ渡す。 */
+    expiresAt?: Date;
     now: Date;
   }): OidcNonce {
     return {
-      nonce: params.nonce,
+      nonce: params.nonce ?? Token.generate(),
       createdAt: params.now,
-      expiresAt: params.expiresAt,
+      expiresAt: params.expiresAt ?? new Date(params.now.getTime() + TTL_MS),
     };
   }
 }
