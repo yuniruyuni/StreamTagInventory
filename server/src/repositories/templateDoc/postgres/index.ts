@@ -8,6 +8,7 @@ import {
 import type { TemplateDocRepository as ITemplateDocRepository } from "../repository";
 import { del } from "./delete";
 import { get } from "./get";
+import { lockByUserId } from "./lock";
 import { upsert } from "./upsert";
 
 export class TemplateDocRepository implements ITemplateDocRepository {
@@ -22,5 +23,8 @@ export class TemplateDocRepository implements ITemplateDocRepository {
   }
   async delete(ctx: DbWriteCtx, spec: Comp<TemplateDoc.Spec>): Promise<number> {
     return del(ctx.db, spec);
+  }
+  async lockByUserId(ctx: DbWriteCtx, userId: string): Promise<void> {
+    return lockByUserId(ctx.db, userId);
   }
 }
