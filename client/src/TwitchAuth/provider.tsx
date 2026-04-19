@@ -4,6 +4,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -23,6 +24,19 @@ import {
 /** nonce を Twitch redirect 往復の間に保管する sessionStorage key */
 const NONCE_STORAGE_KEY = "oauth_nonce";
 
+/**
+ * mount 時点で sessionStorage に nonce が無ければ同期的に発行する。
+ * useState の lazy init は first render の前に走るため、authorize URL を組み
+ * 立てる時点で必ず sessionStorage に nonce が居る状態が保証される。
+ */
+function ensureNonce(): string {
+  const existing = sessionStorage.getItem(NONCE_STORAGE_KEY);
+  if (existing) return existing;
+  const fresh = generateNonce();
+  sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
+  return fresh;
+}
+
 type Props = {
   scope: string[];
   entrance: (uri: string) => ReactNode;
@@ -39,10 +53,11 @@ type Props = {
  * いずれも sessionStorage で寿命が揃う (tab close で両方消滅)。
  *
  * **状態遷移**:
+ *   - mount 時に nonce を必ず発行 (`ensureNonce` の lazy init)。authorize URL は
+ *     nonce から純粋に derive する
  *   - URL fragment あり → Phase A が nonce 照合 → idToken/accessToken 保存
  *   - idToken 有 + auth.me 200 → 完全ログイン
  *   - idToken 有 + auth.me 401 → Phase B が両方クリアして Entrance へ落とす
- *   - idToken 無 → Phase C が nonce を生成して authorize URL を組み立てる
  *
  * **race の排除**: ADR 0007 で server side の login/startNonce mutation を撤去
  * したため、本 provider に async mutation phase は存在しない。idToken の
@@ -53,14 +68,13 @@ export const TwitchAuthProvider: FC<Props> = ({
   entrance,
   children,
 }) => {
-  // access_token と id_token は別 key で保管。setter / remover を別個に持つ。
   const [accessToken, setAccessToken, removeAccessToken] =
     useSession<AuthToken>("twitch-auth", "");
   const [idToken, setIdToken, removeIdToken] = useSession<AuthToken>(
     "twitch-id-token",
     "",
   );
-  const [authorizeUrl, setAuthorizeUrl] = useState<string | null>(null);
+  const [nonce, setNonce] = useState<string>(ensureNonce);
   const callbackHandledRef = useRef(false);
   const queryClient = useQueryClient();
 
@@ -77,6 +91,17 @@ export const TwitchAuthProvider: FC<Props> = ({
     setIdTokenForTrpc(idToken || null);
   }, [idToken]);
 
+  /**
+   * 現 nonce を消費し、次回ログイン用に新しい nonce を発行する。
+   * sessionStorage と React state の両方を同期的に更新する。
+   */
+  const rotateNonce = useCallback(() => {
+    sessionStorage.removeItem(NONCE_STORAGE_KEY);
+    const fresh = generateNonce();
+    sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
+    setNonce(fresh);
+  }, []);
+
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
   // access_token を sessionStorage に保管する。`callbackHandledRef` で
   // StrictMode の double-invoke もガード。
@@ -88,56 +113,48 @@ export const TwitchAuthProvider: FC<Props> = ({
     callbackHandledRef.current = true;
     clearHash();
 
-    const storedNonce = sessionStorage.getItem(NONCE_STORAGE_KEY);
-    sessionStorage.removeItem(NONCE_STORAGE_KEY);
     const claimNonce = peekIdTokenNonce(parsed.idToken);
-    if (!storedNonce || storedNonce !== claimNonce) {
+    if (claimNonce !== nonce) {
       // mix-up 攻撃 or sessionStorage が途中でクリアされた等。callback を破棄
-      // して Phase C に Entrance フローを再開させる。
+      // して新しい nonce で Entrance をやり直させる。
       console.warn("id_token nonce mismatch; rejecting Twitch callback");
       callbackHandledRef.current = false;
+      rotateNonce();
       return;
     }
 
+    // 一致 → consume + 次回用に新規発行
+    rotateNonce();
     setAccessToken(parsed.accessToken);
     setIdToken(parsed.idToken);
     // 直後に meQuery が enable 化して identity を取りに行く
   }, []);
 
   // Phase B: idToken 有 + meQuery 401 → 期限切れ or サーバー側で reject。
-  // 両方クリアして Entrance へ落とす。
+  // 両方クリア + 新 nonce 発行して Entrance へ落とす。
   useEffect(() => {
     if (idToken && meQuery.isError) {
       console.warn("id_token rejected by server; clearing local tokens");
       removeIdToken();
       removeAccessToken();
+      rotateNonce();
     }
-  }, [idToken, meQuery.isError, removeIdToken, removeAccessToken]);
+  }, [idToken, meQuery.isError, removeIdToken, removeAccessToken, rotateNonce]);
 
-  // Phase C: idToken が無い → Entrance URL を組み立てる。
-  // nonce は sessionStorage に既に有れば再利用 (Phase A の nonce ライフサイクルと
-  // 整合)、無ければ新規生成して保管する。
-  // scope は呼出側で毎レンダー新しい配列になり得るので key 化して deps に乗せる。
+  // scope は呼出側で毎レンダー新しい配列になり得るので、内容ベースの key で deps 化。
+  // string が同じなら React の Object.is 比較で useMemo は前回の値を維持する。
   const scopeKey = scope.join(" ");
+  // authorize URL は idToken / nonce / scopeKey から純粋に derive。useEffect 不要。
   // biome-ignore lint/correctness/useExhaustiveDependencies: scope は scopeKey で代替
-  useEffect(() => {
-    if (idToken) {
-      setAuthorizeUrl(null);
-      return;
-    }
-    let nonce = sessionStorage.getItem(NONCE_STORAGE_KEY);
-    if (!nonce) {
-      nonce = generateNonce();
-      sessionStorage.setItem(NONCE_STORAGE_KEY, nonce);
-    }
+  const authorizeUrl = useMemo<string | null>(() => {
+    if (idToken) return null;
     const provider = getAuthProvider({
       get: () => idToken,
       set: setIdToken,
       remove: removeIdToken,
     });
-    const uri = provider.getEntranceUri(`${APP_BASE_URL}/`, scope, nonce);
-    setAuthorizeUrl(uri);
-  }, [idToken, scopeKey, setIdToken, removeIdToken]);
+    return provider.getEntranceUri(`${APP_BASE_URL}/`, scope, nonce);
+  }, [idToken, nonce, scopeKey, setIdToken, removeIdToken]);
 
   const logout = useCallback(async () => {
     // server 側に通知すべき状態は無い (ADR 0007: stateless)。client local の
@@ -145,11 +162,10 @@ export const TwitchAuthProvider: FC<Props> = ({
     // 再開させる。cache を残すと次の user で stale な me / template が flash する。
     removeIdToken();
     removeAccessToken();
-    sessionStorage.removeItem(NONCE_STORAGE_KEY);
     queryClient.clear();
     callbackHandledRef.current = false;
-    setAuthorizeUrl(null);
-  }, [removeIdToken, removeAccessToken, queryClient]);
+    rotateNonce();
+  }, [removeIdToken, removeAccessToken, queryClient, rotateNonce]);
 
   // --- Render ---
 
