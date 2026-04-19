@@ -1,5 +1,7 @@
 # PR 4: tRPC 拡張 + middleware + auth ルーター
 
+> **Updated 2026-04-19**: 本プランは当初 HttpOnly Cookie + CSRF double-submit で書かれていたが、[ADR 0006](../adr/0006-session-token-via-bearer-header.md) により session token は `Authorization: Bearer` ヘッダで運ぶ設計に変更された。以下の記述のうち「CSRF middleware」「`__Host-sid` Cookie」「cookieJar 抽象」「`csrf_token` 列 / `Session.csrfToken` field」は **全て不要** になっている。code 側が authoritative。本 plan は歴史資料として残置。
+
 ## コンテキスト
 
 ### このシリーズについて

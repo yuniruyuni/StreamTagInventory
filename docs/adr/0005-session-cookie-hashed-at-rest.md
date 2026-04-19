@@ -1,10 +1,10 @@
 ---
 id: "0005"
 title: "session cookie は raw 32B トークン、DB は SHA-256 ハッシュで分離保管する"
-status: "accepted"
+status: "superseded"
 date: "2026-04-19"
 supersedes: null
-superseded_by: null
+superseded_by: "0006"
 related_specres: []
 tags: ["auth", "security", "cookie"]
 ---
