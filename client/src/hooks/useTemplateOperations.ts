@@ -1,5 +1,4 @@
-import { arrayMove } from "@dnd-kit/sortable";
-import { type Dispatch, useCallback, useContext } from "react";
+import { useCallback, useContext } from "react";
 import useSWRMutation from "swr/mutation";
 import { ulid } from "ulid";
 import { dep, twitch } from "~/fetcher";
@@ -7,12 +6,11 @@ import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useNotification } from "~/Notification";
+import { useTemplates } from "~/sync/useTemplates";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { exportTemplates, importTemplates } from "~/utils/templateIO";
 
 type UseTemplateOperationsProps = {
-  templates: Template[];
-  setTemplates: Dispatch<Template[]>;
   users?: User[];
 };
 
@@ -28,19 +26,26 @@ type UseTemplateOperationsResult = {
 };
 
 /**
- * カスタムフック: テンプレート操作機能（移動、適用、削除、複製、保存、インポート、エクスポート、追加）を提供する
+ * テンプレート操作 (移動, 適用, 削除, 複製, 保存, インポート, エクスポート, 追加) を提供する。
  *
- * @param props テンプレート配列、テンプレート更新関数、ユーザー情報
- * @returns テンプレート操作用のハンドラー関数群
+ * PR 7: テンプレート CRUD は `useTemplates` (Y.Doc) に委譲する。Twitch API 呼出
+ * (apply / marker) は無変更。Import/Export はファイル I/O 経由のため Y.Doc とは
+ * 独立して動かす (imported list を bulk merge する)。
  */
 export const useTemplateOperations = ({
-  templates,
-  setTemplates,
   users,
 }: UseTemplateOperationsProps): UseTemplateOperationsResult => {
   const { i18n, t } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
   const { addNotification } = useNotification();
+  const {
+    templates,
+    addTemplate,
+    updateTemplate,
+    removeTemplate,
+    moveTemplate,
+    bulkReplace,
+  } = useTemplates();
 
   const { trigger: applyTemplate } = useSWRMutation(
     () => [
@@ -71,24 +76,9 @@ export const useTemplateOperations = ({
   );
 
   const onMoveTemplate = useCallback(
-    (sourceId: string, destinationId: string) => {
-      // Find the corresponding indices in the templates array
-      const sourceIndex = templates.findIndex((t) => t.id === sourceId);
-      const destinationIndex = templates.findIndex(
-        (t) => t.id === destinationId,
-      );
-
-      // Only proceed if both templates were found
-      if (
-        sourceIndex !== -1 &&
-        destinationIndex !== -1 &&
-        sourceIndex !== destinationIndex
-      ) {
-        const moved = arrayMove(templates, sourceIndex, destinationIndex);
-        setTemplates(moved);
-      }
-    },
-    [templates, setTemplates],
+    (sourceId: string, destinationId: string) =>
+      moveTemplate(sourceId, destinationId),
+    [moveTemplate],
   );
 
   const onApplyTemplate = useCallback(
@@ -117,58 +107,40 @@ export const useTemplateOperations = ({
   );
 
   const onRemoveTemplate = useCallback(
-    (removed: Template) => {
-      const newTemplates = [...templates];
-      const index = newTemplates.findIndex((t) => t.id === removed.id);
-      newTemplates.splice(index, 1);
-      setTemplates(newTemplates);
-    },
-    [templates, setTemplates],
+    (removed: Template) => removeTemplate(removed.id),
+    [removeTemplate],
   );
 
   const onCloneTemplate = useCallback(
-    (cloned: Template) => {
-      const clone = { ...cloned, id: ulid() };
-      const newTemplates = [...templates];
-      const index = newTemplates.findIndex((t) => t.id === cloned.id);
-      newTemplates.splice(index + 1, 0, clone);
-      setTemplates(newTemplates);
-    },
-    [templates, setTemplates],
+    (cloned: Template) => addTemplate({ ...cloned, id: ulid() }),
+    [addTemplate],
   );
 
   const onSaveTemplate = useCallback(
-    (saved: Template) => {
-      const newTemplates = [...templates];
-      const index = newTemplates.findIndex((t) => t.id === saved.id);
-      newTemplates[index] = saved;
-      setTemplates(newTemplates);
-    },
-    [templates, setTemplates],
+    (saved: Template) => updateTemplate(saved),
+    [updateTemplate],
   );
 
   const processImportedTemplates = useCallback(
     (importedTemplates: Template[]) => {
-      // Avoid duplicates by checking IDs
+      // 既存 id と被らない分だけ append する。bulkReplace ではなく既存 + 新規を
+      // bulkReplace する形 (Y.Array に append でも良いが、CRDT 的に一括 op の
+      // ほうが echo 1 回で済む)
       const existingIds = new Set(templates.map((t) => t.id));
-      const newTemplates = importedTemplates.filter(
-        (t) => !existingIds.has(t.id),
-      );
+      const newOnes = importedTemplates.filter((t) => !existingIds.has(t.id));
 
-      if (newTemplates.length > 0) {
-        setTemplates([...templates, ...newTemplates]);
-
-        // Show a notification when templates are imported
+      if (newOnes.length > 0) {
+        bulkReplace([...templates, ...newOnes]);
         addNotification({
           type: "success",
           title: t("template.importTemplates"),
-          message: `${t("template.importTemplates")}: ${newTemplates.length} templates`,
+          message: `${t("template.importTemplates")}: ${newOnes.length} templates`,
           autoClose: true,
         });
       }
       return importedTemplates;
     },
-    [templates, setTemplates, addNotification, t],
+    [templates, bulkReplace, addNotification, t],
   );
 
   const onExportTemplates = useCallback(() => {
@@ -180,7 +152,6 @@ export const useTemplateOperations = ({
       const importedTemplates = await importTemplates();
       processImportedTemplates(importedTemplates);
     } catch (error) {
-      // Show error notification if import fails
       addNotification({
         type: "error",
         title: t("error.template.import.title"),
@@ -193,10 +164,8 @@ export const useTemplateOperations = ({
   }, [processImportedTemplates, addNotification, t]);
 
   const onAddTemplate = useCallback(
-    (template: Template) => {
-      setTemplates([...templates, template]);
-    },
-    [templates, setTemplates],
+    (template: Template) => addTemplate(template),
+    [addTemplate],
   );
 
   return {

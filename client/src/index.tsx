@@ -5,6 +5,7 @@ import "./i18n";
 import { Entrance } from "./Entrance";
 import { MainScreen } from "./MainScreen";
 import { NotificationContainer, NotificationProvider } from "./Notification";
+import { TemplateDocProvider } from "./sync/TemplateDocProvider";
 import { TwitchAuthProvider } from "./TwitchAuth";
 import { TRPCProvider } from "./trpc/provider";
 
@@ -23,7 +24,9 @@ if (root) {
             ]}
             entrance={(uri) => <Entrance uri={uri} />}
           >
-            <MainScreen />
+            <TemplateDocProvider>
+              <MainScreen />
+            </TemplateDocProvider>
           </TwitchAuthProvider>
         </NotificationProvider>
       </TRPCProvider>
