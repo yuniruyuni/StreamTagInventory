@@ -21,6 +21,13 @@ jobs:
     with:
       dockerfile: Dockerfile
       image_name: stream-tag-inventory
+      # production 用 client bundle に焼き込む public env (BUN_PUBLIC_* allowlist 経由)。
+      # 本番 Twitch app の client_id は OAuth 仕様上公開値、APP_BASE_URL は
+      # redirect_uri 構築に使う。これを渡さないと bundle 内 default の
+      # http://localhost:3000 が焼き込まれて Twitch redirect が production で機能しない。
+      build_args: |
+        BUN_PUBLIC_TWITCH_CLIENT_ID=d2kz8x5se7k6b1n0picux0r7kaozi3
+        BUN_PUBLIC_APP_BASE_URL=https://tags.yuniruyuni.net
     secrets: inherit
 
   build-migration:

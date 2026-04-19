@@ -9,6 +9,10 @@ on:
       image_name:
         required: true
         type: string
+      build_args:
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -45,7 +49,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image
-        run: docker build -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
+        # `build_args` は改行区切りの "KEY=VALUE" 列。空なら追加引数なし。
+        # eg. "BUN_PUBLIC_APP_BASE_URL=https://example.com\nBUN_PUBLIC_X=foo"
+        run: |
+          BUILD_ARG_FLAGS=""
+          if [ -n "${{ inputs.build_args }}" ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              BUILD_ARG_FLAGS="$BUILD_ARG_FLAGS --build-arg $line"
+            done <<< "${{ inputs.build_args }}"
+          fi
+          docker build $BUILD_ARG_FLAGS -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
 
       - name: Push to Artifact Registry
         run: |
