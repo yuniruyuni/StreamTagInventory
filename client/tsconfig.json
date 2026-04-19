@@ -11,7 +11,8 @@
     /* Alias */
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@/*": ["../server/src/*"]
     },
     "ignoreDeprecations": "6.0",
 
@@ -29,7 +30,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
+    // allowUnreachableCode は未指定 (= true)。server 側の defensive
+    // `throw after exhaustive switch` パターンが workspace type import 経由で
+    // tsc に拾われるため、強制 false にしない
 
     /* Debugging */
     "sourceMap": true

@@ -1,32 +1,41 @@
 import { expect, test } from "bun:test";
-import { CLIENT_ID } from "~/constant";
-import { generateURI, parseTokenFromHash } from "./utils";
+import { clearHash, parseAuthFromHash } from "./utils";
 
-test("generateURI関数が正しいURIを生成する", () => {
-  const auth = {
-    redirect_url: "https://example.com/callback",
-    response_type: "token",
-    scope: ["user:read:email", "channel:read:subscriptions"],
-  };
-
-  const expectedURI = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${auth.redirect_url}&response_type=${auth.response_type}&scope=${auth.scope.join("+")}`;
-
-  const result = generateURI(auth);
-  expect(result).toBe(expectedURI);
-});
-
-test("parseTokenFromHash関数がURLハッシュからトークンを取得する", () => {
+test("parseAuthFromHash extracts access_token and id_token", () => {
   const orig = window.location.hash;
-  window.location.hash = "#access_token=mock-token&other=value";
-  const result = parseTokenFromHash();
-  expect(result).toBe("mock-token");
+  window.location.hash =
+    "#access_token=at&id_token=it&token_type=bearer&expires_in=3600";
+  const result = parseAuthFromHash();
+  expect(result).toEqual({ accessToken: "at", idToken: "it" });
   window.location.hash = orig;
 });
 
-test("parseTokenFromHash関数がトークンがない場合はnullを返す", () => {
+test("parseAuthFromHash returns null when access_token is missing", () => {
   const orig = window.location.hash;
-  window.location.hash = "#other=value";
-  const result = parseTokenFromHash();
-  expect(result).toBeNull();
+  window.location.hash = "#id_token=it";
+  expect(parseAuthFromHash()).toBeNull();
+  window.location.hash = orig;
+});
+
+test("parseAuthFromHash returns null when id_token is missing", () => {
+  const orig = window.location.hash;
+  window.location.hash = "#access_token=at";
+  expect(parseAuthFromHash()).toBeNull();
+  window.location.hash = orig;
+});
+
+test("parseAuthFromHash returns null for empty hash", () => {
+  const orig = window.location.hash;
+  window.location.hash = "";
+  expect(parseAuthFromHash()).toBeNull();
+  window.location.hash = orig;
+});
+
+test("clearHash removes the URL fragment", () => {
+  const orig = window.location.hash;
+  window.location.hash = "#some-hash";
+  expect(window.location.hash).toBe("#some-hash");
+  clearHash();
+  expect(window.location.hash).toBe("");
   window.location.hash = orig;
 });

@@ -25,7 +25,9 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const logout = mock();
   return (
     <I18nextProvider i18n={i18n}>
-      <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+      <TwitchAuthContext.Provider
+        value={{ token: "test-token", logout, user: null }}
+      >
         {children}
       </TwitchAuthContext.Provider>
     </I18nextProvider>
@@ -41,7 +43,9 @@ test("Menuコンポーネントが正しくレンダリングされる", () => {
   const onExport = mock(() => {});
 
   const { getByText, getByAltText } = render(
-    <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+    <TwitchAuthContext.Provider
+      value={{ token: "test-token", logout, user: null }}
+    >
       <Menu
         user={user}
         onSearch={onSearch}
@@ -71,7 +75,9 @@ test("ドロップダウンメニューにLogoutボタンが含まれている",
   const onExport = mock(() => {});
 
   const { getByText } = render(
-    <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+    <TwitchAuthContext.Provider
+      value={{ token: "test-token", logout, user: null }}
+    >
       <Menu
         user={user}
         onSearch={onSearch}
@@ -96,7 +102,9 @@ test("Logoutボタンをクリックするとlogout関数が呼び出される",
   const onExport = mock(() => {});
 
   render(
-    <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+    <TwitchAuthContext.Provider
+      value={{ token: "test-token", logout, user: null }}
+    >
       <Menu
         user={user}
         onSearch={onSearch}
@@ -123,7 +131,9 @@ test("アプリ名がホームページへのリンクになっている", () =>
   const onExport = mock(() => {});
 
   const { getByText } = render(
-    <TwitchAuthContext.Provider value={{ token: "test-token", logout }}>
+    <TwitchAuthContext.Provider
+      value={{ token: "test-token", logout, user: null }}
+    >
       <Menu
         user={user}
         onSearch={onSearch}

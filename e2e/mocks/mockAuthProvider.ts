@@ -33,8 +33,12 @@ export class MockAuthProvider implements AuthProvider {
     return this.token === null;
   }
 
-  getEntranceUri(): string {
-    // Mock login URL
+  getEntranceUri(
+    _redirectUrl: string,
+    _scope: string[],
+    _nonce: string,
+  ): string {
+    // Mock login URL。Bearer フロー用の e2e mock 再設計は PR 8 で行う予定。
     return "#mock-login";
   }
 }

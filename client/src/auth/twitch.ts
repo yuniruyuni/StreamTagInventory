@@ -34,12 +34,18 @@ export class TwitchAuthProvider implements AuthProvider {
     return !currentToken || currentToken === "";
   }
 
-  getEntranceUri(redirectUrl: string, scope: string[]): string {
+  getEntranceUri(redirectUrl: string, scope: string[], nonce: string): string {
+    // Implicit Hybrid: access_token (Twitch API 用) と id_token (server 識別用)
+    // を同時に取る。openid scope + nonce は OIDC 仕様上必須。
     const params = new URLSearchParams({
-      response_type: "token",
+      response_type: "token id_token",
       client_id: CLIENT_ID,
       redirect_uri: redirectUrl,
-      scope: scope.join(" "),
+      scope: ["openid", ...scope].join(" "),
+      nonce,
+      claims: JSON.stringify({
+        id_token: { preferred_username: null },
+      }),
     });
     return `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
   }
