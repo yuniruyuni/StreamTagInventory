@@ -12,7 +12,9 @@ spec:
           containers:
             - image: IMAGE_PLACEHOLDER
               env:
-                - name: DB_APP_NAME
+                - name: DB_USER
+                  value: stream_tag_inventory
+                - name: DB_NAME
                   value: stream_tag_inventory
                 # NOTE: migration job は owner pw (DDL 必要)。-app- サフィックス付きの app user pw は使わない
                 - name: DB_PASSWORD

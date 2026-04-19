@@ -18,9 +18,9 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
 
   const host = process.env.PGHOST ?? "localhost";
   const port = Number(process.env.PGPORT ?? 5432);
-  const user = process.env.DB_APP_NAME ?? "twitch_tag_inventory";
-  const password = process.env.DB_PASSWORD ?? "twitch_tag_inventory";
-  const database = process.env.DB_APP_NAME ?? "twitch_tag_inventory";
+  const user = process.env.DB_USER ?? "stream_tag_inventory";
+  const password = process.env.DB_PASSWORD ?? "stream_tag_inventory";
+  const database = process.env.DB_NAME ?? "stream_tag_inventory";
 
   log.info(`Connecting to PostgreSQL at ${host}:${port}/${database}...`);
   db = new PgDatabase({ host, port, user, password, database });
