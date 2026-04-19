@@ -25,6 +25,10 @@ export class InventoryState extends BaseState {
   }
 
   async expectRedirectedToLogin(): Promise<void> {
-    await expect(this.page.getByRole("link")).toBeVisible();
+    // Entrance には複数のリンク (Login with Twitch / author info) が並ぶため、
+    // 明示的に "Login with Twitch" を狙って strict mode 違反を避ける。
+    await expect(
+      this.page.getByRole("link", { name: "Login with Twitch" }),
+    ).toBeVisible();
   }
 }
