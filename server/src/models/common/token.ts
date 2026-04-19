@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 /**
  * CSPRNG 由来の推測不能な識別子。OIDC nonce / CSRF token / session bearer
@@ -47,5 +47,18 @@ export class Token {
     const b = Buffer.from(other.value, "base64url");
     if (a.length !== b.length) return false;
     return timingSafeEqual(a, b);
+  }
+
+  /**
+   * SHA-256 ハッシュを base64url 文字列で返す。session cookie の DB 照合用
+   * (ADR 0005: cookie = raw / DB = sha256 分離)。
+   *
+   * 入力は decode 済の raw bytes に対して hash するため、base64url 表記の
+   * padding / alphabet ドリフトの影響を受けない。出力も 32 bytes → 43 文字の
+   * no-padding base64url で、Token の内部表現と同形式。
+   */
+  hash(): string {
+    const bytes = Buffer.from(this.value, "base64url");
+    return createHash("sha256").update(bytes).digest("base64url");
   }
 }

@@ -1,20 +1,26 @@
-import type { Session } from "@/models/session";
-import type { User } from "@/models/user";
-import { type Usecase, usecase } from "@/usecases/runner";
+import type { SessionContext, UserContext } from "@/usecases/context";
 
 /**
- * 認証済ユーザーの現在の identity を返す。
+ * 認証済ユーザーの identity と CSRF token を返す presentation 用射影。
  *
- * 入力・出力とも `{ user: User; session: Session }` の Model 合成。PR 4 で
- * auth middleware が cookie から session/user を解決し、この usecase 経由で
- * frontend に渡す構図になる。presentation 層で csrf_token 等のフィールドだけ
- * projection する。
+ * DB I/O を伴わないため usecase runner には乗せない。middleware が既に
+ * resolve した `SessionContext` / `UserContext` をそのまま受け取り、HTTP
+ * 応答に必要な形へ projection するだけの pure 関数。
  *
- * runner は pre 不在時 `state = input` として scaffold するので、write / result
- * すら不要。input がそのまま result に流れる。
- * 呼出は `me.run(ctx, { user, session })`。
+ * 呼出側 (auth.me endpoint) は `protectedProcedure` により `ctx.user` /
+ * `ctx.session` が non-nullable に narrow された状態で渡す。
  */
-export const me: Usecase<
-  { user: User; session: Session },
-  { user: User; session: Session }
-> = usecase({});
+export interface MeResult {
+  user: UserContext;
+  csrfToken: string;
+}
+
+export function meHandler(
+  user: UserContext,
+  session: SessionContext,
+): MeResult {
+  return {
+    user,
+    csrfToken: session.csrfToken.toBase64url(),
+  };
+}

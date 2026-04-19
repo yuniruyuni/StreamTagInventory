@@ -3,6 +3,12 @@ import { defineSpecs, generateId, type SpecsOf, Token } from "../common";
 export interface Session {
   id: string;
   userId: string;
+  /**
+   * Cookie に出す raw bearer token の sha256(base64url) ハッシュ。ADR 0005 に
+   * より、raw 値は DB に置かない。middleware は cookie 値を hash してから
+   * `Session.ByTokenHash(hash)` で照合する。
+   */
+  tokenHash: string;
   csrfToken: Token;
   createdAt: Date;
   expiresAt: Date;
@@ -22,6 +28,8 @@ export namespace Session {
   const _specs = defineSpecs({
     ById: (id: string) => ({ id }),
     ByUserId: (userId: string) => ({ userId }),
+    /** cookie 値を sha256 した hash で照合 (ADR 0005)。 */
+    ByTokenHash: (hash: string) => ({ tokenHash: hash }),
     /** expires_at > at */
     ActiveAt: (at: Date) => ({ activeAt: at }),
     /** expires_at <= now() */
@@ -29,6 +37,7 @@ export namespace Session {
   });
   export const ById = _specs.ById;
   export const ByUserId = _specs.ByUserId;
+  export const ByTokenHash = _specs.ByTokenHash;
   export const ActiveAt = _specs.ActiveAt;
   export const Expired = _specs.Expired;
 
@@ -52,6 +61,12 @@ export namespace Session {
 
   export function create(params: {
     userId: string;
+    /**
+     * 必須。ADR 0005 に従い cookie 値の sha256(base64url) ハッシュを渡す。
+     * 呼出側 (login usecase) で `Token.generate().hash()` を計算し、raw Token
+     * は戻り値として cookie に出すが DB には置かない。
+     */
+    tokenHash: string;
     /** 省略時は CSPRNG で新しい Token を発行。test で固定値を使う場合のみ渡す。 */
     csrfToken?: Token;
     /** 省略時は `now + TTL_MS`。test で期限切れ検証をする場合のみ渡す。 */
@@ -61,6 +76,7 @@ export namespace Session {
     return {
       id: generateId(),
       userId: params.userId,
+      tokenHash: params.tokenHash,
       csrfToken: params.csrfToken ?? Token.generate(),
       createdAt: params.now,
       expiresAt: params.expiresAt ?? new Date(params.now.getTime() + TTL_MS),

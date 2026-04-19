@@ -6,7 +6,9 @@ import type { Session } from "@/models/session";
 export interface SessionRow {
   id: string;
   user_id: string;
-  /** DB 列は TEXT。Model の Token 内部表現 (base64url) と 1:1 対応する。 */
+  /** sha256(raw cookie) の base64url。ADR 0005。 */
+  token_hash: string;
+  /** csrf_token は TEXT。Model の Token 内部表現 (base64url) と 1:1 対応。 */
   csrf_token: string;
   created_at: Date | string;
   expires_at: Date | string;
@@ -19,6 +21,8 @@ export function sessionSpecToSQL(spec: Session.Spec): SQLFragment {
       return sql`id = ${spec.id}`;
     case "ByUserId":
       return sql`user_id = ${spec.userId}`;
+    case "ByTokenHash":
+      return sql`token_hash = ${spec.tokenHash}`;
     case "ActiveAt":
       return sql`expires_at > ${dateToSQL(spec.activeAt)}`;
     case "Expired":
@@ -30,6 +34,7 @@ export function rowToSession(row: SessionRow): Session {
   return {
     id: row.id,
     userId: row.user_id,
+    tokenHash: row.token_hash,
     csrfToken: Token.fromBase64url(row.csrf_token),
     createdAt: dateFromSQL(row.created_at),
     expiresAt: dateFromSQL(row.expires_at),

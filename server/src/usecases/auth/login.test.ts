@@ -105,6 +105,13 @@ describe("loginUsecase", () => {
     expect(result.value.session.csrfToken.toBase64url()).toMatch(
       /^[A-Za-z0-9_-]{43}$/,
     );
+    // rawSessionToken は cookie 出力用 (ADR 0005)。43 文字 base64url、
+    // DB 側は hash のみ保持するため raw は戻り値だけに現れる。
+    expect(result.value.rawSessionToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    // session.tokenHash は rawSessionToken の sha256(base64url) と一致する
+    expect(result.value.session.tokenHash).toBe(
+      Token.fromBase64url(result.value.rawSessionToken).hash(),
+    );
     expect(result.value.session.expiresAt.getTime()).toBeGreaterThan(
       now.getTime(),
     );

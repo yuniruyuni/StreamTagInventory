@@ -1,6 +1,7 @@
 import type { JWTVerifyGetKey } from "jose";
 import type { Database } from "../infra/db/database";
 import type { ILogger } from "../infra/logger/types";
+import type { Token } from "../models/common";
 import type { Repos } from "../repositories";
 import type {
   DbRead,
@@ -20,6 +21,43 @@ export interface TwitchConfig {
   jwks: JWTVerifyGetKey;
 }
 
+/**
+ * presentation 層の Hono middleware が resolve した session / user の射影。
+ * Model 全列ではなく、usecase / router が必要とする最小フィールドに絞る。
+ * tokenHash など DB 内部状態は意図的に持ち込まない (ADR 0005 の境界)。
+ */
+export interface SessionContext {
+  id: string;
+  userId: string;
+  csrfToken: Token;
+  expiresAt: Date;
+}
+
+export interface UserContext {
+  id: string;
+  twitchUserId: string;
+  login: string;
+  displayName: string;
+}
+
+/**
+ * Hono の cookie API を tRPC router から触れるようにする抽象。
+ * tRPC は HTTP を持たないため、createContext callback で Hono `c` から閉じた
+ * set / delete 関数を埋めて渡す。
+ */
+export interface CookieOptions {
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+  path?: string;
+  maxAge?: number;
+}
+
+export interface CookieJar {
+  set: (name: string, value: string, options: CookieOptions) => void;
+  delete: (name: string, options: { path?: string }) => void;
+}
+
 export interface Context {
   now: Date;
   logger: ILogger;
@@ -27,6 +65,12 @@ export interface Context {
   rawRepos: Repos;
   repos: FullRepos<Repos>;
   twitch: TwitchConfig;
+  /** middleware が resolve した session。未ログイン時は undefined。 */
+  session?: SessionContext;
+  /** middleware が resolve した user。未ログイン時は undefined。 */
+  user?: UserContext;
+  /** tRPC context builder が cookie API を注入する。test / 非 HTTP は undefined。 */
+  cookieJar?: CookieJar;
 }
 
 type DbReadRepos<T> = { [K in keyof T]: DbRead<T[K]> };

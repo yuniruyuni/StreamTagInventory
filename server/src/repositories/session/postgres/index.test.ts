@@ -55,6 +55,18 @@ describe("SessionRepository upsert + get", () => {
     expect(retrieved?.id).toBe(session.id);
   });
 
+  test("ByTokenHash retrieves the session by its stored hash", async () => {
+    const session = createTestSession({ userId });
+    await sessionRepo.upsert(wCtx, session);
+
+    const retrieved = await sessionRepo.get(
+      rCtx,
+      Session.ByTokenHash(session.tokenHash),
+    );
+    expect(retrieved?.id).toBe(session.id);
+    expect(retrieved?.tokenHash).toBe(session.tokenHash);
+  });
+
   test("upsert on same id updates last_seen_at", async () => {
     const session = createTestSession({ userId });
     await sessionRepo.upsert(wCtx, session);
