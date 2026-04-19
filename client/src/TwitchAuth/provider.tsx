@@ -1,11 +1,23 @@
-import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type FC,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { SWRConfig } from "swr";
 import { getAuthProvider } from "~/auth";
 import { APP_BASE_URL } from "~/constant";
-import { clearSid, setSid, trpc } from "~/trpc/client";
+import { trpc } from "~/trpc/client";
 import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
-import { clearHash, parseAuthFromHash } from "./utils";
+import {
+  clearHash,
+  generateNonce,
+  parseAuthFromHash,
+  peekIdTokenNonce,
+} from "./utils";
 
 /** nonce を Twitch redirect 往復の間に保管する sessionStorage key */
 const NONCE_STORAGE_KEY = "oauth_nonce";
@@ -17,140 +29,126 @@ type Props = {
 };
 
 /**
- * OIDC Implicit Hybrid Flow 用の AuthProvider (ADR 0006 = Bearer 方式)。
+ * OIDC Implicit Hybrid Flow + stateless JWT Bearer (ADR 0007) 用の AuthProvider。
  *
- * **Invariant**: Twitch session (sessionStorage の access_token) が上位、
- * server session (sessionStorage の sid) はそれに従属する。access_token と
- * sid は同じ sessionStorage に置くので寿命が揃う (tab close で両方消滅)。
+ * **設計原則**: server 側 session を持たず、Twitch id_token をそのまま Bearer
+ * として毎リクエスト送信する。client が保管する 2 値:
+ *   - `twitch-auth` (access_token) — Twitch API 直接呼出用
+ *   - `twitch-id-token` (id_token JWT) — 当 server への Bearer 認証用
+ * いずれも sessionStorage で寿命が揃う (tab close で両方消滅)。
  *
- * 状態遷移:
- *   - URL fragment あり → Phase 1 が login mutation → sid を sessionStorage 保存
- *   - access_token 有 + auth.me 200 → 完全ログイン、app 表示
- *   - access_token 有 + auth.me 401 → 乖離: token を消して Entrance へ
- *   - access_token 無 → 即 Entrance フロー (startNonce → authorize URL)
+ * **状態遷移**:
+ *   - URL fragment あり → Phase A が nonce 照合 → idToken/accessToken 保存
+ *   - idToken 有 + auth.me 200 → 完全ログイン
+ *   - idToken 有 + auth.me 401 → Phase B が両方クリアして Entrance へ落とす
+ *   - idToken 無 → Phase C が nonce を生成して authorize URL を組み立てる
  *
- * CSRF 対策は不要 (Bearer は browser が自動転送しないため、cross-site attacker
- * が他人の header を付けたリクエストを作れない。ADR 0006 参照)。
+ * **race の排除**: ADR 0007 で server side の login/startNonce mutation を撤去
+ * したため、本 provider に async mutation phase は存在しない。idToken の
+ * 有無で「ログイン状態」が一意に決まり、二重 storage の race は構造的に発生しない。
  */
 export const TwitchAuthProvider: FC<Props> = ({
   scope,
   entrance,
   children,
 }) => {
-  const [token, setToken, removeToken] = useSession<AuthToken>(
-    "twitch-auth",
+  // access_token と id_token は別 key で保管。setter / remover を別個に持つ。
+  const [accessToken, setAccessToken, removeAccessToken] =
+    useSession<AuthToken>("twitch-auth", "");
+  const [idToken, setIdToken, removeIdToken] = useSession<AuthToken>(
+    "twitch-id-token",
     "",
   );
   const [authorizeUrl, setAuthorizeUrl] = useState<string | null>(null);
-  const loginFiredRef = useRef(false);
-  const startNonceFiredRef = useRef(false);
+  const callbackHandledRef = useRef(false);
 
-  const startNonceMutation = trpc.auth.startNonce.useMutation();
-  const loginMutation = trpc.auth.login.useMutation();
-  const logoutMutation = trpc.auth.logout.useMutation();
-  // access_token が無ければ server session も意味をなさない (invariant) ので
-  // meQuery は呼ばない。Entrance で 401 ノイズが出るのも抑制。
+  // idToken が空の間は無効 (`enabled: false`) で 401 ノイズを抑制する。
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
-    enabled: !!token,
+    enabled: !!idToken,
   });
 
-  // Phase 1: Twitch callback fragment 処理 (#access_token=...&id_token=...)
+  // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
+  // access_token を sessionStorage に保管する。`callbackHandledRef` で
+  // StrictMode の double-invoke もガード。
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot on mount
   useEffect(() => {
-    if (loginFiredRef.current) return;
-    const auth = parseAuthFromHash();
-    if (!auth) return;
-    loginFiredRef.current = true;
-
-    setToken(auth.accessToken);
+    if (callbackHandledRef.current) return;
+    const parsed = parseAuthFromHash();
+    if (!parsed) return;
+    callbackHandledRef.current = true;
     clearHash();
 
     const storedNonce = sessionStorage.getItem(NONCE_STORAGE_KEY);
     sessionStorage.removeItem(NONCE_STORAGE_KEY);
-    if (!storedNonce) {
-      console.error("nonce missing from sessionStorage");
-      removeToken();
+    const claimNonce = peekIdTokenNonce(parsed.idToken);
+    if (!storedNonce || storedNonce !== claimNonce) {
+      // mix-up 攻撃 or sessionStorage が途中でクリアされた等。callback を破棄
+      // して Phase C に Entrance フローを再開させる。
+      console.warn("id_token nonce mismatch; rejecting Twitch callback");
+      callbackHandledRef.current = false;
       return;
     }
 
-    loginMutation.mutate(
-      { idToken: auth.idToken, nonce: storedNonce },
-      {
-        onSuccess: (data) => {
-          setSid(data.sid);
-          // login 成功直後に auth.me を refetch して user を更新
-          meQuery.refetch();
-        },
-        onError: (err) => {
-          console.error("login failed", err);
-          removeToken();
-        },
-      },
-    );
+    setAccessToken(parsed.accessToken);
+    setIdToken(parsed.idToken);
+    // 直後に meQuery が enable 化して identity を取りに行く
   }, []);
 
-  // Phase 2: token 有 + meQuery 401 の乖離は invariant 違反。両方クリアして
-  // Entrance へ落とす (sessionStorage の一方だけ消えたなど想定外の状態回復)。
+  // Phase B: idToken 有 + meQuery 401 → 期限切れ or サーバー側で reject。
+  // 両方クリアして Entrance へ落とす。
   useEffect(() => {
-    if (token && meQuery.isError) {
-      console.warn("access_token exists but server session is gone; resetting");
-      removeToken();
-      clearSid();
+    if (idToken && meQuery.isError) {
+      console.warn("id_token rejected by server; clearing local tokens");
+      removeIdToken();
+      removeAccessToken();
     }
-  }, [token, meQuery.isError, removeToken]);
+  }, [idToken, meQuery.isError, removeIdToken, removeAccessToken]);
 
-  // Phase 3: access_token 無しの状態で startNonce → Entrance URL を用意。
-  // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot conditional on token
+  // Phase C: idToken が無い → Entrance URL を組み立てる。
+  // nonce は sessionStorage に既に有れば再利用 (Phase A の nonce ライフサイクルと
+  // 整合)、無ければ新規生成して保管する。
+  // scope は呼出側で毎レンダー新しい配列になり得るので key 化して deps に乗せる。
+  const scopeKey = scope.join(" ");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scope は scopeKey で代替
   useEffect(() => {
-    if (startNonceFiredRef.current) return;
-    if (loginFiredRef.current) return; // Twitch callback 処理中
-    if (token) return;
-    startNonceFiredRef.current = true;
-
-    startNonceMutation.mutate(undefined, {
-      onSuccess: (data) => {
-        sessionStorage.setItem(NONCE_STORAGE_KEY, data.nonce);
-        const authProvider = getAuthProvider({
-          get: () => token,
-          set: setToken,
-          remove: removeToken,
-        });
-        const uri = authProvider.getEntranceUri(
-          `${APP_BASE_URL}/`,
-          scope,
-          data.nonce,
-        );
-        setAuthorizeUrl(uri);
-      },
-      onError: (err) => {
-        console.error("startNonce failed", err);
-      },
+    if (idToken) {
+      setAuthorizeUrl(null);
+      return;
+    }
+    let nonce = sessionStorage.getItem(NONCE_STORAGE_KEY);
+    if (!nonce) {
+      nonce = generateNonce();
+      sessionStorage.setItem(NONCE_STORAGE_KEY, nonce);
+    }
+    const provider = getAuthProvider({
+      get: () => idToken,
+      set: setIdToken,
+      remove: removeIdToken,
     });
-  }, [token]);
+    const uri = provider.getEntranceUri(`${APP_BASE_URL}/`, scope, nonce);
+    setAuthorizeUrl(uri);
+  }, [idToken, scopeKey, setIdToken, removeIdToken]);
 
-  const logout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-    } catch (err) {
-      console.error("logout failed (ignored)", err);
-    } finally {
-      clearSid();
-      removeToken();
-      sessionStorage.removeItem(NONCE_STORAGE_KEY);
-    }
-  };
+  const logout = useCallback(async () => {
+    // server 側に通知すべき状態は無い (ADR 0007: stateless)。client local の
+    // sessionStorage を全部掃除して Entrance フローを再開させるだけ。
+    removeIdToken();
+    removeAccessToken();
+    sessionStorage.removeItem(NONCE_STORAGE_KEY);
+    callbackHandledRef.current = false;
+    setAuthorizeUrl(null);
+  }, [removeIdToken, removeAccessToken]);
 
   // --- Render ---
 
-  if (token && meQuery.isPending) return <>Loading...</>;
-  if (loginMutation.isPending) return <>Loading...</>;
+  if (idToken && meQuery.isPending) return <>Loading...</>;
 
   // 完全ログイン
-  if (token && meQuery.data) {
+  if (idToken && meQuery.data) {
     return (
       <TwitchAuthContext.Provider
-        value={{ token, user: meQuery.data.user, logout }}
+        value={{ token: accessToken, user: meQuery.data.user, logout }}
       >
         <SWRConfig
           value={{
@@ -165,18 +163,6 @@ export const TwitchAuthProvider: FC<Props> = ({
           {children}
         </SWRConfig>
       </TwitchAuthContext.Provider>
-    );
-  }
-
-  if (startNonceMutation.isError) {
-    return (
-      <div style={{ padding: 16 }}>
-        <p>
-          認証準備に失敗しました
-          (auth.startNonce)。ページをリロードしてください。
-        </p>
-        <p style={{ color: "crimson" }}>{String(startNonceMutation.error)}</p>
-      </div>
     );
   }
 

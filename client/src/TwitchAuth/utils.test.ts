@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
-import { clearHash, parseAuthFromHash } from "./utils";
+import {
+  clearHash,
+  generateNonce,
+  parseAuthFromHash,
+  peekIdTokenNonce,
+} from "./utils";
 
 test("parseAuthFromHash extracts access_token and id_token", () => {
   const orig = window.location.hash;
@@ -38,4 +43,42 @@ test("clearHash removes the URL fragment", () => {
   clearHash();
   expect(window.location.hash).toBe("");
   window.location.hash = orig;
+});
+
+function b64url(s: string): string {
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function makeFakeJwt(payload: Record<string, unknown>): string {
+  const header = b64url(JSON.stringify({ alg: "RS256", kid: "x" }));
+  const body = b64url(JSON.stringify(payload));
+  return `${header}.${body}.signature-not-verified`;
+}
+
+test("peekIdTokenNonce extracts nonce claim from a well-formed JWT", () => {
+  const jwt = makeFakeJwt({ sub: "1", nonce: "abc-123" });
+  expect(peekIdTokenNonce(jwt)).toBe("abc-123");
+});
+
+test("peekIdTokenNonce returns null when nonce claim is missing", () => {
+  const jwt = makeFakeJwt({ sub: "1" });
+  expect(peekIdTokenNonce(jwt)).toBeNull();
+});
+
+test("peekIdTokenNonce returns null when nonce is not a string", () => {
+  const jwt = makeFakeJwt({ sub: "1", nonce: 42 });
+  expect(peekIdTokenNonce(jwt)).toBeNull();
+});
+
+test("peekIdTokenNonce returns null for a malformed token", () => {
+  expect(peekIdTokenNonce("not.a.jwt.at.all")).toBeNull();
+  expect(peekIdTokenNonce("only-one-segment")).toBeNull();
+  expect(peekIdTokenNonce("a.bad-base64?.c")).toBeNull();
+});
+
+test("generateNonce returns a non-empty unique string", () => {
+  const a = generateNonce();
+  const b = generateNonce();
+  expect(a.length).toBeGreaterThan(0);
+  expect(a).not.toBe(b);
 });
