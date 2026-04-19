@@ -9,7 +9,7 @@ import {
 import { SWRConfig } from "swr";
 import { getAuthProvider } from "~/auth";
 import { APP_BASE_URL } from "~/constant";
-import { trpc } from "~/trpc/client";
+import { setIdTokenForTrpc, trpc } from "~/trpc/client";
 import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
 import {
@@ -67,6 +67,13 @@ export const TwitchAuthProvider: FC<Props> = ({
     retry: false,
     enabled: !!idToken,
   });
+
+  // trpc link に現在の id_token を注入する。sessionStorage の知識は useSession が
+  // 独占し、trpc link は slot を読むだけ。render 毎に同期することで、setIdToken が
+  // 発生した直後の meQuery auto-fetch でも最新値が Bearer に乗る。
+  useEffect(() => {
+    setIdTokenForTrpc(idToken || null);
+  }, [idToken]);
 
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
   // access_token を sessionStorage に保管する。`callbackHandledRef` で
