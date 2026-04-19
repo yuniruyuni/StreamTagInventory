@@ -29,11 +29,19 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
   // 起動時に 1 回 `SELECT 1` を叩いて接続を実検証する。pg pool は lazy connect
   // なので、この確認をしないと起動ログが "Database ready" と嘘をつく一方で
   // 最初の実リクエストまで ECONNREFUSED が顕在化せず、原因特定が遅れる。
-  try {
-    await db.queryRun(sql`SELECT 1`);
-  } catch (err) {
-    log.error(`Database connection failed: ${String(err)}`);
-    throw err;
+  //
+  // ただし e2e / docker smoke test など「server は起動するが DB を要求しない」
+  // シナリオでは startup 検証で fail-early されると困るので、`SKIP_DB_VERIFY=1`
+  // が設定されていれば skip する。production では常に未設定にする。
+  if (process.env.SKIP_DB_VERIFY !== "1") {
+    try {
+      await db.queryRun(sql`SELECT 1`);
+    } catch (err) {
+      log.error(`Database connection failed: ${String(err)}`);
+      throw err;
+    }
+  } else {
+    log.warn("SKIP_DB_VERIFY=1: skipping startup SELECT 1 (CI / smoke test)");
   }
   log.info("Database ready");
 
