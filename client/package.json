@@ -39,7 +39,9 @@
     "react-i18next": "^17.0.2",
     "swr": "^2.4.1",
     "ulid": "^3.0.2",
-    "wouter": "^3.9.0"
+    "wouter": "^3.9.0",
+    "y-indexeddb": "^9.0.12",
+    "yjs": "^13.6.30"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.8.9",
