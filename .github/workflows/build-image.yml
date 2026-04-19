@@ -28,6 +28,9 @@ jobs:
       REPO_OWNER: ${{ github.repository_owner }}
       IMAGE_NAME: ${{ inputs.image_name }}
       DOCKERFILE: ${{ inputs.dockerfile }}
+      # `${{ ... }}` を run: の中に直接展開すると shell injection 可能になるため、
+      # env で先に変数として受けて run の中では `$BUILD_ARGS` で参照する。
+      BUILD_ARGS: ${{ inputs.build_args }}
       SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
@@ -51,13 +54,14 @@ jobs:
       - name: Build image
         # `build_args` は改行区切りの "KEY=VALUE" 列。空なら追加引数なし。
         # eg. "BUN_PUBLIC_APP_BASE_URL=https://example.com\nBUN_PUBLIC_X=foo"
+        # `$BUILD_ARGS` は env 経由 (security: shell injection 回避)。
         run: |
           BUILD_ARG_FLAGS=""
-          if [ -n "${{ inputs.build_args }}" ]; then
+          if [ -n "$BUILD_ARGS" ]; then
             while IFS= read -r line; do
               [ -z "$line" ] && continue
               BUILD_ARG_FLAGS="$BUILD_ARG_FLAGS --build-arg $line"
-            done <<< "${{ inputs.build_args }}"
+            done <<< "$BUILD_ARGS"
           fi
           docker build $BUILD_ARG_FLAGS -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
 
