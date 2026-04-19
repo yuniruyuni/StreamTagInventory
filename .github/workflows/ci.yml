@@ -94,8 +94,13 @@ jobs:
         run: docker build -t stream-tag-inventory .
 
       - name: Test Docker image
+        # TWITCH_CLIENT_ID は server/src/index.ts の REQUIRED_ENV 検査を通す
+        # ためのダミー。この smoke test は /health が 200 を返すかを確認する
+        # だけで、OIDC 実通信は行わない。
         run: |
-          docker run --rm -d -p 3000:3000 --name test-container stream-tag-inventory
+          docker run --rm -d -p 3000:3000 --name test-container \
+            -e TWITCH_CLIENT_ID=ci-smoke-dummy \
+            stream-tag-inventory
           sleep 5
           curl -f http://localhost:3000/health || exit 1
           docker stop test-container
