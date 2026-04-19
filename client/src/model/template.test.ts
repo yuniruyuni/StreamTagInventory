@@ -1,6 +1,12 @@
-import { expect, mock, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { newCategory } from "./category";
-import { cloneTemplate, newTemplate, validateTemplate } from "./template";
+import {
+  cloneTemplate,
+  isTemplateEqual,
+  newTemplate,
+  type Template,
+  validateTemplate,
+} from "./template";
 
 // ulidのモック
 mock.module("ulid", () => {
@@ -145,4 +151,52 @@ test("validateTemplate関数が空のタグを含むテンプレートを無効�
   };
 
   expect(validateTemplate(invalidTemplate)).toBe(false);
+});
+
+describe("isTemplateEqual", () => {
+  const base: Template = {
+    id: "t1",
+    title: "Title",
+    category: { id: "1", name: "A", box_art_url: "u" },
+    tags: ["x", "y"],
+  };
+
+  test("identical templates are equal", () => {
+    expect(isTemplateEqual(base, { ...base })).toBe(true);
+  });
+
+  test("ignores extra fields not in Category type (e.g. igdb_id)", () => {
+    // Twitch API / e2e mock が返す category には igdb_id 等の追加フィールドが
+    // 入っており、`JSON.stringify` 比較だと差異が出てしまう。本関数は宣言済
+    // フィールドだけを見るので等価判定する。
+    const withExtra = {
+      ...base,
+      category: {
+        ...base.category,
+        igdb_id: "extra",
+      } as unknown as Template["category"],
+    };
+    expect(isTemplateEqual(base, withExtra)).toBe(true);
+  });
+
+  test("title diff", () => {
+    expect(isTemplateEqual(base, { ...base, title: "Other" })).toBe(false);
+  });
+
+  test("category id diff", () => {
+    expect(
+      isTemplateEqual(base, {
+        ...base,
+        category: { ...base.category, id: "9" },
+      }),
+    ).toBe(false);
+  });
+
+  test("tags diff (length)", () => {
+    expect(isTemplateEqual(base, { ...base, tags: ["x"] })).toBe(false);
+  });
+
+  test("tags diff (content / order)", () => {
+    expect(isTemplateEqual(base, { ...base, tags: ["y", "x"] })).toBe(false);
+  });
 });
