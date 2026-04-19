@@ -20,7 +20,13 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
   const host = process.env.PGHOST ?? "localhost";
   const port = Number(process.env.PGPORT ?? 5432);
   const user = process.env.DB_USER ?? "stream_tag_inventory";
-  const password = process.env.DB_PASSWORD ?? "stream_tag_inventory";
+  // Cloud Run の secret 値は末尾改行を含む形で保管されており、env 注入時もそのまま
+  // 乗ってくる。pg は trim しないため認証が "FATAL: password authentication failed"
+  // で reject される。Secret 修正までの暫定として code 側で末尾の \r\n を落とす。
+  const password = (process.env.DB_PASSWORD ?? "stream_tag_inventory").replace(
+    /[\r\n]+$/,
+    "",
+  );
   const database = process.env.DB_NAME ?? "stream_tag_inventory";
 
   log.info(`Connecting to PostgreSQL at ${host}:${port}/${database}...`);
