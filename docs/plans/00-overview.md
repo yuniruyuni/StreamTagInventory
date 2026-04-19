@@ -47,7 +47,7 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 | `id_token` (JWT, ~1時間有効) | ✅ 毎リクエスト署名検証 | ❌ |
 | Twitch `access_token` | ❌ | ❌ |
 | Twitch `refresh_token` | ❌ (Implicit Hybrid は発行しない) | ❌ |
-| Twitch user id (`sub`) | ✅ | ✅ `users.twitch_user_id` |
+| Twitch user id (`sub`) | ✅ | ✅ `template_docs.user_id` (直接 PK。users 表は ADR 0007 で撤去) |
 | OIDC nonce | ❌ (client local) | ❌ |
 | テンプレート / postTemplate | ✅ Y.Doc バイナリの sync のみ | ✅ `template_docs` (Yjs CRDT、1 ユーザー 1 行) |
 
@@ -85,14 +85,13 @@ StreamTagInventory は Twitch 配信者向けのカテゴリ・タグ管理ツ�
 
 ## DB スキーマ概要
 
-`schema/tables/` 配下に **2 ファイル** (ADR 0007 で sessions / oidc_nonces を撤去):
+`schema/tables/` 配下に **1 ファイル** (ADR 0007 で sessions / oidc_nonces / users を全撤去):
 
-- `01_users.sql` — Twitch user id ↔ 内部 UUID マッピング
-- `template_docs.sql` — ユーザーごとの Y.Doc バイナリ (テンプレート配列と postTemplate を同居) 。1 ユーザー 1 行
+- `template_docs.sql` — ユーザーごとの Y.Doc バイナリ。`user_id TEXT PRIMARY KEY` (Twitch user id 直接) で 1 ユーザー 1 行
 
 **oauth_tokens / oauth_states テーブルは作らない** — サーバが Twitch トークンを保持しないため。
 **`templates` / `user_settings` テーブルは作らない** — ADR 0004 により Y.Doc に統合されたため。
-**`sessions` / `oidc_nonces` テーブルは作らない** — ADR 0007 により stateless JWT bearer 化、サーバー側 session 状態を持たない。
+**`sessions` / `oidc_nonces` / `users` テーブルは作らない** — ADR 0007 により stateless JWT bearer 化、サーバー側 identity 状態は JWT claim のみから組み立てる。
 
 ---
 

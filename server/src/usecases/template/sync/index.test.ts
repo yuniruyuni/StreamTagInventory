@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { createTestUser } from "@test/factories";
+import { generateTestTwitchUserId } from "@test/factories";
 import { createTestContext } from "@test/helpers/context";
 import { createTestDB } from "@test/helpers/db";
 import * as Y from "yjs";
@@ -7,7 +7,6 @@ import type { Database } from "@/infra/db/database";
 import { TemplateDoc } from "@/models/templateDoc";
 import { createDbWriteCtx } from "@/repositories/common";
 import { createDefault as createTemplateDocRepo } from "@/repositories/templateDoc";
-import { createDefault as createUserRepo } from "@/repositories/user";
 import { syncTemplateDoc } from ".";
 import { SYNC_LIMITS } from "./shape";
 
@@ -16,9 +15,9 @@ let userId: string;
 
 beforeEach(async () => {
   db = await createTestDB();
-  const user = createTestUser();
-  await createUserRepo().upsert(createDbWriteCtx(db), user);
-  userId = user.id;
+  // ADR 0007: user は DB に保持せず JWT claim (sub = Twitch user id) だけが truth。
+  // test で必要なのはユニークな string 1 つ。
+  userId = generateTestTwitchUserId();
 });
 
 /**
