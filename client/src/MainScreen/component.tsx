@@ -15,20 +15,18 @@ import type { Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useNotification } from "~/Notification";
 import { PostTemplateEditor } from "~/PostTemplateEditor";
+import { usePostTemplate } from "~/sync/usePostTemplate";
+import { useTemplates } from "~/sync/useTemplates";
 import { TwitchAuthContext } from "~/TwitchAuth";
-import { useStorage } from "~/useStorage";
-import { DEFAULT_POST_TEMPLATE, POST_TEMPLATE_KEY } from "~/utils/postTemplate";
+
 import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";
 
 export const MainScreen: React.FC = () => {
   const { i18n, t } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
-  const [templates, setTemplates] = useStorage<Template[]>("templates", []);
-  const [postTemplate, setPostTemplate] = useStorage<string>(
-    POST_TEMPLATE_KEY,
-    DEFAULT_POST_TEMPLATE,
-  );
+  const { templates } = useTemplates();
+  const { postTemplate, setPostTemplate } = usePostTemplate();
   const [postTemplateEditorOpen, setPostTemplateEditorOpen] = useState(false);
 
   const { data: users, isLoading } = useSWR(
@@ -56,8 +54,6 @@ export const MainScreen: React.FC = () => {
     onExportTemplates,
     onAddTemplate,
   } = useTemplateOperations({
-    templates,
-    setTemplates,
     users,
   });
 
