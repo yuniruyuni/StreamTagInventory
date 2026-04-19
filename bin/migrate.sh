@@ -13,6 +13,18 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
+# [一時的] ADR 0007 の破壊的スキーマ変更 (users 表撤去 + template_docs.user_id を
+# UUID → TEXT) を pgschema が ALTER で適用できないため、対象テーブルを DROP して
+# pgschema に再作成させる。pre-GA で実データは無いので破棄して問題ない
+# (CLAUDE.md "schema 変更の migration 落とし穴" の選択肢 3 に相当)。
+#
+# ⚠️ deploy 成功後、この commit を revert すること。残しておくと次回 deploy 以降
+# も毎回 template_docs が DROP されて Y.Doc が消える。
+psql -c 'DROP TABLE IF EXISTS sessions CASCADE;'
+psql -c 'DROP TABLE IF EXISTS oidc_nonces CASCADE;'
+psql -c 'DROP TABLE IF EXISTS template_docs CASCADE;'
+psql -c 'DROP TABLE IF EXISTS users CASCADE;'
+
 # pgschema natively supports \i directives for modular schema files
 pgschema apply --file /app/schema/main.sql --auto-approve
 echo "Migration complete."
