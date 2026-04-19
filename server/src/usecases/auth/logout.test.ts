@@ -22,7 +22,9 @@ describe("logout", () => {
     const session = createTestSession({ userId: user.id });
     await createSessionRepo().upsert(createDbWriteCtx(db), session);
 
-    const result = await logout.run(createTestContext(db), session);
+    const result = await logout.run(createTestContext(db), {
+      sessionId: session.id,
+    });
     expect(result.ok).toBe(true);
 
     const remaining = await createSessionRepo().get(
@@ -33,10 +35,9 @@ describe("logout", () => {
   });
 
   test("is idempotent for non-existent sessions", async () => {
-    const ghost = createTestSession({
-      userId: "00000000-0000-0000-0000-000000000000",
+    const result = await logout.run(createTestContext(db), {
+      sessionId: "00000000-0000-0000-0000-000000000000",
     });
-    const result = await logout.run(createTestContext(db), ghost);
     expect(result.ok).toBe(true);
   });
 });
