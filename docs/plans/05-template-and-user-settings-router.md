@@ -357,19 +357,19 @@ bun run check:test
 
 ## Definition of Done
 
-- [ ] `server/src/usecases/template/sync/{index,shape}.ts` 作成
-- [ ] `server/src/usecases/template/sync/{index,shape}.test.ts` 作成
-- [ ] `server/src/presentation/trpc/routers/templates.ts` 作成 (`sync` 単一 procedure)
-- [ ] `server/src/presentation/trpc/routers/index.ts` で `appRouter` に統合
-- [ ] **`userSettings` router / usecase は作らない**（Y.Doc 内に統合済）
-- [ ] **`list` / `upsert` / `bulkUpsert` / `delete` / `reorder` 系 usecase / endpoint は作らない**（sync 1 本に吸収済）
-- [ ] Repository 呼出は標準メソッド (`get` / `upsert`) のみ
-- [ ] 権限ガードは `ctx.user.id` から `TemplateDoc.ByUserId` を生成することで自動成立
-- [ ] shape 検証が全トップレベルキーと各フィールドをカバー
-- [ ] サイズ制限 (`MAX_UPDATE_BYTES` / `MAX_STATE_BYTES`) が usecase で効く
-- [ ] 並行 push の直列化 integration test が通る
-- [ ] `bun run check` 全緑
-- [ ] `bun run build` 成功
+- [x] `server/src/usecases/template/sync/{index,shape}.ts` 作成
+- [x] `server/src/usecases/template/sync/{index,shape}.test.ts` 作成
+- [x] `server/src/presentation/trpc/routers/templates.ts` 作成 (`sync` 単一 procedure)
+- [x] `server/src/presentation/trpc/routers/index.ts` で `appRouter` に統合
+- [x] **`userSettings` router / usecase は作らない**（Y.Doc 内に統合済）
+- [x] **`list` / `upsert` / `bulkUpsert` / `delete` / `reorder` 系 usecase / endpoint は作らない**（sync 1 本に吸収済）
+- [x] Repository 呼出は標準メソッド (`get` / `upsert`) のみ — 追加で `lockByUserId` を導入 (advisory lock、下記並行性で説明)
+- [x] 権限ガードは `ctx.user.id` から `TemplateDoc.ByUserId` を生成することで自動成立
+- [x] shape 検証が全トップレベルキーと各フィールドをカバー
+- [x] サイズ制限 (`MAX_UPDATE_BYTES` / `MAX_STATE_BYTES`) が usecase で効く
+- [x] 並行 push の直列化 integration test が通る (FOR UPDATE + pg advisory xact lock で first-write race も保護)
+- [x] `bun run check` 全緑 (server 111 pass / client 148 pass / e2e chromium 17 pass)
+- [x] `bun run build` 成功
 
 ---
 
