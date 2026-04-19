@@ -1,11 +1,10 @@
-import type { SessionContext, UserContext } from "@/usecases/context";
+import type { UserContext } from "@/usecases/context";
 
-// Hono の c.set / c.get が返す型を拡張。session middleware が cookie を
-// 解決した後、protected endpoint や CSRF middleware から type-safe に
-// 参照できるようにする。
+// Hono の c.set / c.get が返す型を拡張。jwt-auth middleware (ADR 0007) が
+// id_token を verify した後、protected endpoint から type-safe に参照できる
+// ようにする。
 declare module "hono" {
   interface ContextVariableMap {
-    session?: SessionContext;
     user?: UserContext;
   }
 }

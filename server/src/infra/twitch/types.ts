@@ -12,7 +12,7 @@ export interface IdTokenClaims {
   /** Unix epoch 秒 */
   exp: number;
   iat: number;
-  /** リプレイ防止 nonce (auth.startNonce で発行した値と一致する) */
+  /** id_token mix-up 防止 nonce。ADR 0007 で client が照合する (server は不検証)。 */
   nonce?: string;
   /** Twitch のログイン名 (users.login / display_name の初期値に使う) */
   preferred_username?: string;

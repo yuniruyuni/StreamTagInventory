@@ -4,8 +4,8 @@ import { serveStatic } from "hono/bun";
 import { compress } from "hono/compress";
 import { secureHeaders } from "hono/secure-headers";
 import type { Context } from "../usecases/context";
+import { createJwtAuthMiddleware } from "./middleware/jwt-auth";
 import { noStoreMiddleware } from "./middleware/no-store";
-import { createSessionMiddleware } from "./middleware/session";
 import { appRouter } from "./trpc/routers";
 
 // hono-context.d.ts に ContextVariableMap 拡張あり。明示的に import はせず
@@ -37,10 +37,11 @@ export function createApp(ctx: Context) {
 
   app.get("/health", (c) => c.json({ status: "ok" }));
 
-  // /api/* 群に適用する middleware 列。no-store → session 復元。
-  // ADR 0006 により CSRF middleware は廃止 (Bearer は自動送信されないため不要)。
+  // /api/* 群に適用する middleware 列。no-store → JWT 検証。
+  // ADR 0006 で CSRF middleware を撤去、ADR 0007 で server session の DB lookup を
+  // 廃止して id_token を per-request 検証する jwt-auth middleware に差し替えた。
   app.use("/api/*", noStoreMiddleware);
-  app.use("/api/*", createSessionMiddleware({ ctx }));
+  app.use("/api/*", createJwtAuthMiddleware({ ctx }));
 
   app.use(
     "/api/trpc/*",
@@ -48,7 +49,6 @@ export function createApp(ctx: Context) {
       router: appRouter,
       createContext: (_opts, c) => ({
         ...ctx,
-        session: c.get("session"),
         user: c.get("user"),
       }),
     }),

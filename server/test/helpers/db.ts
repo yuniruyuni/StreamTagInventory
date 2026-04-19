@@ -55,9 +55,7 @@ export async function createTestDB(options?: {
 }): Promise<PgDatabase> {
   const db = await ensureReady(options?.dataDir ?? DEFAULT_DATA_DIR);
 
-  await db.queryRun(
-    sql`TRUNCATE TABLE template_docs, sessions, oidc_nonces, users CASCADE`,
-  );
+  await db.queryRun(sql`TRUNCATE TABLE template_docs, users CASCADE`);
 
   return db;
 }

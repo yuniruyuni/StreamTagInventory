@@ -65,7 +65,6 @@ describe("verifyIdToken", () => {
     const token = await signToken();
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -73,6 +72,8 @@ describe("verifyIdToken", () => {
     expect(result.value.aud).toBe(AUDIENCE);
     expect(result.value.iss).toBe(ISSUER);
     expect(result.value.preferred_username).toBe("test_user");
+    // ADR 0007: nonce は claim として返るが server は検証しない (client 側担当)
+    expect(result.value.nonce).toBe(NONCE);
   });
 
   test("rejects a token with a tampered signature", async () => {
@@ -82,7 +83,6 @@ describe("verifyIdToken", () => {
     const tampered = `${parts[0]}.${parts[1]}.${"A".repeat(parts[2].length)}`;
     const result = await verifyIdToken(tampered, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(false);
   });
@@ -91,7 +91,6 @@ describe("verifyIdToken", () => {
     const token = await signToken({ expDelta: -60 });
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(false);
   });
@@ -100,7 +99,6 @@ describe("verifyIdToken", () => {
     const token = await signToken({ iss: "https://evil.example.com" });
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(false);
   });
@@ -109,27 +107,26 @@ describe("verifyIdToken", () => {
     const token = await signToken({ aud: "someone-elses-client-id" });
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(false);
   });
 
-  test("rejects a token whose nonce does not match expectedNonce", async () => {
+  test("accepts a token whose nonce differs (server does not verify nonce)", async () => {
+    // ADR 0007: nonce 検証は client 側に移譲。server は nonce mismatch を理由に
+    // reject しない (claim はそのまま下流に渡す)。
     const token = await signToken({ nonce: "different-nonce" });
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.message).toContain("nonce");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.nonce).toBe("different-nonce");
   });
 
   test("rejects a token missing sub", async () => {
     const token = await signToken({ sub: null });
     const result = await verifyIdToken(token, jwks, {
       expectedAudience: AUDIENCE,
-      expectedNonce: NONCE,
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
