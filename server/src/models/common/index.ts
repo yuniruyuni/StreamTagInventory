@@ -12,3 +12,4 @@ export {
   or,
   type SpecsOf,
 } from "./spec";
+export * from "./token";

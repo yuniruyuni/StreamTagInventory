@@ -7,7 +7,7 @@ export async function upsert(db: Database, nonce: OidcNonce): Promise<void> {
   await db.queryRun(sql`
     INSERT INTO oidc_nonces (nonce, created_at, expires_at)
     VALUES (
-      ${nonce.nonce},
+      ${nonce.nonce.toBase64url()},
       ${dateToSQL(nonce.createdAt)},
       ${dateToSQL(nonce.expiresAt)}
     )

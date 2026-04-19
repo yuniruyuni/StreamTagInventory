@@ -19,9 +19,9 @@ export function createTestSession(
 ): Session {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  // csrfToken は Session.create が CSPRNG で自動発行する
   const base = Session.create({
     userId: overrides.userId,
-    csrfToken: `csrf-${Math.random().toString(36).slice(2)}`,
     expiresAt,
     now,
   });
@@ -33,11 +33,8 @@ export function createTestOidcNonce(
 ): OidcNonce {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-  const base = OidcNonce.create({
-    nonce: `nonce-${Math.random().toString(36).slice(2)}`,
-    expiresAt,
-    now,
-  });
+  // nonce は OidcNonce.create が CSPRNG で自動発行する
+  const base = OidcNonce.create({ expiresAt, now });
   return { ...base, ...overrides };
 }
 
