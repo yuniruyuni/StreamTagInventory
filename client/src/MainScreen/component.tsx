@@ -11,7 +11,7 @@ import {
 import { useTranslation } from "~/i18n";
 import { Menu } from "~/Menu";
 import { newCategory } from "~/model/category";
-import type { Template } from "~/model/template";
+import { cloneTemplate, type Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useNotification } from "~/Notification";
 import { PostTemplateEditor } from "~/PostTemplateEditor";
@@ -25,7 +25,13 @@ import { TemplateList } from "./TemplateList";
 export const MainScreen: React.FC = () => {
   const { i18n, t } = useTranslation();
   const { token } = React.useContext(TwitchAuthContext);
-  const { templates } = useTemplates();
+  const {
+    templates,
+    addTemplate,
+    updateTemplate,
+    removeTemplate,
+    moveTemplate,
+  } = useTemplates();
   const { postTemplate, setPostTemplate } = usePostTemplate();
   const [postTemplateEditorOpen, setPostTemplateEditorOpen] = useState(false);
 
@@ -44,18 +50,19 @@ export const MainScreen: React.FC = () => {
   const { searchQuery, setSearchQuery, filteredTemplates } =
     useTemplateSearch(templates);
 
-  const {
-    onMoveTemplate,
-    onApplyTemplate,
-    onRemoveTemplate,
-    onCloneTemplate,
-    onSaveTemplate,
-    onImportTemplates,
-    onExportTemplates,
-    onAddTemplate,
-  } = useTemplateOperations({
-    users,
-  });
+  // Twitch 依存操作 (apply + marker) と import/export 専用。CRUD は useTemplates の
+  // setter を TemplateCard / TemplateList にそのまま渡す。
+  const { onApplyTemplate, onImportTemplates, onExportTemplates } =
+    useTemplateOperations({ users });
+
+  const onRemoveTemplate = useCallback(
+    (t: Template) => removeTemplate(t.id),
+    [removeTemplate],
+  );
+  const onCloneTemplate = useCallback(
+    (t: Template) => addTemplate(cloneTemplate(t)),
+    [addTemplate],
+  );
 
   const onImportCurrentAsTemplate = useCallback(() => {
     if (!channelInfo) return;
@@ -67,14 +74,14 @@ export const MainScreen: React.FC = () => {
       tags: channelInfo.tags,
     };
 
-    onAddTemplate(template);
+    addTemplate(template);
     addNotification({
       type: "success",
       title: t("stream.importSuccess"),
       message: `${channelInfo.title} - ${channelInfo.game_name}`,
       autoClose: true,
     });
-  }, [channelInfo, channelCategory, onAddTemplate, addNotification, t]);
+  }, [channelInfo, channelCategory, addTemplate, addNotification, t]);
 
   return (
     <div className="container mx-auto">
@@ -97,11 +104,11 @@ export const MainScreen: React.FC = () => {
           {filteredTemplates.length > 0 ? (
             <TemplateList
               templates={filteredTemplates}
-              onMove={onMoveTemplate}
+              onMove={moveTemplate}
               onApply={onApplyTemplate}
               onRemove={onRemoveTemplate}
               onClone={onCloneTemplate}
-              onSave={onSaveTemplate}
+              onSave={updateTemplate}
               userLogin={users?.[0]?.login}
               postTemplate={postTemplate}
             />
@@ -112,7 +119,7 @@ export const MainScreen: React.FC = () => {
               </div>
             )
           )}
-          <AddTemplateButton onAdd={onAddTemplate} />
+          <AddTemplateButton onAdd={addTemplate} />
         </div>
       </div>
       <PostTemplateEditor

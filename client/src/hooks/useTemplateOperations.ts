@@ -1,6 +1,5 @@
 import { useCallback, useContext } from "react";
 import useSWRMutation from "swr/mutation";
-import { ulid } from "ulid";
 import { dep, twitch } from "~/fetcher";
 import { useTranslation } from "~/i18n";
 import type { Template } from "~/model/template";
@@ -15,22 +14,21 @@ type UseTemplateOperationsProps = {
 };
 
 type UseTemplateOperationsResult = {
-  onMoveTemplate: (sourceId: string, destinationId: string) => void;
   onApplyTemplate: (template: Template) => Promise<void>;
-  onRemoveTemplate: (template: Template) => void;
-  onCloneTemplate: (template: Template) => void;
-  onSaveTemplate: (template: Template) => void;
   onImportTemplates: () => void;
   onExportTemplates: () => void;
-  onAddTemplate: (template: Template) => void;
 };
 
 /**
- * テンプレート操作 (移動, 適用, 削除, 複製, 保存, インポート, エクスポート, 追加) を提供する。
+ * Twitch API 呼出 (channel 適用 + stream marker) と import/export を束ねる hook。
  *
- * PR 7: テンプレート CRUD は `useTemplates` (Y.Doc) に委譲する。Twitch API 呼出
- * (apply / marker) は無変更。Import/Export はファイル I/O 経由のため Y.Doc とは
- * 独立して動かす (imported list を bulk merge する)。
+ * テンプレート CRUD (add / update / remove / move) は `useTemplates()` を呼出側で
+ * 直接使う。旧 useTemplateOperations は薄い passthrough が大半だったため、
+ * 本 hook を Twitch 依存操作と I/O 操作に絞って整理した (PR 7 review)。
+ *
+ * export だけ `templates` を読み取るのでここで `useTemplates()` を再度呼んでいる。
+ * 追加の observer が立つが、refresh は React の batching で同居の観測と共に
+ * 処理されるので実コスト差はほぼ無し。
  */
 export const useTemplateOperations = ({
   users,
@@ -38,14 +36,7 @@ export const useTemplateOperations = ({
   const { i18n, t } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
   const { addNotification } = useNotification();
-  const {
-    templates,
-    addTemplate,
-    updateTemplate,
-    removeTemplate,
-    moveTemplate,
-    bulkReplace,
-  } = useTemplates();
+  const { templates, bulkReplace } = useTemplates();
 
   const { trigger: applyTemplate } = useSWRMutation(
     () => [
@@ -75,12 +66,6 @@ export const useTemplateOperations = ({
     twitch.post,
   );
 
-  const onMoveTemplate = useCallback(
-    (sourceId: string, destinationId: string) =>
-      moveTemplate(sourceId, destinationId),
-    [moveTemplate],
-  );
-
   const onApplyTemplate = useCallback(
     async (template: Template) => {
       await applyTemplate({
@@ -106,29 +91,17 @@ export const useTemplateOperations = ({
     [applyTemplate, createMarker, users, addNotification, i18n, t],
   );
 
-  const onRemoveTemplate = useCallback(
-    (removed: Template) => removeTemplate(removed.id),
-    [removeTemplate],
-  );
+  const onExportTemplates = useCallback(() => {
+    exportTemplates(templates);
+  }, [templates]);
 
-  const onCloneTemplate = useCallback(
-    (cloned: Template) => addTemplate({ ...cloned, id: ulid() }),
-    [addTemplate],
-  );
-
-  const onSaveTemplate = useCallback(
-    (saved: Template) => updateTemplate(saved),
-    [updateTemplate],
-  );
-
-  const processImportedTemplates = useCallback(
-    (importedTemplates: Template[]) => {
-      // 既存 id と被らない分だけ append する。bulkReplace ではなく既存 + 新規を
-      // bulkReplace する形 (Y.Array に append でも良いが、CRDT 的に一括 op の
-      // ほうが echo 1 回で済む)
+  const onImportTemplates = useCallback(async () => {
+    try {
+      const imported = await importTemplates();
+      // 既存 id と被らない分だけ append する。bulkReplace で「既存 + 新規」を
+      // 1 op にまとめて echo / server sync を 1 回に絞る。
       const existingIds = new Set(templates.map((t) => t.id));
-      const newOnes = importedTemplates.filter((t) => !existingIds.has(t.id));
-
+      const newOnes = imported.filter((t) => !existingIds.has(t.id));
       if (newOnes.length > 0) {
         bulkReplace([...templates, ...newOnes]);
         addNotification({
@@ -138,19 +111,6 @@ export const useTemplateOperations = ({
           autoClose: true,
         });
       }
-      return importedTemplates;
-    },
-    [templates, bulkReplace, addNotification, t],
-  );
-
-  const onExportTemplates = useCallback(() => {
-    exportTemplates(templates);
-  }, [templates]);
-
-  const onImportTemplates = useCallback(async () => {
-    try {
-      const importedTemplates = await importTemplates();
-      processImportedTemplates(importedTemplates);
     } catch (error) {
       addNotification({
         type: "error",
@@ -161,21 +121,11 @@ export const useTemplateOperations = ({
         autoClose: true,
       });
     }
-  }, [processImportedTemplates, addNotification, t]);
-
-  const onAddTemplate = useCallback(
-    (template: Template) => addTemplate(template),
-    [addTemplate],
-  );
+  }, [templates, bulkReplace, addNotification, t]);
 
   return {
-    onMoveTemplate,
     onApplyTemplate,
-    onRemoveTemplate,
-    onCloneTemplate,
-    onSaveTemplate,
     onImportTemplates,
     onExportTemplates,
-    onAddTemplate,
   };
 };
