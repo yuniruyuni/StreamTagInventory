@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type FC,
   type ReactNode,
@@ -61,6 +62,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   );
   const [authorizeUrl, setAuthorizeUrl] = useState<string | null>(null);
   const callbackHandledRef = useRef(false);
+  const queryClient = useQueryClient();
 
   // idToken が空の間は無効 (`enabled: false`) で 401 ノイズを抑制する。
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -139,13 +141,15 @@ export const TwitchAuthProvider: FC<Props> = ({
 
   const logout = useCallback(async () => {
     // server 側に通知すべき状態は無い (ADR 0007: stateless)。client local の
-    // sessionStorage を全部掃除して Entrance フローを再開させるだけ。
+    // sessionStorage を全部掃除 + React Query の cache を破棄して Entrance フローを
+    // 再開させる。cache を残すと次の user で stale な me / template が flash する。
     removeIdToken();
     removeAccessToken();
     sessionStorage.removeItem(NONCE_STORAGE_KEY);
+    queryClient.clear();
     callbackHandledRef.current = false;
     setAuthorizeUrl(null);
-  }, [removeIdToken, removeAccessToken]);
+  }, [removeIdToken, removeAccessToken, queryClient]);
 
   // --- Render ---
 
