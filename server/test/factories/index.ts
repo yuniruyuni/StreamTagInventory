@@ -20,7 +20,7 @@ export function createTestSession(
 ): Session {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + Session.TTL_MS);
-  // ADR 0005: tokenHash は raw Token を hash した値。test では use-once の
+  // ADR 0006: tokenHash は raw Token を hash した値。test では use-once の
   // raw Token を発行して hash を渡す (raw 自体は破棄)。
   const tokenHash = Token.generate().hash();
   const base = Session.create({

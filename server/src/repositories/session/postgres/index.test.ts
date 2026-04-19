@@ -44,7 +44,7 @@ describe("SessionRepository upsert + get", () => {
     const retrieved = await sessionRepo.get(rCtx, Session.ById(session.id));
     expect(retrieved).not.toBeNull();
     expect(retrieved?.userId).toBe(userId);
-    expect(retrieved?.csrfToken.equals(session.csrfToken)).toBe(true);
+    expect(retrieved?.tokenHash).toBe(session.tokenHash);
   });
 
   test("ByUserId retrieves the user's session", async () => {
