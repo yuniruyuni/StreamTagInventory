@@ -1,6 +1,3 @@
-import { Token } from "@/models/common";
-import { OidcNonce } from "@/models/oidcNonce";
-import { Session } from "@/models/session";
 import type { TemplateDoc } from "@/models/templateDoc";
 import { User } from "@/models/user";
 
@@ -12,33 +9,6 @@ export function createTestUser(overrides: Partial<User> = {}): User {
     displayName: "Test User",
     now,
   });
-  return { ...base, ...overrides };
-}
-
-export function createTestSession(
-  overrides: Partial<Session> & { userId: string },
-): Session {
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + Session.TTL_MS);
-  // ADR 0006: tokenHash は raw Token を hash した値。test では use-once の
-  // raw Token を発行して hash を渡す (raw 自体は破棄)。
-  const tokenHash = Token.generate().hash();
-  const base = Session.create({
-    userId: overrides.userId,
-    tokenHash,
-    expiresAt,
-    now,
-  });
-  return { ...base, ...overrides };
-}
-
-export function createTestOidcNonce(
-  overrides: Partial<OidcNonce> = {},
-): OidcNonce {
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-  // nonce は OidcNonce.create が CSPRNG で自動発行する
-  const base = OidcNonce.create({ expiresAt, now });
   return { ...base, ...overrides };
 }
 

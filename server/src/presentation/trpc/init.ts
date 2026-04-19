@@ -7,22 +7,21 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 
 /**
- * 認証済 procedure。`ctx.user` / `ctx.session` を non-nullable に narrow して
- * 下流に渡す。未認証は `TRPCError(UNAUTHORIZED)` で 401。
+ * 認証済 procedure。`ctx.user` を non-nullable に narrow して下流に渡す。
+ * 未認証は `TRPCError(UNAUTHORIZED)` で 401。
  *
- * middleware (session.ts) が cookie → Session を resolve していれば user /
- * session が ctx に乗ってくる。未ログイン = 両方 undefined のパターンのみ
- * ここで弾く。
+ * jwt-auth middleware (ADR 0007) が `Authorization: Bearer <id_token>` を
+ * 検証して user を ctx に乗せていれば認証済。検証失敗 / header 無し =
+ * `ctx.user` は undefined のままなので、ここで弾く。
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.user || !ctx.session) {
+  if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
       ...ctx,
       user: ctx.user,
-      session: ctx.session,
     },
   });
 });

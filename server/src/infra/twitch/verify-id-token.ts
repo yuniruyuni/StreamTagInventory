@@ -7,15 +7,13 @@ const TWITCH_ISSUER = "https://id.twitch.tv/oauth2";
 export interface VerifyOptions {
   /** TWITCH_CLIENT_ID (aud claim と一致する値) */
   expectedAudience: string;
-  /** auth.startNonce で DB に保存した nonce */
-  expectedNonce: string;
 }
 
 /**
  * Twitch の id_token を検証して verified claims を返す。
  *
  * - `jwtVerify` が iss / aud / exp / 署名を検証する
- * - nonce は jose の対象外なので手動で一致確認する
+ * - nonce は ADR 0007 により client 側で照合する責務 (server では検証しない)
  * - 失敗時の details には token 本体を入れない (ログ漏洩防止)
  *
  * `jwks` を引数で受け取ることでテストでは `createLocalJWKSet` した
@@ -38,12 +36,6 @@ export async function verifyIdToken(
         error: fail("INVALID_INPUT", "id_token missing sub"),
       };
     }
-    if (payload.nonce !== options.expectedNonce) {
-      return {
-        ok: false,
-        error: fail("INVALID_INPUT", "id_token nonce mismatch"),
-      };
-    }
 
     return {
       ok: true,
@@ -55,7 +47,7 @@ export async function verifyIdToken(
           : (payload.aud as string),
         exp: payload.exp as number,
         iat: payload.iat as number,
-        nonce: payload.nonce as string,
+        nonce: typeof payload.nonce === "string" ? payload.nonce : undefined,
         preferred_username:
           typeof payload.preferred_username === "string"
             ? payload.preferred_username

@@ -21,16 +21,9 @@ export interface TwitchConfig {
 }
 
 /**
- * presentation 層の Hono middleware が resolve した session / user の射影。
+ * presentation 層の jwt-auth middleware (ADR 0007) が resolve した user の射影。
  * Model 全列ではなく、usecase / router が必要とする最小フィールドに絞る。
- * tokenHash 等 DB 内部状態は意図的に持ち込まない (ADR 0006 の境界)。
  */
-export interface SessionContext {
-  id: string;
-  userId: string;
-  expiresAt: Date;
-}
-
 export interface UserContext {
   id: string;
   twitchUserId: string;
@@ -45,9 +38,7 @@ export interface Context {
   rawRepos: Repos;
   repos: FullRepos<Repos>;
   twitch: TwitchConfig;
-  /** middleware が resolve した session。未ログイン時は undefined。 */
-  session?: SessionContext;
-  /** middleware が resolve した user。未ログイン時は undefined。 */
+  /** middleware が id_token から resolve した user。未ログイン時は undefined。 */
   user?: UserContext;
 }
 
