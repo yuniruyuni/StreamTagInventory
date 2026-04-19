@@ -7,6 +7,11 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+      # DB 接続 (migration service と同じ形式。server は app user で DML のみ)
+      - PGHOST=postgres
+      - DB_USER=stream_tag_inventory
+      - DB_NAME=stream_tag_inventory
+      - DB_PASSWORD=stream_tag_inventory
       # Twitch OIDC: 開発時は既存ハードコードと同じ値で OK、本番は別 app を使用
       - TWITCH_CLIENT_ID=d2kz8x5se7k6b1n0picux0r7kaozi3
       - APP_BASE_URL=http://localhost:3000

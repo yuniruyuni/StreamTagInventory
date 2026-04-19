@@ -1,5 +1,6 @@
 import type { ILogger } from "../logger/types";
 import { PgDatabase } from "./pg-client";
+import { sql } from "./sql";
 
 export type { Database } from "./database";
 export { PgDatabase } from "./pg-client";
@@ -24,6 +25,16 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
 
   log.info(`Connecting to PostgreSQL at ${host}:${port}/${database}...`);
   db = new PgDatabase({ host, port, user, password, database });
+
+  // 起動時に 1 回 `SELECT 1` を叩いて接続を実検証する。pg pool は lazy connect
+  // なので、この確認をしないと起動ログが "Database ready" と嘘をつく一方で
+  // 最初の実リクエストまで ECONNREFUSED が顕在化せず、原因特定が遅れる。
+  try {
+    await db.queryRun(sql`SELECT 1`);
+  } catch (err) {
+    log.error(`Database connection failed: ${String(err)}`);
+    throw err;
+  }
   log.info("Database ready");
 
   return db;
