@@ -89,6 +89,15 @@ bun run fix:lint      # Biome auto-fix (全ワークスペース)
 
 **新規 Repository / Usecase / Model を追加する前に必ず [`docs/architecture.md`](./docs/architecture.md) を読むこと**。Spec パターン / 標準メソッド / Pagination / Usecase phase / Result-Fail の規約をまとめてある。
 
+## Architecture Decision Records (ADR)
+
+横断的な設計判断（複数の選択肢から片方を選んだ経緯、将来の作業を制約する取り決め）は [`docs/adr/`](./docs/adr/) に ADR として記録する。
+
+- 判断基準・ステータス・ファイル命名・作成フローは [`docs/adr/README.md`](./docs/adr/README.md) を参照
+- 雛形は [`docs/adr/template.md`](./docs/adr/template.md)
+- **既存 ADR の本文は書き換えず、判断を覆すときは新 ADR を書いて旧 ADR の `superseded_by` を更新** する
+- 実装前に関連 ADR がないか確認し、`docs/plans/` や `docs/architecture.md` からは該当 ADR へリンクを張る
+
 ## Theme Colors (`client/src/index.css`)
 
 CSS 変数として定義。コンポーネントでは Tailwind クラス (`bg-surface`, `text-primary`, `border-border` 等) で参照する。
