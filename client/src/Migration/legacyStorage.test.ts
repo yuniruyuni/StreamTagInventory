@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { DEFAULT_POST_TEMPLATE } from "~/utils/postTemplate";
 import {
+  cleanupLegacyStorage,
   LEGACY_POST_TEMPLATE_KEY,
+  LEGACY_RETENTION_MS,
   LEGACY_TEMPLATES_KEY,
   MIGRATED_AT_KEY,
   markMigrated,
@@ -85,5 +87,61 @@ describe("markMigrated", () => {
     const t = new Date("2026-04-19T16:00:00.000Z");
     markMigrated(t);
     expect(localStorage.getItem(MIGRATED_AT_KEY)).toBe(t.toISOString());
+  });
+});
+
+describe("cleanupLegacyStorage", () => {
+  const sample = [
+    {
+      id: "t1",
+      title: "First",
+      category: { id: "1", name: "A", box_art_url: "" },
+      tags: ["x"],
+    },
+  ];
+
+  function seedLegacy() {
+    localStorage.setItem(LEGACY_TEMPLATES_KEY, JSON.stringify(sample));
+    localStorage.setItem(
+      LEGACY_POST_TEMPLATE_KEY,
+      JSON.stringify("custom {title}"),
+    );
+  }
+
+  test("no-op when MIGRATED_AT_KEY is absent", () => {
+    seedLegacy();
+    cleanupLegacyStorage();
+    expect(localStorage.getItem(LEGACY_TEMPLATES_KEY)).not.toBeNull();
+    expect(localStorage.getItem(LEGACY_POST_TEMPLATE_KEY)).not.toBeNull();
+  });
+
+  test("no-op when retention has not expired", () => {
+    seedLegacy();
+    const migrated = new Date("2026-04-01T00:00:00.000Z");
+    markMigrated(migrated);
+    const now = new Date(migrated.getTime() + LEGACY_RETENTION_MS - 1000);
+    cleanupLegacyStorage(now);
+    expect(localStorage.getItem(LEGACY_TEMPLATES_KEY)).not.toBeNull();
+    expect(localStorage.getItem(MIGRATED_AT_KEY)).not.toBeNull();
+  });
+
+  test("clears legacy + MIGRATED_AT after retention", () => {
+    seedLegacy();
+    const migrated = new Date("2026-04-01T00:00:00.000Z");
+    markMigrated(migrated);
+    const now = new Date(migrated.getTime() + LEGACY_RETENTION_MS + 1);
+    cleanupLegacyStorage(now);
+    expect(localStorage.getItem(LEGACY_TEMPLATES_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_POST_TEMPLATE_KEY)).toBeNull();
+    expect(localStorage.getItem(MIGRATED_AT_KEY)).toBeNull();
+  });
+
+  test("corrupted MIGRATED_AT_KEY (non-date) is removed but legacy kept", () => {
+    seedLegacy();
+    localStorage.setItem(MIGRATED_AT_KEY, "not-a-date");
+    cleanupLegacyStorage();
+    // 破損値は消すが、旧データは残して次回 migration prompt で回復させる
+    expect(localStorage.getItem(MIGRATED_AT_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_TEMPLATES_KEY)).not.toBeNull();
   });
 });

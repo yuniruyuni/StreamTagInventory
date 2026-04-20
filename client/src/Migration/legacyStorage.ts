@@ -40,6 +40,38 @@ export function markMigrated(now: Date = new Date()): void {
   localStorage.setItem(MIGRATED_AT_KEY, now.toISOString());
 }
 
+/** 移行完了後に旧 localStorage データを保持する期間 (30 日)。rollback 余地用。 */
+export const LEGACY_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * 移行後 `LEGACY_RETENTION_MS` を過ぎた旧 localStorage データを削除する。index.tsx の
+ * 起動時に呼ぶ想定。クリア条件:
+ *  - `MIGRATED_AT_KEY` が立っていて
+ *  - 値が有効な ISO date で
+ *  - 現在時刻との差が `LEGACY_RETENTION_MS` を超えている
+ *
+ * MIGRATED_AT_KEY 自体も消す (完全にクリーンな状態に戻る)。
+ */
+export function cleanupLegacyStorage(now: Date = new Date()): void {
+  if (typeof window === "undefined") return;
+
+  const migratedAt = localStorage.getItem(MIGRATED_AT_KEY);
+  if (migratedAt === null) return;
+
+  const migratedDate = new Date(migratedAt);
+  if (Number.isNaN(migratedDate.getTime())) {
+    // 破損値は即削除 (再度 migration prompt を出して回復させる)
+    localStorage.removeItem(MIGRATED_AT_KEY);
+    return;
+  }
+
+  if (now.getTime() - migratedDate.getTime() < LEGACY_RETENTION_MS) return;
+
+  localStorage.removeItem(LEGACY_TEMPLATES_KEY);
+  localStorage.removeItem(LEGACY_POST_TEMPLATE_KEY);
+  localStorage.removeItem(MIGRATED_AT_KEY);
+}
+
 function parseTemplates(raw: string | null): Template[] {
   if (raw === null) return [];
   try {

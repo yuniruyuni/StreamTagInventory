@@ -1,5 +1,7 @@
 export {
+  cleanupLegacyStorage,
   LEGACY_POST_TEMPLATE_KEY,
+  LEGACY_RETENTION_MS,
   LEGACY_TEMPLATES_KEY,
   MIGRATED_AT_KEY,
   markMigrated,
