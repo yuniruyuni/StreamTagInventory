@@ -2,7 +2,7 @@ import { useCallback, useContext } from "react";
 import useSWRMutation from "swr/mutation";
 import { dep, twitch } from "~/fetcher";
 import { useTranslation } from "~/i18n";
-import type { Template } from "~/model/template";
+import { cloneTemplate, type Template } from "~/model/template";
 import type { User } from "~/model/user";
 import { useNotification } from "~/Notification";
 import { useTemplates } from "~/sync/useTemplates";
@@ -14,21 +14,28 @@ type UseTemplateOperationsProps = {
 };
 
 type UseTemplateOperationsResult = {
+  onAddTemplate: (template: Template) => void;
+  onMoveTemplate: (sourceId: string, destinationId: string) => void;
   onApplyTemplate: (template: Template) => Promise<void>;
+  onRemoveTemplate: (template: Template) => void;
+  onCloneTemplate: (template: Template) => void;
+  onSaveTemplate: (template: Template) => void;
   onImportTemplates: () => void;
   onExportTemplates: () => void;
 };
 
 /**
- * Twitch API 呼出 (channel 適用 + stream marker) と import/export を束ねる hook。
+ * テンプレートに対して行える UX 操作の総目録。ここを見れば「templates に対して
+ * 画面から行える操作」が一覧できる、という単一の catalog を維持する。
  *
- * テンプレート CRUD (add / update / remove / move) は `useTemplates()` を呼出側で
- * 直接使う。旧 useTemplateOperations は薄い passthrough が大半だったため、
- * 本 hook を Twitch 依存操作と I/O 操作に絞って整理した (PR 7 review)。
+ * 内部的には:
+ *  - CRUD (add / update / remove / move / clone) は `useTemplates` (Y.Doc) に委譲
+ *  - Twitch API 操作 (channel apply + stream marker) は SWR mutation
+ *  - import / export はファイル I/O と `bulkReplace`
  *
- * export だけ `templates` を読み取るのでここで `useTemplates()` を再度呼んでいる。
- * 追加の observer が立つが、refresh は React の batching で同居の観測と共に
- * 処理されるので実コスト差はほぼ無し。
+ * TemplateCard 形状 (`(template: Template) => void`) と useTemplates setter 形状
+ * (`(id)` / `(template)`) のインピーダンスマッチ (onRemove で id 抽出 /
+ * onClone で id 振り直し) もここで吸収する。
  */
 export const useTemplateOperations = ({
   users,
@@ -36,7 +43,14 @@ export const useTemplateOperations = ({
   const { i18n, t } = useTranslation();
   const { token } = useContext(TwitchAuthContext);
   const { addNotification } = useNotification();
-  const { templates, bulkReplace } = useTemplates();
+  const {
+    templates,
+    addTemplate,
+    updateTemplate,
+    removeTemplate,
+    moveTemplate,
+    bulkReplace,
+  } = useTemplates();
 
   const { trigger: applyTemplate } = useSWRMutation(
     () => [
@@ -91,6 +105,16 @@ export const useTemplateOperations = ({
     [applyTemplate, createMarker, users, addNotification, i18n, t],
   );
 
+  const onRemoveTemplate = useCallback(
+    (template: Template) => removeTemplate(template.id),
+    [removeTemplate],
+  );
+
+  const onCloneTemplate = useCallback(
+    (template: Template) => addTemplate(cloneTemplate(template)),
+    [addTemplate],
+  );
+
   const onExportTemplates = useCallback(() => {
     exportTemplates(templates);
   }, [templates]);
@@ -98,10 +122,10 @@ export const useTemplateOperations = ({
   const onImportTemplates = useCallback(async () => {
     try {
       const imported = await importTemplates();
-      // 既存 id と被らない分だけ append する。bulkReplace で「既存 + 新規」を
-      // 1 op にまとめて echo / server sync を 1 回に絞る。
-      const existingIds = new Set(templates.map((t) => t.id));
-      const newOnes = imported.filter((t) => !existingIds.has(t.id));
+      // 既存 id と被らない分だけ append。bulkReplace で「既存 + 新規」を 1 op に
+      // まとめて echo / server sync を 1 回に絞る。
+      const existingIds = new Set(templates.map((tpl) => tpl.id));
+      const newOnes = imported.filter((tpl) => !existingIds.has(tpl.id));
       if (newOnes.length > 0) {
         bulkReplace([...templates, ...newOnes]);
         addNotification({
@@ -124,7 +148,12 @@ export const useTemplateOperations = ({
   }, [templates, bulkReplace, addNotification, t]);
 
   return {
+    onAddTemplate: addTemplate,
+    onMoveTemplate: moveTemplate,
+    onSaveTemplate: updateTemplate,
     onApplyTemplate,
+    onRemoveTemplate,
+    onCloneTemplate,
     onImportTemplates,
     onExportTemplates,
   };
