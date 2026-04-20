@@ -84,7 +84,11 @@ bun run fix:lint      # Biome auto-fix (全ワークスペース)
 - **共有 UI コンポーネント** (`client/src/components/`): Tailwind + CSS 変数によるカスタムデザインシステム
 - **Feature ディレクトリ**: 各機能は `component.tsx` + `index.ts` + テスト + サブコンポーネントで構成
 - **カスタムフック**: ビジネスロジックを `use*.ts` に抽出
-- **状態管理**: テンプレートは `localStorage` (`useStorage`)、API データは SWR、認証は React Context
+- **状態管理**:
+  - テンプレート本体と postTemplate は **Y.Doc (Yjs CRDT) + y-indexeddb ローカル永続化 + tRPC でサーバ同期** ([ADR 0004](./docs/adr/0004-local-first-sync-with-yjs.md))。`client/src/sync/` に templateDoc / TemplateDocProvider / TRpcSyncProvider / useTemplates / usePostTemplate
+  - Twitch API レスポンスは SWR
+  - 認証 (Twitch identity) は `TwitchAuthProvider` で React Context 配信、id_token を sessionStorage + Bearer ([ADR 0007](./docs/adr/0007-stateless-jwt-bearer-no-server-session.md))
+  - `localStorage` は PR 7 以前の旧テンプレートの rollback 用に 30 日残置 (`Migration/` で自動移行 + `cleanupLegacyStorage` で起動時削除)
 - **パスエイリアス**: `~/*` → `./src/*` (`client/tsconfig.json`)
 
 **新規 Repository / Usecase / Model を追加する前に必ず [`docs/architecture.md`](./docs/architecture.md) を読むこと**。Spec パターン / 標準メソッド / Pagination / Usecase phase / Result-Fail の規約をまとめてある。
@@ -105,6 +109,52 @@ CSS 変数として定義。コンポーネントでは Tailwind クラス (`bg-
 - `primary` / `secondary` / `error`: アクセントカラー
 - `on-surface` / `text-*` / `neutral-*`: テキスト・中立色
 - `border` / `focus-ring`: ボーダー・フォーカス
+
+## 認証フロー (ADR 0007)
+
+stateless JWT Bearer 方式。サーバー側に session / nonce 表は持たない。
+
+1. client 起動 → `TwitchAuthProvider` が sessionStorage に id_token / access_token が居るか確認
+2. 未ログイン: `crypto.randomUUID` で nonce を生成して `sessionStorage.oauth_nonce` に保管、Twitch OIDC authorize URL (implicit hybrid, `response_type=token id_token`) を用意して Entrance に表示
+3. Twitch → localhost/#access_token=...&id_token=... でコールバック。client は id_token の `nonce` claim を sessionStorage の保存値と照合 (mix-up 防止)、成功したら `twitch-id-token` / `twitch-auth` を sessionStorage に保管
+4. tRPC link が全リクエストに `Authorization: Bearer <id_token>` を付与、server は毎回 `jose.jwtVerify` で署名 / iss / aud / exp を検証して `sub` を UserContext.id に乗せる (DB I/O なし)
+5. id_token の `exp` 失効 → 次の `auth.me` が 401 → provider の Phase B で sessionStorage を掃除して Entrance へ戻る
+
+関連 ADR:
+- [ADR 0002](./docs/adr/0002-server-does-not-hold-twitch-tokens.md) — Twitch トークンを DB に保存しない
+- [ADR 0006](./docs/adr/0006-session-token-via-bearer-header.md) — session token を Authorization: Bearer (0007 で supersede 済、形は継承)
+- [ADR 0007](./docs/adr/0007-stateless-jwt-bearer-no-server-session.md) — サーバ session 撤去、id_token を直接 Bearer に
+
+DB 表は `template_docs` (Y.Doc バイナリ、PK = Twitch user id) **1 枚のみ**。users 表も ADR 0007 で撤去。
+
+## 環境変数
+
+### Server (Cloud Run `cloudrun.yaml` / `cloudrun-job.yaml` / docker-compose)
+
+| env | 意味 | source |
+|---|---|---|
+| `TWITCH_CLIENT_ID` | id_token の `aud` 検証用。公開値なので平文 value | cloudrun.yaml の env 直書き |
+| `APP_BASE_URL` | server 側参照用の自身の base URL。現状未使用だが server code に残る | cloudrun.yaml の env 直書き |
+| `PGHOST` / `PGPORT` | libpq。production は cloudflared sidecar 経由で `localhost:5432` | cloudrun*.yaml 直書き (空なら default) |
+| `DB_USER` / `DB_NAME` | DB ロール / DB 名。現状 `stream_tag_inventory` 単一ユーザー | cloudrun*.yaml 直書き |
+| `DB_PASSWORD` | DB パスワード。**末尾改行込みで格納されている** ため code 側で trim (後述) | Secret Manager (`stream-tag-inventory-db-password`) |
+| `SKIP_DB_VERIFY` | `=1` で起動時 `SELECT 1` 検証を skip。e2e / docker smoke 用 | CI ワークフロー env |
+
+### Client (build-time 埋込)
+
+`client/bin/build.ts` が `--define` で inline する allowlist キー。production deploy では `deploy.yml` が `build_args` で指定 (`.github/workflows/build-image.yml` 参照):
+
+- `BUN_PUBLIC_TWITCH_CLIENT_ID`: authorize URL 構築用
+- `BUN_PUBLIC_APP_BASE_URL`: redirect_uri 構築用 (production は `https://tags.yuniruyuni.net`)
+- `NODE_ENV`: React の dev/prod 切替
+
+**Dockerfile の ARG 同名 + build-arg 経由でしか production 値は入らない**。未指定だと `http://localhost:3000` が焼き込まれて Twitch redirect が壊れる。
+
+## Cloudflare (production)
+
+- **Cache Rule**: Cloudflare 側で `/api/*` Bypass を設定。origin の `Cache-Control: no-store` + `Vary: Authorization` が利かない場合 `api/*` が中間 CDN にキャッシュされ、他ユーザーに user 情報が混じる事故に繋がる
+- **Insights beacon**: `static.cloudflareinsights.com/beacon.min.js` が Cloudflare プロキシで自動注入される。CSP の `scriptSrc` / `connectSrc` で許可済 (`server/src/presentation/index.ts`)
+- **Access (DB Tunnel)**: Cloud Run → `db.yuniruyuni.net` は Cloudflare Access 経由のトンネル。cloudflared サイドカーが `cf-db-access-client-id` / `cf-db-access-client-secret` で認証
 
 ## Testing
 
@@ -155,10 +205,22 @@ server (`server/src/infra/db/index.ts`) / migration (`bin/migrate.sh`) は以下
 
 ### DB パスワードの使い分け
 
-- **migration job** (`cloudrun-job.yaml`): `stream-tag-inventory-db-password` (owner user — DDL 権限が必要)
-- **service** (`cloudrun.yaml`): `stream-tag-inventory-db-app-password` (app user — DML のみ)
+**現状**: `cloudrun.yaml` (service) / `cloudrun-job.yaml` (migration) の **両方が owner password** (`stream-tag-inventory-db-password`) を使っている。production DB に app user (DML 専用) が作成されていないため。`stream-tag-inventory-db-app-password` secret は値こそあるが対応する user が存在しないので失敗する (deploy 時にこれで躓いた経緯あり)。
 
-混同すると migration が権限エラーで失敗するか、service に不要な DDL 権限が付与される。`-app-` サフィックスの有無で区別する。
+**本来の意図 (TODO)**:
+- migration job: `stream-tag-inventory-db-password` (owner — DDL 必要)
+- service: `stream-tag-inventory-db-app-password` (app — DML のみ)
+
+app user を DB 側に `CREATE USER + GRANT` で用意したら、service の cloudrun.yaml を app 側に切り替える。`-app-` サフィックスの有無で secret を区別する命名規約は維持する。
+
+### DB_PASSWORD の末尾改行に注意
+
+Secret Manager の `stream-tag-inventory-db-password` / `stream-tag-inventory-db-app-password` は **値の末尾に `\n` が含まれた形で格納** されている (33 bytes = 32 char + `\n`)。Cloud Run はそのまま env に注入するため、素の `PGPASSWORD` には改行が乗る。
+
+- `pg` (Node) は改行を trim せず、認証で `"FATAL: password authentication failed"` になる
+- 過去のデプロイが通っていたのは pgschema の Go client が内部で whitespace を trim していたため
+
+対応: `server/src/infra/db/index.ts` および `bin/migrate.sh` の両方で、env から読んだ直後に `.replace(/[\r\n]+$/, "")` / `printf '%s'` で trim してから使う。secret 側を改行なしで再作成するのが根本だが、既存値を壊したくないため code 側で吸収する運用。
 
 ### cloudflared サイドカー
 
@@ -170,11 +232,17 @@ DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続す�
 
 - 新しい列を `NOT NULL` で追加 → 既存行の値を埋められず `ALTER TABLE ... ADD COLUMN ... NOT NULL` が ERROR
 - 同様に型を互換性のない形に変える (TEXT → BYTEA など) も既存値で fail する可能性
+- 列の型変更 (UUID ↔ TEXT 等) は pgschema が ALTER で差し替えようとしても既存値が cast できないと fail
 
 対策 (先に検討すべき順):
 
 1. **`DEFAULT` 付きで追加** — 安全かつ自動。値が意味を持たない時のみ使える (例: hash 列など "意味的に空" が許されない列には不向き)
 2. **2 段階 migration** — PR を分けて NULL 許容で追加 → backfill → NOT NULL に変更
-3. **`TRUNCATE <table>` を deploy 前に実行** — ユーザーデータが失われてもよい段階 (pre-GA / session / nonce 等の ephemeral 表) でのみ許容
+3. **`TRUNCATE <table>` / `DROP TABLE IF EXISTS` を deploy 前に実行** — ユーザーデータが失われてもよい段階 (pre-GA / session / nonce 等の ephemeral 表) でのみ許容。`bin/migrate.sh` の先頭に psql で書くのが定石。**deploy 成功後は即 revert** (残すと毎 deploy でデータが消える)
+
+### 現スキーマ (ADR 0007 以降)
+
+- `template_docs` — Y.Doc バイナリ。PK = `user_id TEXT` (Twitch user id 直接)
+- それ以外の表は無し (ADR 0007 で `users` / `sessions` / `oidc_nonces` を撤去)
 
 PR 4 時点の `sessions.token_hash NOT NULL` 追加では、production の `sessions` が空だったため migration が通った。同様の変更で行が既にある場合は上記のいずれかを選ぶこと。
