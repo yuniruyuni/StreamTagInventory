@@ -4,11 +4,10 @@ import { createTestContext } from "@test/helpers/context";
 import { createTestDB } from "@test/helpers/db";
 import * as Y from "yjs";
 import type { Database } from "@/infra/db/database";
-import { TemplateDoc } from "@/models/templateDoc";
+import { SYNC_LIMITS, TemplateDoc } from "@/models/templateDoc";
 import { createDbWriteCtx } from "@/repositories/common";
 import { createDefault as createTemplateDocRepo } from "@/repositories/templateDoc";
 import { syncTemplateDoc } from ".";
-import { SYNC_LIMITS } from "./shape";
 
 let db: Database;
 let userId: string;
