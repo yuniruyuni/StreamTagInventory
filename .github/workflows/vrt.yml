@@ -45,6 +45,8 @@ jobs:
         run: cd e2e && bunx playwright test --update-snapshots --project=chromium
         env:
           CI: true
+          SKIP_DB_VERIFY: "1"
+          TWITCH_CLIENT_ID: ci-vrt-dummy
 
       - uses: yorifuji/easy-vrt/expected@v2
         with:
@@ -76,6 +78,8 @@ jobs:
         run: cd e2e && bunx playwright test --update-snapshots --project=chromium
         env:
           CI: true
+          SKIP_DB_VERIFY: "1"
+          TWITCH_CLIENT_ID: ci-vrt-dummy
 
       - uses: yorifuji/easy-vrt/actual@v2
         with:
