@@ -1,12 +1,6 @@
-import * as Y from "yjs";
-import { fail } from "@/models/common";
-import { TemplateDoc } from "@/models/templateDoc";
+import { isFail } from "@/models/common";
+import { LiveTemplateDoc, TemplateDoc } from "@/models/templateDoc";
 import { usecase } from "@/usecases/runner";
-import {
-  validateDocShape,
-  validateStateSize,
-  validateUpdateSize,
-} from "./shape";
 
 /**
  * クライアントの state vector と optional な update を受け取り、サーバ側
@@ -38,65 +32,33 @@ export const syncTemplateDoc = usecase({
     },
   ) => {
     if (input.clientUpdate) {
-      const v = validateUpdateSize(input.clientUpdate);
+      const v = LiveTemplateDoc.validateUpdateSize(input.clientUpdate);
       if (v) return v;
     }
     return input;
   },
   write: async (ctx, input) => {
-    // 先に advisory lock を取り、以降の get → apply → upsert 列を
-    // 同一ユーザー内で直列化する (row 不在の first write 並行 race を塞ぐ)。
     await ctx.repos.templateDoc.lockByUserId(input.userId);
 
     const existing = await ctx.repos.templateDoc.get(
       TemplateDoc.ByUserId(input.userId),
     );
-    const doc = new Y.Doc();
-    if (existing) Y.applyUpdate(doc, existing.state);
+    const live = existing
+      ? LiveTemplateDoc.fromPersisted(existing)
+      : LiveTemplateDoc.empty(input.userId);
 
     if (input.clientUpdate) {
-      // client 由来の opaque binary。corrupt だと Yjs が throw するので
-      // INTERNAL に落ちないよう INVALID_INPUT に変換する。
-      try {
-        Y.applyUpdate(doc, input.clientUpdate);
-      } catch (err) {
-        return fail(
-          "INVALID_INPUT",
-          `clientUpdate could not be applied: ${String(err)}`,
-        );
-      }
+      const applyFail = live.applyClientUpdate(input.clientUpdate);
+      if (applyFail) return applyFail;
 
-      const shapeFail = validateDocShape(doc);
-      if (shapeFail) return shapeFail;
+      const validateFail = live.validate();
+      if (validateFail) return validateFail;
 
-      const newState = Y.encodeStateAsUpdate(doc);
-      const sizeFail = validateStateSize(newState);
-      if (sizeFail) return sizeFail;
-
-      await ctx.repos.templateDoc.upsert({
-        userId: input.userId,
-        state: newState,
-        sizeBytes: newState.byteLength,
-        updatedAt: ctx.now,
-      });
+      await ctx.repos.templateDoc.upsert(live.toPersisted(ctx.now));
     }
 
-    // clientStateVector は Yjs protocol の state vector 形式を要求する
-    // (= 空の Y.Doc でも encodeStateVector 結果)。空 Uint8Array は
-    // decode 不能なので INVALID_INPUT として弾く。
-    let serverUpdate: Uint8Array;
-    try {
-      serverUpdate = Y.encodeStateAsUpdate(doc, input.clientStateVector);
-    } catch (err) {
-      return fail(
-        "INVALID_INPUT",
-        `clientStateVector is malformed: ${String(err)}`,
-      );
-    }
-
-    return {
-      serverUpdate,
-      serverStateVector: Y.encodeStateVector(doc),
-    };
+    const diff = live.computeDiff(input.clientStateVector);
+    if (isFail(diff)) return diff;
+    return diff;
   },
 });
