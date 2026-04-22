@@ -31,7 +31,7 @@
     "@trpc/client": "^11.16.0",
     "@trpc/react-query": "^11.16.0",
     "clsx": "^2.1.1",
-    "i18next": "^26.0.4",
+    "i18next": "^26.0.6",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.5",
     "react-call": "^1.8.2",

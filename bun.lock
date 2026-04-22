@@ -19,7 +19,7 @@
         "@trpc/client": "^11.16.0",
         "@trpc/react-query": "^11.16.0",
         "clsx": "^2.1.1",
-        "i18next": "^26.0.4",
+        "i18next": "^26.0.6",
         "i18next-browser-languagedetector": "^8.2.1",
         "react": "^19.2.5",
         "react-call": "^1.8.2",
@@ -401,7 +401,7 @@
 
     "html-parse-stringify": ["html-parse-stringify@3.0.1", "", { "dependencies": { "void-elements": "3.1.0" } }, "sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg=="],
 
-    "i18next": ["i18next@26.0.5", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-9uHb4T27TdV36phJXcbpnRPt5yzAfqHXVrdASvmHZyPuZJtrLythd+GyXhiaHV5LlpuuskbAqhwPjmfTbKbi8w=="],
+    "i18next": ["i18next@26.0.6", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-A4U6eCXodIbrhf8EarRurB9/4ebyaurH4+fu4gig9bqxmpSt+fCAFm/GpRQDcN1Xzu/LdFCx4nYHsnM1edIIbg=="],
 
     "i18next-browser-languagedetector": ["i18next-browser-languagedetector@8.2.1", "", { "dependencies": { "@babel/runtime": "^7.23.2" } }, "sha512-bZg8+4bdmaOiApD7N7BPT9W8MLZG+nPTOFlLiJiT8uzKXFjhxw4v2ierCXOwB5sFDMtuA5G4kgYZ0AznZxQ/cw=="],
 
