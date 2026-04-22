@@ -270,6 +270,27 @@ test("RemoveボタンをクリックするとonRemoveが呼び出される", () 
   expect(removedTemplate).toBe(template);
 });
 
+test("userLoginあり・postTemplate未指定（空文字列）でXボタンが表示される", () => {
+  const template = createMockTemplate();
+  const { getByRole } = render(
+    <TemplateActions
+      template={template}
+      changed={false}
+      onRevert={() => {}}
+      onSave={() => {}}
+      onClone={() => {}}
+      onRemove={() => {}}
+      onApply={() => {}}
+      userLogin="testuser"
+      postTemplate=""
+    />,
+    { wrapper: TestWrapper },
+  );
+
+  const xButton = getByRole("button", { name: "announce on x" });
+  expect(xButton).not.toBeNull();
+});
+
 test("ApplyボタンをクリックするとonApplyが呼び出される", () => {
   let appliedTemplate: Template | undefined;
   const template = createMockTemplate();

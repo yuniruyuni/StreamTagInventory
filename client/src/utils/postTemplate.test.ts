@@ -48,6 +48,16 @@ describe("formatPostText", () => {
     expect(result).toBe("{unknown}");
   });
 
+  test("空文字列テンプレートでは空文字列を返す", () => {
+    const result = formatPostText("", {
+      title: "テスト配信",
+      category: "Apex Legends",
+      tags: ["FPS"],
+      url: "https://twitch.tv/testuser",
+    });
+    expect(result).toBe("");
+  });
+
   test("デフォルトテンプレートで正しく動作する", () => {
     const result = formatPostText(DEFAULT_POST_TEMPLATE, {
       title: "テスト配信",

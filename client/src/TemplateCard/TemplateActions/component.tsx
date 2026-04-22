@@ -45,7 +45,7 @@ export const TemplateActions: React.FC<Props> = ({
             className="inline-flex items-center gap-1.5 bg-slate-950 text-white rounded-full px-3 py-1.5 text-sm font-bold hover:opacity-80 transition-opacity cursor-pointer"
             onClick={() => {
               const text = formatPostText(
-                postTemplate ?? DEFAULT_POST_TEMPLATE,
+                postTemplate || DEFAULT_POST_TEMPLATE,
                 {
                   title: template.title,
                   category: template.category.name,

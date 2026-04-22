@@ -27,11 +27,11 @@ export const PostTemplateEditor: React.FC<Props> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState(postTemplate);
+  const [draft, setDraft] = useState(postTemplate || DEFAULT_POST_TEMPLATE);
 
   useEffect(() => {
     if (open) {
-      setDraft(postTemplate);
+      setDraft(postTemplate || DEFAULT_POST_TEMPLATE);
     }
   }, [open, postTemplate]);
 
@@ -47,7 +47,7 @@ export const PostTemplateEditor: React.FC<Props> = ({
   };
 
   const handleClose = () => {
-    setDraft(postTemplate);
+    setDraft(postTemplate || DEFAULT_POST_TEMPLATE);
     onClose();
   };
 
