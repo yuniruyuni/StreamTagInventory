@@ -197,21 +197,29 @@ server 側は `process.env.PORT ?? 3000` で受け取るため、開発時は環
 server (`server/src/infra/db/index.ts`) / migration (`bin/migrate.sh`) は以下の env で接続情報を受け取る:
 
 - `PGHOST` / `PGPORT`: libpq 標準。cloudflared サイドカー経由で `localhost:5432` を参照
-- `DB_USER`: DB ロール名 (現状 service / migration 共に `stream_tag_inventory`)
-- `DB_NAME`: データベース名 (同上)
+- `DB_USER`: DB ロール名 (service = `stream_tag_inventory_app`, migration = `stream_tag_inventory`)
+- `DB_NAME`: データベース名 (`stream_tag_inventory`)
 - `DB_PASSWORD`: 下記のとおり owner / app user で secret を切り替える
-
-`DB_USER` と `DB_NAME` を分離しているのは、将来 app user を owner と分ける際に user 名だけ差し替えられるようにするため。現状は同値でも env は別々に供給する。
 
 ### DB パスワードの使い分け
 
-**現状**: `cloudrun.yaml` (service) / `cloudrun-job.yaml` (migration) の **両方が owner password** (`stream-tag-inventory-db-password`) を使っている。production DB に app user (DML 専用) が作成されていないため。`stream-tag-inventory-db-app-password` secret は値こそあるが対応する user が存在しないので失敗する (deploy 時にこれで躓いた経緯あり)。
+least privilege の原則に従い owner と app user を分離している:
 
-**本来の意図 (TODO)**:
-- migration job: `stream-tag-inventory-db-password` (owner — DDL 必要)
-- service: `stream-tag-inventory-db-app-password` (app — DML のみ)
+- **migration job** (`cloudrun-job.yaml`): `stream_tag_inventory` (owner, DDL 可) + `stream-tag-inventory-db-password`
+- **service** (`cloudrun.yaml`): `stream_tag_inventory_app` (DML のみ) + `stream-tag-inventory-db-app-password`
 
-app user を DB 側に `CREATE USER + GRANT` で用意したら、service の cloudrun.yaml を app 側に切り替える。`-app-` サフィックスの有無で secret を区別する命名規約は維持する。
+DB 側の user 定義 / GRANT / パスワード set は本 repo では管理しておらず、**infra repo (`yuniruyuni.net`) の `nixos/services/postgresql.nix`** で宣言的に扱われる。`postgresql-app-credentials` systemd oneshot が activation 毎に両 user のパスワードを age secret から `ALTER USER` で反映し、app user には `SELECT/INSERT/UPDATE/DELETE ON ALL TABLES` + `ALTER DEFAULT PRIVILEGES` (将来の table/sequence 自動追従) を付与する。
+
+**パスワード値の同期は手動運用**: age secret (NixOS 側の source of truth) と GCP Secret Manager (`stream-tag-inventory-db-password` / `stream-tag-inventory-db-app-password`) の値は自動同期されない。片方を rotate したらもう片方にも同値を put し直す必要がある。ズレると Cloud Run 起動時の `SELECT 1` で `FATAL: password authentication failed` になる。
+
+### DB パスワード rotate 時の手順
+
+age secret を rekey した場合の典型フロー:
+
+1. infra repo 側で age secret を更新 → NixOS activation で `ALTER USER` 走行 (DB 側の値が変わる)
+2. 同じ値を GCP Secret Manager に新 version として put: `printf '%s' '<new-pw>' | gcloud secrets versions add stream-tag-inventory-db-app-password --data-file=-` (末尾改行込みで揃えるか、末尾改行なしで put するかは既存値の shape に合わせる — 後述)
+3. Cloud Run を re-deploy (service は起動時に最新 version を fetch)
+4. Cloud Run logs で `Database ready` が出ることを確認
 
 ### DB_PASSWORD の末尾改行に注意
 
