@@ -140,7 +140,7 @@ export const useTemplateOperations = ({
         type: "error",
         title: t("error.template.import.title"),
         message: t("error.template.import.message", {
-          error: (error as Error).message,
+          error: error instanceof Error ? error.message : String(error),
         }),
         autoClose: true,
       });
