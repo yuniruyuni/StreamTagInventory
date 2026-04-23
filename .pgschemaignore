@@ -1,7 +1,0 @@
-# Privileges are managed outside pgschema.
-
-[privileges]
-patterns = ["*"]
-
-[default_privileges]
-patterns = ["*"]
