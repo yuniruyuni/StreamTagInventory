@@ -78,11 +78,13 @@ Client ID は以下 3 箇所に反映:
 Cloud Run deploy に必要な Secret を Google Cloud Secret Manager に作成する。すべて **末尾改行を含めずに** 作成すること (code 側で trim する防御策は入っているが混乱の元)。
 
 ```bash
-# DB パスワード (owner 権限、DDL 可)
+# DB パスワード (owner 権限、DDL 可。migration job が使用)
 printf "%s" "<strong-random-32chars>" | \
   gcloud secrets create stream-tag-inventory-db-password --data-file=-
 
-# app user パスワード (現状未使用。app user を DB 側で作成後に切替予定)
+# app user パスワード (DML のみ。service が使用)
+# 値は infra repo (yuniruyuni.net) の age secret と手動で一致させる必要がある。
+# DB 側の user / GRANT / password set は NixOS 側で宣言的に管理されている。
 printf "%s" "<another-random-32chars>" | \
   gcloud secrets create stream-tag-inventory-db-app-password --data-file=-
 
