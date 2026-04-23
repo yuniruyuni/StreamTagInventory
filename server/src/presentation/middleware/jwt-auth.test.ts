@@ -2,12 +2,12 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { createTestContext } from "@test/helpers/context";
 import { Hono } from "hono";
 import {
+  type CryptoKey,
   createLocalJWKSet,
   exportJWK,
   generateKeyPair,
   type JWK,
   type JWTVerifyGetKey,
-  type KeyLike,
   SignJWT,
 } from "jose";
 import type { UserContext } from "@/usecases/context";
@@ -18,7 +18,7 @@ const AUDIENCE = "test-client-id";
 const SUB = "987654321";
 const KID = "test-key-jwt-auth";
 
-let privateKey: KeyLike;
+let privateKey: CryptoKey;
 let jwks: JWTVerifyGetKey;
 
 beforeAll(async () => {
