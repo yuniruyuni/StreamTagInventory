@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import type { TRPCLink } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
-import type { FC, ReactNode } from "react";
+import { type FC, type ReactNode, useContext } from "react";
 import { I18nWrapper } from "~/test-utils";
 import { ID_TOKEN_STORAGE_KEY, trpc } from "~/trpc/client";
+import { TwitchAuthContext } from "./context";
 import { TwitchAuthProvider } from "./provider";
 
 /**
@@ -19,6 +20,13 @@ function fakeJwt(payload: Record<string, unknown>): string {
   const body = b64url(JSON.stringify(payload));
   return `${header}.${body}.sig`;
 }
+
+const DEFAULT_USER = {
+  id: "u1",
+  twitchUserId: "u1",
+  login: "u",
+  displayName: "U",
+};
 
 /**
  * auth.me の応答を「その時点で sessionStorage にある id_token」に応じて
@@ -96,6 +104,27 @@ const Providers: FC<{
   );
 };
 
+function renderWithProvider(
+  authMeResponder: AuthMeResponder,
+  children: ReactNode = <div>AUTHENTICATED</div>,
+) {
+  const { link, calls } = createMockLink(authMeResponder);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const result = render(
+    <Providers queryClient={queryClient} link={link}>
+      <TwitchAuthProvider
+        scope={["user:edit:broadcast"]}
+        entrance={() => <div>ENTRANCE</div>}
+      >
+        {children}
+      </TwitchAuthProvider>
+    </Providers>,
+  );
+  return { ...result, calls, queryClient };
+}
+
 beforeEach(() => {
   sessionStorage.clear();
   window.location.hash = "";
@@ -106,16 +135,64 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-/**
- * 再現テスト: sessionStorage に stale id_token が残っている状態で、URL hash に
- * 新しい id_token を持って callback 戻り → 最終的に MainScreen (AUTHENTICATED)
- * に到達すべき。
- *
- * バグ: Phase A で NEW token に差し替わったあと、meQuery が前 token の 401 error
- * 状態を保持したままで Phase B が発火 → NEW token も clear されて Entrance bounce。
- * ユーザは 2 度ログインしないといけない症状として現れる。
- */
-test("stale id_token + callback hash で 2 度ログイン不要 (regression)", async () => {
+// =============================================================================
+// Happy paths
+// =============================================================================
+
+test("fresh visitor sees Entrance (no tokens, no hash)", async () => {
+  const { findByText, queryByText } = renderWithProvider(() => ({
+    ok: false,
+  }));
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+  expect(queryByText("AUTHENTICATED")).toBeNull();
+});
+
+test("fresh login: Entrance → Twitch callback (matching nonce) → AUTHENTICATED", async () => {
+  const nonce = "fresh-nonce";
+  const idToken = fakeJwt({ nonce, sub: "u1" });
+  sessionStorage.setItem("oauth_nonce", nonce);
+  window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer&expires_in=14400`;
+
+  const { findByText, queryByText, calls } = renderWithProvider((bearer) =>
+    bearer === idToken
+      ? { ok: true, data: { user: DEFAULT_USER } }
+      : { ok: false },
+  );
+
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(queryByText("ENTRANCE")).toBeNull();
+  // 新 Bearer で auth.me が呼ばれている
+  expect(calls.some((c) => c.path === "auth.me" && c.bearer === idToken)).toBe(
+    true,
+  );
+  // hash が消費されていることも確認 (Phase A の clearHash)
+  expect(window.location.hash).toBe("");
+});
+
+test("returning visitor (valid id_token in storage, no hash) goes directly to AUTHENTICATED", async () => {
+  const idToken = fakeJwt({ nonce: "any", sub: "u1" });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+
+  const { findByText, queryByText } = renderWithProvider((bearer) =>
+    bearer === idToken
+      ? { ok: true, data: { user: DEFAULT_USER } }
+      : { ok: false },
+  );
+
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(queryByText("ENTRANCE")).toBeNull();
+});
+
+// =============================================================================
+// Stale / expired token cleanup paths
+// =============================================================================
+
+test("stale id_token + callback hash で 2 度ログイン不要 (regression, PR #91)", async () => {
   const oldNonce = "nonce-old";
   const newNonce = "nonce-new";
   const oldIdToken = fakeJwt({ nonce: oldNonce, sub: "u1" });
@@ -126,45 +203,193 @@ test("stale id_token + callback hash で 2 度ログイン不要 (regression)", 
   sessionStorage.setItem("oauth_nonce", newNonce);
   window.location.hash = `#access_token=new-access&id_token=${newIdToken}&token_type=bearer&expires_in=14400`;
 
-  // Bearer が OLD → UNAUTHORIZED, NEW → user 情報を返す
-  const { link, calls } = createMockLink((bearer) => {
-    if (bearer === newIdToken) {
-      return {
-        ok: true,
-        data: {
-          user: {
-            id: "u1",
-            twitchUserId: "u1",
-            login: "u",
-            displayName: "U",
-          },
-        },
-      };
-    }
-    return { ok: false };
-  });
-
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-
-  const { findByText, queryByText } = render(
-    <Providers queryClient={queryClient} link={link}>
-      <TwitchAuthProvider
-        scope={["user:edit:broadcast"]}
-        entrance={() => <div>ENTRANCE</div>}
-      >
-        <div>AUTHENTICATED</div>
-      </TwitchAuthProvider>
-    </Providers>,
+  const { findByText, queryByText, calls } = renderWithProvider((bearer) =>
+    bearer === newIdToken
+      ? { ok: true, data: { user: DEFAULT_USER } }
+      : { ok: false },
   );
 
-  const authed = await findByText("AUTHENTICATED", {}, { timeout: 3000 });
-  expect(authed).toBeInTheDocument();
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
   expect(queryByText("ENTRANCE")).toBeNull();
 
-  // 診断: OLD Bearer で auth.me が走ったこと + 最終的に NEW Bearer で 200 取ったこと
+  // NEW Bearer での auth.me 呼出を最低 1 回行っている
   const authMeCalls = calls.filter((c) => c.path === "auth.me");
-  expect(authMeCalls.length).toBeGreaterThanOrEqual(1);
   expect(authMeCalls.some((c) => c.bearer === newIdToken)).toBe(true);
+});
+
+test("session expired (valid token in storage but server 401): Phase B cleans up to Entrance", async () => {
+  const idToken = fakeJwt({ nonce: "any", sub: "u1" });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+
+  const { findByText, queryByText } = renderWithProvider(() => ({ ok: false }));
+
+  // Phase B 発火で Entrance にクリーンアップされる
+  expect(
+    await findByText("ENTRANCE", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(queryByText("AUTHENTICATED")).toBeNull();
+  // storage から token が消されている
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  // nonce は新しいものに rotate されている (= Entrance の authorize URL は fresh)
+  expect(sessionStorage.getItem("oauth_nonce")).not.toBeNull();
+});
+
+// =============================================================================
+// Nonce / callback validation
+// =============================================================================
+
+test("nonce mismatch in callback id_token → Entrance (no tokens saved, nonce rotated)", async () => {
+  // sessionStorage.oauth_nonce と id_token claim.nonce が異なるケース = mix-up
+  sessionStorage.setItem("oauth_nonce", "expected-nonce");
+  const bogusIdToken = fakeJwt({ nonce: "attacker-nonce", sub: "u1" });
+  window.location.hash = `#access_token=at&id_token=${bogusIdToken}&token_type=bearer&expires_in=14400`;
+
+  const { findByText } = renderWithProvider(() => ({
+    ok: true,
+    data: { user: DEFAULT_USER },
+  }));
+
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+  // token が保存されていない
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  // nonce は rotate 済 (攻撃用 nonce を再利用されない)
+  expect(sessionStorage.getItem("oauth_nonce")).not.toBe("expected-nonce");
+});
+
+test("malformed id_token (can't parse nonce) → Entrance (no tokens saved)", async () => {
+  sessionStorage.setItem("oauth_nonce", "n1");
+  // peekIdTokenNonce が null を返す形式
+  const badIdToken = "not-a-jwt";
+  window.location.hash = `#access_token=at&id_token=${badIdToken}&token_type=bearer&expires_in=14400`;
+
+  const { findByText } = renderWithProvider(() => ({
+    ok: true,
+    data: { user: DEFAULT_USER },
+  }));
+
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+});
+
+test("hash present but missing id_token (Twitch protocol error) → Entrance, tokens not touched", async () => {
+  sessionStorage.setItem("oauth_nonce", "n1");
+  // access_token のみ、id_token 無し → parseAuthFromHash は null を返す
+  window.location.hash = `#access_token=at&token_type=bearer&expires_in=14400`;
+
+  const { findByText } = renderWithProvider(() => ({
+    ok: true,
+    data: { user: DEFAULT_USER },
+  }));
+
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  // nonce は保持される (callback が成立していないので消費しない)
+  expect(sessionStorage.getItem("oauth_nonce")).toBe("n1");
+});
+
+test("hash present but missing access_token → Entrance, tokens not touched", async () => {
+  sessionStorage.setItem("oauth_nonce", "n1");
+  const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
+  // id_token のみ、access_token 無し → parseAuthFromHash は null を返す
+  window.location.hash = `#id_token=${idToken}&token_type=bearer`;
+
+  const { findByText } = renderWithProvider(() => ({
+    ok: true,
+    data: { user: DEFAULT_USER },
+  }));
+
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+});
+
+// =============================================================================
+// Logout flow
+// =============================================================================
+
+/**
+ * Authenticated 状態から logout() を呼ぶと tokens / query cache がクリアされ
+ * Entrance に戻る。再度 login 経路が使えることも確認する。
+ */
+const LogoutButton: FC = () => {
+  const { logout } = useContext(TwitchAuthContext);
+  return (
+    <button type="button" onClick={() => void logout()}>
+      LOGOUT
+    </button>
+  );
+};
+
+test("logout clears tokens, rotates nonce, and returns to Entrance", async () => {
+  const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+  sessionStorage.setItem("oauth_nonce", "n1");
+
+  const { findByText, getByRole } = renderWithProvider(
+    (bearer) =>
+      bearer === idToken
+        ? { ok: true, data: { user: DEFAULT_USER } }
+        : { ok: false },
+    <>
+      <div>AUTHENTICATED</div>
+      <LogoutButton />
+    </>,
+  );
+
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(getByRole("button", { name: "LOGOUT" }));
+
+  await waitFor(
+    () => {
+      expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    },
+    { timeout: 2000 },
+  );
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  // nonce は新 nonce に rotate されている
+  const newNonce = sessionStorage.getItem("oauth_nonce");
+  expect(newNonce).not.toBeNull();
+  expect(newNonce).not.toBe("n1");
+  expect(await findByText("ENTRANCE")).toBeInTheDocument();
+});
+
+// =============================================================================
+// meQuery error correctness
+// =============================================================================
+
+test("in-flight stale meQuery が 401 を返しても、Phase A 後の reset で誤発動しない (regression)", async () => {
+  // stale-id_token シナリオの低レベル確認 — reset が in-flight の error を
+  // 無視させていることを直接 assert する (regression PR #91)。
+  const oldNonce = "old";
+  const newNonce = "new";
+  const oldIdToken = fakeJwt({ nonce: oldNonce, sub: "u1" });
+  const newIdToken = fakeJwt({ nonce: newNonce, sub: "u1" });
+
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(oldIdToken));
+  sessionStorage.setItem("oauth_nonce", newNonce);
+  window.location.hash = `#access_token=at&id_token=${newIdToken}&token_type=bearer`;
+
+  const { findByText, calls } = renderWithProvider((bearer) =>
+    bearer === newIdToken
+      ? { ok: true, data: { user: DEFAULT_USER } }
+      : { ok: false },
+  );
+
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+
+  // OLD Bearer で最低 1 回 (mount 直後の初回 fetch) 叩いているはず
+  expect(
+    calls.some((c) => c.path === "auth.me" && c.bearer === oldIdToken),
+  ).toBe(true);
 });
