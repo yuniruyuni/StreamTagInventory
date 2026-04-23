@@ -35,7 +35,8 @@ jobs:
               pgschema/pgschema apply \
               --file /schema/main.sql \
               --host localhost --port 5432 \
-              --user planuser --password planpass --db plandb
+              --user planuser --password planpass --db plandb \
+              --auto-approve
             echo "Applied main branch schema as baseline."
           else
             echo "No schema/main.sql on main branch — planning against empty DB (initial migration)."

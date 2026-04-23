@@ -14,3 +14,5 @@ CREATE TABLE template_docs (
   CONSTRAINT template_docs_size_bytes_non_negative CHECK (size_bytes >= 0),
   CONSTRAINT template_docs_size_bytes_max          CHECK (size_bytes <= 1048576)
 );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON template_docs TO stream_tag_inventory_app;
