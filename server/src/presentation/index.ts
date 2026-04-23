@@ -24,6 +24,19 @@ export function createApp(ctx: Context) {
       xContentTypeOptions: "nosniff",
       xXssProtection: "1; mode=block",
       referrerPolicy: "strict-origin-when-cross-origin",
+      // Hono の secureHeaders はデフォルトで Cross-Origin-Opener-Policy:
+      // same-origin を送る。これが有効だと OAuth implicit flow の cross-origin
+      // redirect (tags → id.twitch.tv → tags) で browsing context group が
+      // 切り替わり、同じタブでも sessionStorage が wholesale クリアされる挙動
+      // になる。nonce の sessionStorage 保管が callback 着地時に失われ、
+      // 「nonce mismatch で初回ログイン失敗 → 2 度ログイン必要」という症状に
+      // なっていた。
+      //
+      // 本ツールの脅威モデル (個人配信者 1 ユーザ、機密クロスオリジン資源なし) では
+      // COOP による Spectre 緩和の便益が薄いため disable する。必要なら他の
+      // header (X-Frame-Options / CSP frame-ancestors) で iframe 禁止、
+      // `origin-agent-cluster: ?1` でメモリ隔離を別途担保する。
+      crossOriginOpenerPolicy: false,
       contentSecurityPolicy: {
         defaultSrc: ["'self'"],
         // Cloudflare proxy 経由 (本番) では Cloudflare Insights の beacon.min.js が
