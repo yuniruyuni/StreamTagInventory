@@ -252,44 +252,12 @@ test("session expired (valid token in storage but server 401): Phase B cleans up
 // Nonce / callback validation
 // =============================================================================
 
-test("nonce mismatch in callback id_token → auto-retry by navigating to authorize URL (regression #93-follow-up)", async () => {
-  // Twitch が前セッションの id_token を cache して、新しい nonce で authorize
-  // しても stale な nonce claim の id_token を返すケース。手で 2 度 login ボタンを
-  // 押せば成功するが UX が悪い。mismatch 検出時に client 側で自動的に再 authorize
-  // することで 1 クリックで login 完了させる。
+test("nonce mismatch in callback id_token → Entrance (mix-up rejection, no tokens saved, nonce rotated)", async () => {
+  // localStorage.oauth_nonce と id_token claim.nonce が異なるケース = mix-up
+  // 攻撃 or 何らかの不整合。callback を破棄して Entrance に戻す。
   localStorage.setItem("oauth_nonce", "expected-nonce");
-  const bogusIdToken = fakeJwt({ nonce: "stale-nonce", sub: "u1" });
+  const bogusIdToken = fakeJwt({ nonce: "attacker-nonce", sub: "u1" });
   window.location.hash = `#access_token=at&id_token=${bogusIdToken}&token_type=bearer&expires_in=14400`;
-  const originalHref = window.location.href;
-
-  renderWithProvider(() => ({ ok: true, data: { user: DEFAULT_USER } }));
-
-  await waitFor(
-    () => {
-      // Phase A が mismatch を検出して window.location.href を authorize URL に
-      // 向け直すことを確認
-      expect(window.location.href).not.toBe(originalHref);
-    },
-    { timeout: 1500 },
-  );
-  expect(window.location.href).toContain("id.twitch.tv/oauth2/authorize");
-
-  // token は保存されていない (stale token を拒否)
-  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
-  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
-  // nonce は rotate 済 (次の authorize は fresh な値で走る)
-  expect(localStorage.getItem("oauth_nonce")).not.toBe("expected-nonce");
-  // auto-retry 用のカウンタが sessionStorage に立つ
-  expect(sessionStorage.getItem("oauth_retry_count")).toBe("1");
-});
-
-test("nonce mismatch が連続した場合、MAX_AUTO_RETRIES で auto-retry を停止して Entrance を出す", async () => {
-  // 攻撃者が執拗に stale token を inject し続ける or Twitch が壊れてる等で
-  // 無限 retry loop を避けるガード。
-  localStorage.setItem("oauth_nonce", "expected");
-  sessionStorage.setItem("oauth_retry_count", "2"); // 既に MAX 到達
-  const bogusIdToken = fakeJwt({ nonce: "stale", sub: "u1" });
-  window.location.hash = `#access_token=at&id_token=${bogusIdToken}&token_type=bearer`;
 
   const { findByText } = renderWithProvider(() => ({
     ok: true,
@@ -297,34 +265,11 @@ test("nonce mismatch が連続した場合、MAX_AUTO_RETRIES で auto-retry を
   }));
 
   expect(await findByText("ENTRANCE")).toBeInTheDocument();
-  // retry 上限のため navigate はしない (href が id.twitch.tv/authorize 形式に
-  // なっていないこと、すなわち自 origin のままであることを確認)
-  expect(window.location.href).not.toContain("id.twitch.tv/oauth2/authorize");
-  // retry counter は reset される (次回の新規 login でまた 0 から数える)
-  expect(sessionStorage.getItem("oauth_retry_count")).toBeNull();
+  // token が保存されていない
   expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
-});
-
-test("nonce が一致して login 成功した場合、oauth_retry_count はクリアされる", async () => {
-  // auto-retry で 1 回目 mismatch → navigate → 2 回目 callback が一致して成功、
-  // というシーケンスの後半を模擬する。retry_count=1 の状態から成功すれば 0 に
-  // リセットされ、次回 login は fresh な状態から始まる。
-  const nonce = "match";
-  const idToken = fakeJwt({ nonce, sub: "u1" });
-  localStorage.setItem("oauth_nonce", nonce);
-  sessionStorage.setItem("oauth_retry_count", "1");
-  window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer`;
-
-  const { findByText } = renderWithProvider((bearer) =>
-    bearer === idToken
-      ? { ok: true, data: { user: DEFAULT_USER } }
-      : { ok: false },
-  );
-
-  expect(
-    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
-  ).toBeInTheDocument();
-  expect(sessionStorage.getItem("oauth_retry_count")).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  // nonce は rotate 済 (攻撃用 nonce を再利用されない)
+  expect(localStorage.getItem("oauth_nonce")).not.toBe("expected-nonce");
 });
 
 test("malformed id_token (can't parse nonce) → Entrance (no tokens saved)", async () => {
