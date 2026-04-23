@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { TRPCClientError, type TRPCLink } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
-import { type FC, type ReactNode, useContext } from "react";
+import React, { type FC, type ReactNode, useContext } from "react";
 import { I18nWrapper } from "~/test-utils";
 import { ID_TOKEN_STORAGE_KEY, trpc } from "~/trpc/client";
 import { TwitchAuthContext } from "./context";
@@ -133,12 +133,13 @@ const Providers: FC<{
 function renderWithProvider(
   authMeResponder: AuthMeResponder,
   children: ReactNode = <div>AUTHENTICATED</div>,
+  options: { strictMode?: boolean } = {},
 ) {
   const { link, calls } = createMockLink(authMeResponder);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  const result = render(
+  const tree = (
     <Providers queryClient={queryClient} link={link}>
       <TwitchAuthProvider
         scope={["user:edit:broadcast"]}
@@ -146,7 +147,10 @@ function renderWithProvider(
       >
         {children}
       </TwitchAuthProvider>
-    </Providers>,
+    </Providers>
+  );
+  const result = render(
+    options.strictMode ? <React.StrictMode>{tree}</React.StrictMode> : tree,
   );
   return { ...result, calls, queryClient };
 }
@@ -418,6 +422,82 @@ test("in-flight stale meQuery が 401 を返しても、Phase A 後の reset で
   expect(
     calls.some((c) => c.path === "auth.me" && c.bearer === oldIdToken),
   ).toBe(true);
+});
+
+// =============================================================================
+// StrictMode 下でも同じシナリオが通ること
+// production の index.tsx は React.StrictMode でラップされており、useState
+// initializer と useEffect が 2 回呼ばれる。これにより下記が起きうる:
+//   - ensureNonce の 2 重呼出で nonce が 2 回生成される
+//   - Phase A の useEffect が 2 回走り、callbackHandledRef の管理がずれる
+//   - rotateNonce が 2 回走って sessionStorage と state が不整合になる
+// ユーザ報告 (新タブ → 初回ログイン失敗 → 2 度目で成功) を再現する最有力候補。
+// =============================================================================
+
+test("StrictMode 下で fresh login が 1 発で通る (user reported scenario)", async () => {
+  const nonce = "fresh-nonce";
+  const idToken = fakeJwt({ nonce, sub: "u1" });
+  sessionStorage.setItem("oauth_nonce", nonce);
+  window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer`;
+
+  const { findByText, queryByText } = renderWithProvider(
+    (bearer) =>
+      bearer === idToken
+        ? { ok: true, data: { user: DEFAULT_USER } }
+        : { ok: false },
+    <div>AUTHENTICATED</div>,
+    { strictMode: true },
+  );
+
+  expect(
+    await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(queryByText("ENTRANCE")).toBeNull();
+  expect(window.location.hash).toBe("");
+});
+
+test("StrictMode 下で new tab → Entrance → callback 一連が実際のユーザ操作順で 1 発成功", async () => {
+  // 本物の「新タブ開く → Entrance 表示 → login クリック → callback 戻り」の
+  // シーケンスを 1 テスト内で再現する。
+  //   1. 新タブ: sessionStorage 空 + hash 無し → Entrance で nonce が発行される
+  //   2. authorize URL から発行される nonce を記録
+  //   3. Twitch が同じ nonce を持つ id_token で戻る = hash を設定
+  //   4. 再 mount (rerender でも Phase A は [] deps だが fresh mount が欲しいので
+  //      unmount + render で擬似)
+
+  // Step 1-2: Entrance を表示させて nonce を取る
+  const stage1 = renderWithProvider(
+    () => ({ ok: false }),
+    <div>AUTHENTICATED</div>,
+    { strictMode: true },
+  );
+  await stage1.findByText("ENTRANCE");
+  const nonceFromStorage = sessionStorage.getItem("oauth_nonce");
+  expect(nonceFromStorage).not.toBeNull();
+  // authorize URL が含む nonce と storage の nonce が一致している必要がある
+  // (ensureNonce の lazy init が fresh に発行するため)
+
+  // Step 3: callback hash を設定
+  const idToken = fakeJwt({ nonce: nonceFromStorage!, sub: "u1" });
+  window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer`;
+
+  // Step 4: unmount + re-render = fresh mount
+  stage1.unmount();
+
+  const stage2 = renderWithProvider(
+    (bearer) =>
+      bearer === idToken
+        ? { ok: true, data: { user: DEFAULT_USER } }
+        : { ok: false },
+    <div>AUTHENTICATED</div>,
+    { strictMode: true },
+  );
+
+  // ここで bounce せず AUTHENTICATED に到達すること
+  expect(
+    await stage2.findByText("AUTHENTICATED", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(stage2.queryByText("ENTRANCE")).toBeNull();
 });
 
 // =============================================================================
