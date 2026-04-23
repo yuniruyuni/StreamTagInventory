@@ -94,6 +94,8 @@ export default defineConfig({
       // server/src/index.ts の REQUIRED_ENV 検査を通すためのダミー。
       // e2e は OIDC を実通信しない (mocks/api 側で stub する) ので aud 値は無意味。
       TWITCH_CLIENT_ID: "e2e-dummy-client-id",
+      // e2e では DB mock を使うため実 PostgreSQL は不要。起動時の SELECT 1 検証を skip する。
+      SKIP_DB_VERIFY: "1",
     },
     timeout: 120 * 1000,
   },
