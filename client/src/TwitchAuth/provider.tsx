@@ -10,6 +10,7 @@ import {
 } from "react";
 import { SWRConfig } from "swr";
 import { getAuthProvider } from "~/auth";
+import { LoadingScreen } from "~/components/LoadingScreen";
 import { APP_BASE_URL } from "~/constant";
 import { ID_TOKEN_STORAGE_KEY, trpc } from "~/trpc/client";
 import { useSession } from "~/useStorage";
@@ -162,7 +163,7 @@ export const TwitchAuthProvider: FC<Props> = ({
 
   // --- Render ---
 
-  if (idToken && meQuery.isPending) return <>Loading...</>;
+  if (idToken && meQuery.isPending) return <LoadingScreen />;
 
   // 完全ログイン
   if (idToken && meQuery.data) {
@@ -187,5 +188,5 @@ export const TwitchAuthProvider: FC<Props> = ({
   }
 
   if (authorizeUrl) return <>{entrance(authorizeUrl)}</>;
-  return <>Loading...</>;
+  return <LoadingScreen />;
 };
