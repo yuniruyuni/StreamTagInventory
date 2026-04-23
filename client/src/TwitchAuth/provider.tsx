@@ -130,9 +130,14 @@ export const TwitchAuthProvider: FC<Props> = ({
       const retryCount = Number(
         sessionStorage.getItem(RETRY_COUNT_STORAGE_KEY) ?? "0",
       );
+      // 根本原因 (Twitch の cache バグ vs URL encoding vs 別事象) の特定用に
+      // claim / expected の両値を出す。auto-retry の navigation で console が
+      // 消えるため、DevTools Console の "Preserve log upon navigation" を ON
+      // にしてから再現する。
+      const nonceDiag = `claimed=${claimNonce ?? "<null>"} expected=${nonce}`;
       if (retryCount >= MAX_AUTO_RETRIES) {
         console.warn(
-          `id_token nonce mismatch; auto-retry exhausted (${retryCount}/${MAX_AUTO_RETRIES})`,
+          `id_token nonce mismatch; auto-retry exhausted (${retryCount}/${MAX_AUTO_RETRIES}) ${nonceDiag}`,
         );
         sessionStorage.removeItem(RETRY_COUNT_STORAGE_KEY);
         callbackHandledRef.current = false;
@@ -140,7 +145,7 @@ export const TwitchAuthProvider: FC<Props> = ({
         return;
       }
       console.warn(
-        `id_token nonce mismatch; auto-retrying (${retryCount + 1}/${MAX_AUTO_RETRIES})`,
+        `id_token nonce mismatch; auto-retrying (${retryCount + 1}/${MAX_AUTO_RETRIES}) ${nonceDiag}`,
       );
       sessionStorage.setItem(RETRY_COUNT_STORAGE_KEY, String(retryCount + 1));
       rotateNonce();
