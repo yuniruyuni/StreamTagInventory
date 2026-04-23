@@ -39,84 +39,6 @@ import {
  * (URL state 方式と違い、攻撃者が一方的にセットできる値ではない)。
  */
 const NONCE_STORAGE_KEY = "oauth_nonce";
-/**
- * nonce mismatch 時に auto-retry した回数を保持する sessionStorage key。
- * Twitch が前 session の id_token を cache して stale nonce で返すバグの
- * 回避策として用いる。MAX を超えたら retry 停止して Entrance を出す。
- */
-const RETRY_COUNT_STORAGE_KEY = "oauth_retry_count";
-const MAX_AUTO_RETRIES = 2;
-
-/** 診断用: localStorage 側に Mount 1 の時刻を置いて、Mount 2 で読めるか確認する */
-const WITNESS_STORAGE_KEY = "oauth_witness_ts";
-
-/**
- * 診断ログ。nonce mismatch の真因調査用に ensureNonce / rotateNonce /
- * Phase A の各イベント発火時点で console.log する。mismatch 検知時点では
- * 既に storage が rewrite 済みのため、イベントが起きた瞬間に記録しないと
- * 真相が追えない。
- *
- * 再現時は DevTools Console の "Preserve log upon navigation" を ON にして
- * これらの行を時系列で追う。prefix `[auth]` で grep しやすくしてある。
- */
-function diag(msg: string): void {
-  console.log(`[auth] ${msg}`);
-}
-
-/**
- * sessionStorage の全 key を summary にする。どの key が生き残っている (or 消えた)
- * かで wholesale clear か selective clear か判別できる。
- */
-function dumpSessionKeys(): string {
-  try {
-    const keys: string[] = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const k = sessionStorage.key(i);
-      if (k) keys.push(k);
-    }
-    return keys.length === 0 ? "<empty>" : `[${keys.join(", ")}]`;
-  } catch {
-    return "<error>";
-  }
-}
-
-/**
- * localStorage 側に witness (timestamp) を置く & 読む。sessionStorage だけが
- * 特殊に消えたのか、全ブラウジング context ごと別物になったのかを区別する。
- */
-function readWitness(): string | null {
-  try {
-    return localStorage.getItem(WITNESS_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-function writeWitness(): void {
-  try {
-    localStorage.setItem(WITNESS_STORAGE_KEY, new Date().toISOString());
-  } catch {
-    /* ignore */
-  }
-}
-
-/**
- * navigation の性質を dump。type は "navigate" / "reload" / "back_forward" /
- * "prerender" のいずれか。referrer も一緒に取る。
- */
-function dumpEnvironment(): string {
-  const ref = document.referrer || "<empty>";
-  const winName = window.name || "<empty>";
-  let navType = "<unknown>";
-  try {
-    const nav = performance.getEntriesByType("navigation")[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-    navType = nav?.type ?? "<none>";
-  } catch {
-    /* ignore */
-  }
-  return `referrer=${ref} winName=${winName} navType=${navType}`;
-}
 
 /**
  * mount 時点で localStorage に nonce が無ければ同期的に発行する。
@@ -125,23 +47,9 @@ function dumpEnvironment(): string {
  */
 function ensureNonce(): string {
   const existing = localStorage.getItem(NONCE_STORAGE_KEY);
-  // mount 毎に一度だけ環境情報をダンプ (ensureNonce は Mount ごとに 1 度だけ呼ばれる)
-  diag(
-    `env ${dumpEnvironment()} sessionKeys=${dumpSessionKeys()} witness=${readWitness() ?? "<null>"}`,
-  );
-  if (existing) {
-    diag(`ensureNonce read=${existing} (no gen)`);
-    writeWitness();
-    return existing;
-  }
+  if (existing) return existing;
   const fresh = generateNonce();
   localStorage.setItem(NONCE_STORAGE_KEY, fresh);
-  // 書込が即座に見えるか検証 (storage engine のバグや quota exceeded を検出)
-  const verify = localStorage.getItem(NONCE_STORAGE_KEY);
-  diag(
-    `ensureNonce read=<null> generated=${fresh} postWriteRead=${verify ?? "<null>"}`,
-  );
-  writeWitness();
   return fresh;
 }
 
@@ -198,12 +106,10 @@ export const TwitchAuthProvider: FC<Props> = ({
    * localStorage と React state の両方を同期的に更新する。
    */
   const rotateNonce = useCallback(() => {
-    const before = localStorage.getItem(NONCE_STORAGE_KEY);
     localStorage.removeItem(NONCE_STORAGE_KEY);
     const fresh = generateNonce();
     localStorage.setItem(NONCE_STORAGE_KEY, fresh);
     setNonce(fresh);
-    diag(`rotateNonce before=${before ?? "<null>"} after=${fresh}`);
   }, []);
 
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
@@ -211,72 +117,23 @@ export const TwitchAuthProvider: FC<Props> = ({
   // StrictMode の double-invoke もガード。
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot on mount
   useEffect(() => {
-    diag(
-      `phaseA enter hash=${window.location.hash ? "present" : "<empty>"} state.nonce=${nonce} storage.nonce=${localStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"} callbackHandled=${callbackHandledRef.current}`,
-    );
     if (callbackHandledRef.current) return;
     const parsed = parseAuthFromHash();
-    if (!parsed) {
-      diag("phaseA no-hash (early return)");
-      return;
-    }
+    if (!parsed) return;
     callbackHandledRef.current = true;
     clearHash();
 
     const claimNonce = peekIdTokenNonce(parsed.idToken);
-    diag(
-      `phaseA compare claim=${claimNonce ?? "<null>"} state.nonce=${nonce} storage.nonce=${localStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"}`,
-    );
     if (claimNonce !== nonce) {
-      // Twitch のキャッシュ問題で stale nonce の id_token が返されることがある
-      // (前タブで login 成功 → タブ close → 新タブで login すると再現)。ユーザが
-      // もう一度 login ボタンを手動でクリックすれば成功するが UX が悪いので、
-      // mismatch を検出したら自動的に authorize URL へ再 navigate する。
-      //
-      // mix-up 攻撃の場合でも、再 navigate は Twitch が fresh token を返すだけ
-      // なので security 上のリスクは無い (stale token は破棄される)。
-      //
-      // ただし無限 retry ループを避けるため MAX_AUTO_RETRIES で打ち切り、
-      // 上限到達時は通常通り Entrance に戻してユーザの再操作を待つ。
-      const retryCount = Number(
-        sessionStorage.getItem(RETRY_COUNT_STORAGE_KEY) ?? "0",
-      );
-      // 根本原因 (Twitch の cache バグ vs URL encoding vs 別事象) の特定用に
-      // claim / expected の両値を出す。auto-retry の navigation で console が
-      // 消えるため、DevTools Console の "Preserve log upon navigation" を ON
-      // にしてから再現する。
-      const nonceDiag = `claimed=${claimNonce ?? "<null>"} expected=${nonce}`;
-      if (retryCount >= MAX_AUTO_RETRIES) {
-        console.warn(
-          `id_token nonce mismatch; auto-retry exhausted (${retryCount}/${MAX_AUTO_RETRIES}) ${nonceDiag}`,
-        );
-        sessionStorage.removeItem(RETRY_COUNT_STORAGE_KEY);
-        callbackHandledRef.current = false;
-        rotateNonce();
-        return;
-      }
-      console.warn(
-        `id_token nonce mismatch; auto-retrying (${retryCount + 1}/${MAX_AUTO_RETRIES}) ${nonceDiag}`,
-      );
-      sessionStorage.setItem(RETRY_COUNT_STORAGE_KEY, String(retryCount + 1));
+      // mix-up 攻撃 or sessionStorage が途中でクリアされた等。callback を破棄
+      // して新しい nonce で Entrance をやり直させる。
+      console.warn("id_token nonce mismatch; rejecting Twitch callback");
+      callbackHandledRef.current = false;
       rotateNonce();
-      const freshNonce =
-        localStorage.getItem(NONCE_STORAGE_KEY) ?? generateNonce();
-      const provider = getAuthProvider({
-        get: () => idToken,
-        set: setIdToken,
-        remove: removeIdToken,
-      });
-      window.location.href = provider.getEntranceUri(
-        `${APP_BASE_URL}/`,
-        scope,
-        freshNonce,
-      );
       return;
     }
 
-    // 一致 → consume + 次回用に新規発行 + retry counter を reset
-    sessionStorage.removeItem(RETRY_COUNT_STORAGE_KEY);
+    // 一致 → consume + 次回用に新規発行
     rotateNonce();
     setAccessToken(parsed.accessToken);
     setIdToken(parsed.idToken);
