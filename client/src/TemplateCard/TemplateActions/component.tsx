@@ -53,7 +53,14 @@ export const TemplateActions: React.FC<Props> = ({
                   url: `https://twitch.tv/${userLogin}`,
                 },
               );
-              window.open(buildTweetIntentUrl(text), "_blank");
+              // noopener,noreferrer: opened window (x.com) から window.opener 経由で
+              // 本タブを phishing URL に navigation 書換される tabnabbing を防ぐ。
+              // `AuthorInfo` の <a target="_blank" rel="noopener noreferrer"> に合わせた防御。
+              window.open(
+                buildTweetIntentUrl(text),
+                "_blank",
+                "noopener,noreferrer",
+              );
             }}
           >
             <svg
