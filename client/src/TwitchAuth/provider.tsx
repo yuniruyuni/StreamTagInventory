@@ -24,6 +24,13 @@ import {
 
 /** nonce を Twitch redirect 往復の間に保管する sessionStorage key */
 const NONCE_STORAGE_KEY = "oauth_nonce";
+/**
+ * nonce mismatch 時に auto-retry した回数を保持する sessionStorage key。
+ * Twitch が前 session の id_token を cache して stale nonce で返すバグの
+ * 回避策として用いる。MAX を超えたら retry 停止して Entrance を出す。
+ */
+const RETRY_COUNT_STORAGE_KEY = "oauth_retry_count";
+const MAX_AUTO_RETRIES = 2;
 
 /**
  * mount 時点で sessionStorage に nonce が無ければ同期的に発行する。
@@ -110,15 +117,50 @@ export const TwitchAuthProvider: FC<Props> = ({
 
     const claimNonce = peekIdTokenNonce(parsed.idToken);
     if (claimNonce !== nonce) {
-      // mix-up 攻撃 or sessionStorage が途中でクリアされた等。callback を破棄
-      // して新しい nonce で Entrance をやり直させる。
-      console.warn("id_token nonce mismatch; rejecting Twitch callback");
-      callbackHandledRef.current = false;
+      // Twitch のキャッシュ問題で stale nonce の id_token が返されることがある
+      // (前タブで login 成功 → タブ close → 新タブで login すると再現)。ユーザが
+      // もう一度 login ボタンを手動でクリックすれば成功するが UX が悪いので、
+      // mismatch を検出したら自動的に authorize URL へ再 navigate する。
+      //
+      // mix-up 攻撃の場合でも、再 navigate は Twitch が fresh token を返すだけ
+      // なので security 上のリスクは無い (stale token は破棄される)。
+      //
+      // ただし無限 retry ループを避けるため MAX_AUTO_RETRIES で打ち切り、
+      // 上限到達時は通常通り Entrance に戻してユーザの再操作を待つ。
+      const retryCount = Number(
+        sessionStorage.getItem(RETRY_COUNT_STORAGE_KEY) ?? "0",
+      );
+      if (retryCount >= MAX_AUTO_RETRIES) {
+        console.warn(
+          `id_token nonce mismatch; auto-retry exhausted (${retryCount}/${MAX_AUTO_RETRIES})`,
+        );
+        sessionStorage.removeItem(RETRY_COUNT_STORAGE_KEY);
+        callbackHandledRef.current = false;
+        rotateNonce();
+        return;
+      }
+      console.warn(
+        `id_token nonce mismatch; auto-retrying (${retryCount + 1}/${MAX_AUTO_RETRIES})`,
+      );
+      sessionStorage.setItem(RETRY_COUNT_STORAGE_KEY, String(retryCount + 1));
       rotateNonce();
+      const freshNonce =
+        sessionStorage.getItem(NONCE_STORAGE_KEY) ?? generateNonce();
+      const provider = getAuthProvider({
+        get: () => idToken,
+        set: setIdToken,
+        remove: removeIdToken,
+      });
+      window.location.href = provider.getEntranceUri(
+        `${APP_BASE_URL}/`,
+        scope,
+        freshNonce,
+      );
       return;
     }
 
-    // 一致 → consume + 次回用に新規発行
+    // 一致 → consume + 次回用に新規発行 + retry counter を reset
+    sessionStorage.removeItem(RETRY_COUNT_STORAGE_KEY);
     rotateNonce();
     setAccessToken(parsed.accessToken);
     setIdToken(parsed.idToken);
