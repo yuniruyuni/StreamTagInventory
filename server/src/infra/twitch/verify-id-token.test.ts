@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import {
+  type CryptoKey,
   createLocalJWKSet,
   exportJWK,
   generateKeyPair,
   type JWK,
   type JWTVerifyGetKey,
-  type KeyLike,
   SignJWT,
 } from "jose";
 import { verifyIdToken } from "@/infra/twitch/verify-id-token";
@@ -16,7 +16,7 @@ const NONCE = "test-nonce-abc";
 const SUB = "12345678";
 const KID = "test-key-1";
 
-let privateKey: KeyLike;
+let privateKey: CryptoKey;
 let publicJwk: JWK;
 let jwks: JWTVerifyGetKey;
 
