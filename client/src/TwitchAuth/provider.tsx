@@ -78,6 +78,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   const [nonce, setNonce] = useState<string>(ensureNonce);
   const callbackHandledRef = useRef(false);
   const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
   // idToken が空の間は無効 (`enabled: false`) で 401 ノイズを抑制する。
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -121,19 +122,37 @@ export const TwitchAuthProvider: FC<Props> = ({
     rotateNonce();
     setAccessToken(parsed.accessToken);
     setIdToken(parsed.idToken);
+    // 前 session の stale id_token が storage に残っていた場合、mount 時に
+    // meQuery が OLD Bearer で fetch 済みで 401 を返しつつある状況がある。
+    // そのまま放置すると Phase B が isError を見て NEW token 一式を clear して
+    // しまうため、in-flight を cancel + state を reset して NEW token での
+    // fresh な fetch を強制する。
+    void utils.auth.me.cancel();
+    utils.auth.me.reset();
     // 直後に meQuery が enable 化して identity を取りに行く
   }, []);
 
   // Phase B: idToken 有 + meQuery 401 → 期限切れ or サーバー側で reject。
   // 両方クリア + 新 nonce 発行して Entrance へ落とす。
+  //
+  // isFetching=true の間は cleanup を待つ。Phase A の reset 直後に refetch が
+  // 走っている最中で、前 token の stale error を見て誤発動することを防ぐ。
+  // fetch が終わって isError=true のままなら本当に reject されたと判断してよい。
   useEffect(() => {
-    if (idToken && meQuery.isError) {
+    if (idToken && meQuery.isError && !meQuery.isFetching) {
       console.warn("id_token rejected by server; clearing local tokens");
       removeIdToken();
       removeAccessToken();
       rotateNonce();
     }
-  }, [idToken, meQuery.isError, removeIdToken, removeAccessToken, rotateNonce]);
+  }, [
+    idToken,
+    meQuery.isError,
+    meQuery.isFetching,
+    removeIdToken,
+    removeAccessToken,
+    rotateNonce,
+  ]);
 
   // scope は呼出側で毎レンダー新しい配列になり得るので、内容ベースの key で deps 化。
   // string が同じなら React の Object.is 比較で useMemo は前回の値を維持する。
