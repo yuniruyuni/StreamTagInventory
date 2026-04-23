@@ -90,7 +90,15 @@ export const TwitchAuthProvider: FC<Props> = ({
     ID_TOKEN_STORAGE_KEY,
     "",
   );
-  const [nonce, setNonce] = useState<string>(ensureNonce);
+  // ログイン済 (idToken 有) では authorize URL の useMemo が null を返すため nonce
+  // は参照されない。ensureNonce を無条件に呼ぶと reload のたびに localStorage に
+  // 無用な nonce が書き込まれてしまうので、idToken 有の場合は既存値だけ state に
+  // 積み (stale-id_token + callback regression で Phase A が使う)、無ければ "" で
+  // 済ませる。logout / Phase B で Entrance に戻る時は rotateNonce が新規発行する。
+  const [nonce, setNonce] = useState<string>(() => {
+    if (idToken) return localStorage.getItem(NONCE_STORAGE_KEY) ?? "";
+    return ensureNonce();
+  });
   const callbackHandledRef = useRef(false);
   const queryClient = useQueryClient();
   const utils = trpc.useUtils();
