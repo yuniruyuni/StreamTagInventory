@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import type { TRPCLink } from "@trpc/client";
+import { TRPCClientError, type TRPCLink } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 import { type FC, type ReactNode, useContext } from "react";
 import { I18nWrapper } from "~/test-utils";
@@ -38,10 +38,31 @@ const DEFAULT_USER = {
  */
 type AuthMeResponder = (
   bearer: string | null,
-) => { ok: true; data: unknown } | { ok: false };
+) =>
+  | { ok: true; data: unknown }
+  | { ok: false; kind?: "unauthorized" | "network" };
 
-// biome-ignore lint/suspicious/noExplicitAny: TRPCLink generics は AppRouter 型に依存し、テストでは雑に any で流す
+/**
+ * tRPC が `httpStatus: 401` を data に含めた shape で error を投げる場合を
+ * 再現する。本物の httpBatchLink が UNAUTHORIZED を返すときに作る error と
+ * 互換 (TRPCClientError.from(cause={ error: {...} }) 経由で構築される)。
+ */
+function makeUnauthorizedError(): unknown {
+  return TRPCClientError.from({
+    error: {
+      message: "UNAUTHORIZED",
+      code: -32001,
+      data: {
+        code: "UNAUTHORIZED",
+        httpStatus: 401,
+        path: "auth.me",
+      },
+    },
+  } as Parameters<typeof TRPCClientError.from>[0]);
+}
+
 function createMockLink(authMeResponder: AuthMeResponder): {
+  // biome-ignore lint/suspicious/noExplicitAny: TRPCLink generics は AppRouter 型に依存し、テストでは雑に any で流す
   link: TRPCLink<any>;
   calls: Array<{ path: string; bearer: string | null }>;
 } {
@@ -70,11 +91,16 @@ function createMockLink(authMeResponder: AuthMeResponder): {
             observer.next({ result: { data: res.data } });
             observer.complete();
           } else {
-            observer.error(
-              new Error("UNAUTHORIZED") as unknown as Parameters<
-                typeof observer.error
-              >[0],
-            );
+            // kind 省略時は "unauthorized" 扱い (既存テストの互換性のため)
+            const err =
+              res.kind === "network"
+                ? (new Error("network failure") as unknown as Parameters<
+                    typeof observer.error
+                  >[0])
+                : (makeUnauthorizedError() as Parameters<
+                    typeof observer.error
+                  >[0]);
+            observer.error(err);
           }
           return;
         }
@@ -392,4 +418,63 @@ test("in-flight stale meQuery が 401 を返しても、Phase A 後の reset で
   expect(
     calls.some((c) => c.path === "auth.me" && c.bearer === oldIdToken),
   ).toBe(true);
+});
+
+// =============================================================================
+// Phase B の発火条件 — HTTP 401 のみで cleanup すべき (network error では保持)
+// =============================================================================
+
+test("network error (not HTTP 401) では Phase B が cleanup しない (authenticated のまま)", async () => {
+  // 仮説: refetchOnWindowFocus などの再 fetch が transient なネットワークエラー
+  // で失敗したとき、Phase B が isError=true を見て tokens を clear していた可能性
+  // がある。fix 後はこのテストが pass する (cleanup が走らず authenticated 維持)。
+  const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+
+  // auth.me: 全て network error で返す (401 ではない)
+  const { queryByText } = renderWithProvider(() => ({
+    ok: false,
+    kind: "network",
+  }));
+
+  // network error の場合、Phase B は token を clear せずそのまま維持する。
+  // meQuery.data が undefined のままなので MainScreen にも入れないが、Entrance
+  // にも bounce しない = LoadingScreen 等の中間状態が続く想定。
+  //
+  // ただし本テストで重要なのは storage が保たれること (= 再 focus 時に素直に
+  // refetch でリカバリできる状態であること)。
+  await waitFor(
+    () => {
+      // isError=true になるのを待つために 500ms 待機
+    },
+    { timeout: 500 },
+  ).catch(() => {
+    // waitFor の fn が empty なので timeout するが、それは期待通り (待機目的)
+  });
+  // storage から id_token が削除されていない
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).not.toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).not.toBeNull();
+  // Entrance に bounce していない
+  expect(queryByText("ENTRANCE")).toBeNull();
+  // AUTHENTICATED にも入れない (network error なので meQuery.data 無し)
+  expect(queryByText("AUTHENTICATED")).toBeNull();
+});
+
+test("explicit 401 (UNAUTHORIZED) では Phase B が cleanup して Entrance に戻す", async () => {
+  // 対比テスト: 本当にサーバーが UNAUTHORIZED を返したときだけ cleanup する。
+  const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+
+  const { findByText } = renderWithProvider(() => ({
+    ok: false,
+    kind: "unauthorized",
+  }));
+
+  expect(
+    await findByText("ENTRANCE", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
 });

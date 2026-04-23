@@ -132,23 +132,42 @@ export const TwitchAuthProvider: FC<Props> = ({
     // 直後に meQuery が enable 化して identity を取りに行く
   }, []);
 
-  // Phase B: idToken 有 + meQuery 401 → 期限切れ or サーバー側で reject。
-  // 両方クリア + 新 nonce 発行して Entrance へ落とす。
+  // Phase B: idToken 有 + サーバーが **明示的に UNAUTHORIZED (HTTP 401)** を
+  // 返したとき → 期限切れ or サーバー側で reject。両方クリア + 新 nonce 発行して
+  // Entrance へ落とす。
   //
-  // isFetching=true の間は cleanup を待つ。Phase A の reset 直後に refetch が
-  // 走っている最中で、前 token の stale error を見て誤発動することを防ぐ。
-  // fetch が終わって isError=true のままなら本当に reject されたと判断してよい。
+  // 過去のバグ: `meQuery.isError` だけで判定していたため、refetchOnWindowFocus
+  // 等で発生する transient なネットワークエラー (abort / 5xx / offline 等) でも
+  // 誤って logout していた。結果、ユーザは login 直後にタブを切り替えただけで
+  // Entrance に戻される = 2 度ログイン必要、という症状が出ていた。
+  //
+  // tRPC の TRPCClientError は `data.httpStatus` に HTTP status を持つ。401 の
+  // ときだけ cleanup する。network error (fetch 失敗) では `data` が無いため
+  // この条件を満たさず、token は保持されて次の refetch でリカバリされる。
+  //
+  // isFetching=true の間は PR #91 の fix 通り待つ (refetch 中の stale error で
+  // 誤発動しないよう)。
   useEffect(() => {
-    if (idToken && meQuery.isError && !meQuery.isFetching) {
-      console.warn("id_token rejected by server; clearing local tokens");
-      removeIdToken();
-      removeAccessToken();
-      rotateNonce();
-    }
+    if (!idToken || !meQuery.isError || meQuery.isFetching) return;
+    const err = meQuery.error;
+    const httpStatus =
+      err !== null &&
+      typeof err === "object" &&
+      "data" in err &&
+      typeof (err as { data?: { httpStatus?: unknown } }).data?.httpStatus ===
+        "number"
+        ? (err as { data: { httpStatus: number } }).data.httpStatus
+        : undefined;
+    if (httpStatus !== 401) return;
+    console.warn("id_token rejected by server; clearing local tokens");
+    removeIdToken();
+    removeAccessToken();
+    rotateNonce();
   }, [
     idToken,
     meQuery.isError,
     meQuery.isFetching,
+    meQuery.error,
     removeIdToken,
     removeAccessToken,
     rotateNonce,
