@@ -203,7 +203,7 @@ server (`server/src/infra/db/index.ts`) / migration (`bin/migrate.sh`) は以下
 
 ### DB パスワードの使い分け
 
-least privilege の原則に従い owner と app user を分離している:
+least privilege の原則に従い owner と app user を分離している ([ADR 0008](./docs/adr/0008-cloud-run-service-connects-as-dml-only-app-user.md)):
 
 - **migration job** (`cloudrun-job.yaml`): `stream_tag_inventory` (owner, DDL 可) + `stream-tag-inventory-db-password`
 - **service** (`cloudrun.yaml`): `stream_tag_inventory_app` (DML のみ) + `stream-tag-inventory-db-app-password`
@@ -236,7 +236,7 @@ DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続す�
 
 ### pgschema の declarative GRANT と role 宣言
 
-table への `GRANT` と `ALTER DEFAULT PRIVILEGES` は `schema/tables/*.sql` 内に宣言することで pgschema が diff 管理する (per-table GRANT を追加・削除・変更するとそのまま migration plan に乗る)。
+table への `GRANT` と `ALTER DEFAULT PRIVILEGES` は `schema/tables/*.sql` 内に宣言することで pgschema が diff 管理する ([ADR 0009](./docs/adr/0009-declarative-per-table-grant-via-pgschema.md))。per-table GRANT を追加・削除・変更するとそのまま migration plan に乗る。
 
 **制約**: pgschema の plan phase は embedded plan DB に desired state を一度流して validation するため、参照する role が plan DB に存在しないと `role does not exist` で fail する。
 
