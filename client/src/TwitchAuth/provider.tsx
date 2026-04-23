@@ -22,7 +22,22 @@ import {
   peekIdTokenNonce,
 } from "./utils";
 
-/** nonce を Twitch redirect 往復の間に保管する sessionStorage key */
+/**
+ * nonce を Twitch redirect 往復の間に保管する localStorage key。
+ *
+ * **なぜ localStorage か**: サーバが `Cross-Origin-Opener-Policy: same-origin`
+ * を送っているため、OAuth implicit flow の cross-origin redirect
+ * (tags → id.twitch.tv → tags) で browsing context group が切り替わり、同じ
+ * タブでも sessionStorage が wholesale クリアされる (Chrome 実測)。nonce が
+ * callback 着地時に失われて「nonce mismatch で 2 度ログイン要求」の症状に
+ * なっていた。localStorage は origin 単位で永続化するため browsing context
+ * group の切替に影響されず保持される。
+ *
+ * **security 上の trade-off**: localStorage は tab 間共有になるが、nonce は
+ * authorize URL に平文で載る公開情報で秘匿性は要求されないため影響なし。
+ * mix-up 攻撃耐性は被害者独自の storage 値と claim の照合で担保される
+ * (URL state 方式と違い、攻撃者が一方的にセットできる値ではない)。
+ */
 const NONCE_STORAGE_KEY = "oauth_nonce";
 /**
  * nonce mismatch 時に auto-retry した回数を保持する sessionStorage key。
@@ -104,12 +119,12 @@ function dumpEnvironment(): string {
 }
 
 /**
- * mount 時点で sessionStorage に nonce が無ければ同期的に発行する。
+ * mount 時点で localStorage に nonce が無ければ同期的に発行する。
  * useState の lazy init は first render の前に走るため、authorize URL を組み
- * 立てる時点で必ず sessionStorage に nonce が居る状態が保証される。
+ * 立てる時点で必ず localStorage に nonce が居る状態が保証される。
  */
 function ensureNonce(): string {
-  const existing = sessionStorage.getItem(NONCE_STORAGE_KEY);
+  const existing = localStorage.getItem(NONCE_STORAGE_KEY);
   // mount 毎に一度だけ環境情報をダンプ (ensureNonce は Mount ごとに 1 度だけ呼ばれる)
   diag(
     `env ${dumpEnvironment()} sessionKeys=${dumpSessionKeys()} witness=${readWitness() ?? "<null>"}`,
@@ -120,9 +135,9 @@ function ensureNonce(): string {
     return existing;
   }
   const fresh = generateNonce();
-  sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
+  localStorage.setItem(NONCE_STORAGE_KEY, fresh);
   // 書込が即座に見えるか検証 (storage engine のバグや quota exceeded を検出)
-  const verify = sessionStorage.getItem(NONCE_STORAGE_KEY);
+  const verify = localStorage.getItem(NONCE_STORAGE_KEY);
   diag(
     `ensureNonce read=<null> generated=${fresh} postWriteRead=${verify ?? "<null>"}`,
   );
@@ -180,13 +195,13 @@ export const TwitchAuthProvider: FC<Props> = ({
 
   /**
    * 現 nonce を消費し、次回ログイン用に新しい nonce を発行する。
-   * sessionStorage と React state の両方を同期的に更新する。
+   * localStorage と React state の両方を同期的に更新する。
    */
   const rotateNonce = useCallback(() => {
-    const before = sessionStorage.getItem(NONCE_STORAGE_KEY);
-    sessionStorage.removeItem(NONCE_STORAGE_KEY);
+    const before = localStorage.getItem(NONCE_STORAGE_KEY);
+    localStorage.removeItem(NONCE_STORAGE_KEY);
     const fresh = generateNonce();
-    sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
+    localStorage.setItem(NONCE_STORAGE_KEY, fresh);
     setNonce(fresh);
     diag(`rotateNonce before=${before ?? "<null>"} after=${fresh}`);
   }, []);
@@ -197,7 +212,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot on mount
   useEffect(() => {
     diag(
-      `phaseA enter hash=${window.location.hash ? "present" : "<empty>"} state.nonce=${nonce} storage.nonce=${sessionStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"} callbackHandled=${callbackHandledRef.current}`,
+      `phaseA enter hash=${window.location.hash ? "present" : "<empty>"} state.nonce=${nonce} storage.nonce=${localStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"} callbackHandled=${callbackHandledRef.current}`,
     );
     if (callbackHandledRef.current) return;
     const parsed = parseAuthFromHash();
@@ -210,7 +225,7 @@ export const TwitchAuthProvider: FC<Props> = ({
 
     const claimNonce = peekIdTokenNonce(parsed.idToken);
     diag(
-      `phaseA compare claim=${claimNonce ?? "<null>"} state.nonce=${nonce} storage.nonce=${sessionStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"}`,
+      `phaseA compare claim=${claimNonce ?? "<null>"} state.nonce=${nonce} storage.nonce=${localStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"}`,
     );
     if (claimNonce !== nonce) {
       // Twitch のキャッシュ問題で stale nonce の id_token が返されることがある
@@ -246,7 +261,7 @@ export const TwitchAuthProvider: FC<Props> = ({
       sessionStorage.setItem(RETRY_COUNT_STORAGE_KEY, String(retryCount + 1));
       rotateNonce();
       const freshNonce =
-        sessionStorage.getItem(NONCE_STORAGE_KEY) ?? generateNonce();
+        localStorage.getItem(NONCE_STORAGE_KEY) ?? generateNonce();
       const provider = getAuthProvider({
         get: () => idToken,
         set: setIdToken,
