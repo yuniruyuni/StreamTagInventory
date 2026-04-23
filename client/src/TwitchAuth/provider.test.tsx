@@ -199,6 +199,10 @@ test("returning visitor (valid id_token in storage, no hash) goes directly to AU
     await findByText("AUTHENTICATED", {}, { timeout: 3000 }),
   ).toBeInTheDocument();
   expect(queryByText("ENTRANCE")).toBeNull();
+  // reload 時 (既にログイン中) は nonce を新規発行しない。ログイン中は
+  // authorize URL が null (idToken 有で useMemo が null を返す) なので nonce は
+  // 参照されず、発行すると localStorage にゴミが残るだけ。
+  expect(localStorage.getItem("oauth_nonce")).toBeNull();
 });
 
 // =============================================================================
