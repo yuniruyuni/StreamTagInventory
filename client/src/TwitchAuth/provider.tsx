@@ -11,7 +11,7 @@ import {
 import { SWRConfig } from "swr";
 import { getAuthProvider } from "~/auth";
 import { APP_BASE_URL } from "~/constant";
-import { setIdTokenForTrpc, trpc } from "~/trpc/client";
+import { ID_TOKEN_STORAGE_KEY, trpc } from "~/trpc/client";
 import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
 import {
@@ -71,7 +71,7 @@ export const TwitchAuthProvider: FC<Props> = ({
   const [accessToken, setAccessToken, removeAccessToken] =
     useSession<AuthToken>("twitch-auth", "");
   const [idToken, setIdToken, removeIdToken] = useSession<AuthToken>(
-    "twitch-id-token",
+    ID_TOKEN_STORAGE_KEY,
     "",
   );
   const [nonce, setNonce] = useState<string>(ensureNonce);
@@ -83,13 +83,6 @@ export const TwitchAuthProvider: FC<Props> = ({
     retry: false,
     enabled: !!idToken,
   });
-
-  // trpc link に現在の id_token を注入する。sessionStorage の知識は useSession が
-  // 独占し、trpc link は slot を読むだけ。render 毎に同期することで、setIdToken が
-  // 発生した直後の meQuery auto-fetch でも最新値が Bearer に乗る。
-  useEffect(() => {
-    setIdTokenForTrpc(idToken || null);
-  }, [idToken]);
 
   /**
    * 現 nonce を消費し、次回ログイン用に新しい nonce を発行する。
