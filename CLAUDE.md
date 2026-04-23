@@ -234,6 +234,27 @@ Secret Manager の `stream-tag-inventory-db-password` / `stream-tag-inventory-db
 
 DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続する。`cloudrun.yaml` と `cloudrun-job.yaml` の **両方** に `cloudflared` サイドカーが必要で、`cf-db-access-client-id` / `cf-db-access-client-secret` の secret を参照する。
 
+### pgschema の declarative GRANT と role 宣言
+
+table への `GRANT` と `ALTER DEFAULT PRIVILEGES` は `schema/tables/*.sql` 内に宣言することで pgschema が diff 管理する (per-table GRANT を追加・削除・変更するとそのまま migration plan に乗る)。
+
+**制約**: pgschema の plan phase は embedded plan DB に desired state を一度流して validation するため、参照する role が plan DB に存在しないと `role does not exist` で fail する。
+
+**対応**: `schema/tables/000_roles.sql` で role を宣言してから GRANT を書く。
+
+```sql
+-- schema/tables/000_roles.sql
+CREATE ROLE stream_tag_inventory;
+CREATE ROLE stream_tag_inventory_app;
+```
+
+ポイント:
+
+- 裸の `CREATE ROLE` (`IF NOT EXISTS` 無し) でよい。PostgreSQL は `CREATE ROLE IF NOT EXISTS` をサポートしていないが、pgschema の embedded plan DB は呼び出しごとに fresh なので衝突しない
+- pgschema の dump scope は指定 schema (= public) 配下のオブジェクトに限定されるため、**この `CREATE ROLE` は plan DB でのみ実行され target DB の diff plan には含まれない**
+- target DB 側の role 定義・password・`GRANT CONNECT ON DATABASE` / `GRANT USAGE ON SCHEMA public` は **infra repo (`yuniruyuni.net/nixos/services/postgresql.nix`) が source of truth**。app repo の `CREATE ROLE` は plan DB をダマすためだけの存在
+- ファイル名の `000_` prefix は `\i tables/` の alphabetical ロード順で role 宣言が GRANT より先に走ることを保証するため
+
 ### schema 変更の migration 落とし穴
 
 `schema/tables/` を declarative 編集して `pgschema` で反映する構造のため、**既存行がある状態で NOT NULL 列を追加すると migration が fail する**。具体的には:
