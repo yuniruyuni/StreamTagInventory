@@ -134,11 +134,14 @@ function renderWithProvider(
 const BASE_URL = "http://localhost:3000/";
 beforeEach(() => {
   sessionStorage.clear();
+  // nonce は localStorage 保管のためこちらもクリア
+  localStorage.clear();
   window.location.href = BASE_URL;
 });
 
 afterEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
   window.location.href = BASE_URL;
 });
 
@@ -157,7 +160,7 @@ test("fresh visitor sees Entrance (no tokens, no hash)", async () => {
 test("fresh login: Entrance → Twitch callback (matching nonce) → AUTHENTICATED", async () => {
   const nonce = "fresh-nonce";
   const idToken = fakeJwt({ nonce, sub: "u1" });
-  sessionStorage.setItem("oauth_nonce", nonce);
+  localStorage.setItem("oauth_nonce", nonce);
   window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer&expires_in=14400`;
 
   const { findByText, queryByText, calls } = renderWithProvider((bearer) =>
@@ -207,7 +210,7 @@ test("stale id_token + callback hash で 2 度ログイン不要 (regression, PR
 
   sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(oldIdToken));
   sessionStorage.setItem("twitch-auth", JSON.stringify("old-access"));
-  sessionStorage.setItem("oauth_nonce", newNonce);
+  localStorage.setItem("oauth_nonce", newNonce);
   window.location.hash = `#access_token=new-access&id_token=${newIdToken}&token_type=bearer&expires_in=14400`;
 
   const { findByText, queryByText, calls } = renderWithProvider((bearer) =>
@@ -242,7 +245,7 @@ test("session expired (valid token in storage but server 401): Phase B cleans up
   expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
   expect(sessionStorage.getItem("twitch-auth")).toBeNull();
   // nonce は新しいものに rotate されている (= Entrance の authorize URL は fresh)
-  expect(sessionStorage.getItem("oauth_nonce")).not.toBeNull();
+  expect(localStorage.getItem("oauth_nonce")).not.toBeNull();
 });
 
 // =============================================================================
@@ -254,7 +257,7 @@ test("nonce mismatch in callback id_token → auto-retry by navigating to author
   // しても stale な nonce claim の id_token を返すケース。手で 2 度 login ボタンを
   // 押せば成功するが UX が悪い。mismatch 検出時に client 側で自動的に再 authorize
   // することで 1 クリックで login 完了させる。
-  sessionStorage.setItem("oauth_nonce", "expected-nonce");
+  localStorage.setItem("oauth_nonce", "expected-nonce");
   const bogusIdToken = fakeJwt({ nonce: "stale-nonce", sub: "u1" });
   window.location.hash = `#access_token=at&id_token=${bogusIdToken}&token_type=bearer&expires_in=14400`;
   const originalHref = window.location.href;
@@ -275,7 +278,7 @@ test("nonce mismatch in callback id_token → auto-retry by navigating to author
   expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
   expect(sessionStorage.getItem("twitch-auth")).toBeNull();
   // nonce は rotate 済 (次の authorize は fresh な値で走る)
-  expect(sessionStorage.getItem("oauth_nonce")).not.toBe("expected-nonce");
+  expect(localStorage.getItem("oauth_nonce")).not.toBe("expected-nonce");
   // auto-retry 用のカウンタが sessionStorage に立つ
   expect(sessionStorage.getItem("oauth_retry_count")).toBe("1");
 });
@@ -283,7 +286,7 @@ test("nonce mismatch in callback id_token → auto-retry by navigating to author
 test("nonce mismatch が連続した場合、MAX_AUTO_RETRIES で auto-retry を停止して Entrance を出す", async () => {
   // 攻撃者が執拗に stale token を inject し続ける or Twitch が壊れてる等で
   // 無限 retry loop を避けるガード。
-  sessionStorage.setItem("oauth_nonce", "expected");
+  localStorage.setItem("oauth_nonce", "expected");
   sessionStorage.setItem("oauth_retry_count", "2"); // 既に MAX 到達
   const bogusIdToken = fakeJwt({ nonce: "stale", sub: "u1" });
   window.location.hash = `#access_token=at&id_token=${bogusIdToken}&token_type=bearer`;
@@ -308,7 +311,7 @@ test("nonce が一致して login 成功した場合、oauth_retry_count はク�
   // リセットされ、次回 login は fresh な状態から始まる。
   const nonce = "match";
   const idToken = fakeJwt({ nonce, sub: "u1" });
-  sessionStorage.setItem("oauth_nonce", nonce);
+  localStorage.setItem("oauth_nonce", nonce);
   sessionStorage.setItem("oauth_retry_count", "1");
   window.location.hash = `#access_token=at&id_token=${idToken}&token_type=bearer`;
 
@@ -325,7 +328,7 @@ test("nonce が一致して login 成功した場合、oauth_retry_count はク�
 });
 
 test("malformed id_token (can't parse nonce) → Entrance (no tokens saved)", async () => {
-  sessionStorage.setItem("oauth_nonce", "n1");
+  localStorage.setItem("oauth_nonce", "n1");
   // peekIdTokenNonce が null を返す形式
   const badIdToken = "not-a-jwt";
   window.location.hash = `#access_token=at&id_token=${badIdToken}&token_type=bearer&expires_in=14400`;
@@ -340,7 +343,7 @@ test("malformed id_token (can't parse nonce) → Entrance (no tokens saved)", as
 });
 
 test("hash present but missing id_token (Twitch protocol error) → Entrance, tokens not touched", async () => {
-  sessionStorage.setItem("oauth_nonce", "n1");
+  localStorage.setItem("oauth_nonce", "n1");
   // access_token のみ、id_token 無し → parseAuthFromHash は null を返す
   window.location.hash = `#access_token=at&token_type=bearer&expires_in=14400`;
 
@@ -353,11 +356,11 @@ test("hash present but missing id_token (Twitch protocol error) → Entrance, to
   expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
   expect(sessionStorage.getItem("twitch-auth")).toBeNull();
   // nonce は保持される (callback が成立していないので消費しない)
-  expect(sessionStorage.getItem("oauth_nonce")).toBe("n1");
+  expect(localStorage.getItem("oauth_nonce")).toBe("n1");
 });
 
 test("hash present but missing access_token → Entrance, tokens not touched", async () => {
-  sessionStorage.setItem("oauth_nonce", "n1");
+  localStorage.setItem("oauth_nonce", "n1");
   const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
   // id_token のみ、access_token 無し → parseAuthFromHash は null を返す
   window.location.hash = `#id_token=${idToken}&token_type=bearer`;
@@ -392,7 +395,7 @@ test("logout clears tokens, rotates nonce, and returns to Entrance", async () =>
   const idToken = fakeJwt({ nonce: "n1", sub: "u1" });
   sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
   sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
-  sessionStorage.setItem("oauth_nonce", "n1");
+  localStorage.setItem("oauth_nonce", "n1");
 
   const { findByText, getByRole } = renderWithProvider(
     (bearer) =>
@@ -419,7 +422,7 @@ test("logout clears tokens, rotates nonce, and returns to Entrance", async () =>
   );
   expect(sessionStorage.getItem("twitch-auth")).toBeNull();
   // nonce は新 nonce に rotate されている
-  const newNonce = sessionStorage.getItem("oauth_nonce");
+  const newNonce = localStorage.getItem("oauth_nonce");
   expect(newNonce).not.toBeNull();
   expect(newNonce).not.toBe("n1");
   expect(await findByText("ENTRANCE")).toBeInTheDocument();
@@ -438,7 +441,7 @@ test("in-flight stale meQuery が 401 を返しても、Phase A 後の reset で
   const newIdToken = fakeJwt({ nonce: newNonce, sub: "u1" });
 
   sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(oldIdToken));
-  sessionStorage.setItem("oauth_nonce", newNonce);
+  localStorage.setItem("oauth_nonce", newNonce);
   window.location.hash = `#access_token=at&id_token=${newIdToken}&token_type=bearer`;
 
   const { findByText, calls } = renderWithProvider((bearer) =>
