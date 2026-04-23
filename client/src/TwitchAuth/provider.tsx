@@ -33,15 +33,32 @@ const RETRY_COUNT_STORAGE_KEY = "oauth_retry_count";
 const MAX_AUTO_RETRIES = 2;
 
 /**
+ * 診断ログ。nonce mismatch の真因調査用に ensureNonce / rotateNonce /
+ * Phase A の各イベント発火時点で console.log する。mismatch 検知時点では
+ * 既に storage が rewrite 済みのため、イベントが起きた瞬間に記録しないと
+ * 真相が追えない。
+ *
+ * 再現時は DevTools Console の "Preserve log upon navigation" を ON にして
+ * これらの行を時系列で追う。prefix `[auth]` で grep しやすくしてある。
+ */
+function diag(msg: string): void {
+  console.log(`[auth] ${msg}`);
+}
+
+/**
  * mount 時点で sessionStorage に nonce が無ければ同期的に発行する。
  * useState の lazy init は first render の前に走るため、authorize URL を組み
  * 立てる時点で必ず sessionStorage に nonce が居る状態が保証される。
  */
 function ensureNonce(): string {
   const existing = sessionStorage.getItem(NONCE_STORAGE_KEY);
-  if (existing) return existing;
+  if (existing) {
+    diag(`ensureNonce read=${existing} (no gen)`);
+    return existing;
+  }
   const fresh = generateNonce();
   sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
+  diag(`ensureNonce read=<null> generated=${fresh}`);
   return fresh;
 }
 
@@ -98,10 +115,12 @@ export const TwitchAuthProvider: FC<Props> = ({
    * sessionStorage と React state の両方を同期的に更新する。
    */
   const rotateNonce = useCallback(() => {
+    const before = sessionStorage.getItem(NONCE_STORAGE_KEY);
     sessionStorage.removeItem(NONCE_STORAGE_KEY);
     const fresh = generateNonce();
     sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
     setNonce(fresh);
+    diag(`rotateNonce before=${before ?? "<null>"} after=${fresh}`);
   }, []);
 
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
@@ -109,13 +128,22 @@ export const TwitchAuthProvider: FC<Props> = ({
   // StrictMode の double-invoke もガード。
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot on mount
   useEffect(() => {
+    diag(
+      `phaseA enter hash=${window.location.hash ? "present" : "<empty>"} state.nonce=${nonce} storage.nonce=${sessionStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"} callbackHandled=${callbackHandledRef.current}`,
+    );
     if (callbackHandledRef.current) return;
     const parsed = parseAuthFromHash();
-    if (!parsed) return;
+    if (!parsed) {
+      diag("phaseA no-hash (early return)");
+      return;
+    }
     callbackHandledRef.current = true;
     clearHash();
 
     const claimNonce = peekIdTokenNonce(parsed.idToken);
+    diag(
+      `phaseA compare claim=${claimNonce ?? "<null>"} state.nonce=${nonce} storage.nonce=${sessionStorage.getItem(NONCE_STORAGE_KEY) ?? "<null>"}`,
+    );
     if (claimNonce !== nonce) {
       // Twitch のキャッシュ問題で stale nonce の id_token が返されることがある
       // (前タブで login 成功 → タブ close → 新タブで login すると再現)。ユーザが
