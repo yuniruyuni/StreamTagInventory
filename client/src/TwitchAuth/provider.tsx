@@ -32,6 +32,9 @@ const NONCE_STORAGE_KEY = "oauth_nonce";
 const RETRY_COUNT_STORAGE_KEY = "oauth_retry_count";
 const MAX_AUTO_RETRIES = 2;
 
+/** 診断用: localStorage 側に Mount 1 の時刻を置いて、Mount 2 で読めるか確認する */
+const WITNESS_STORAGE_KEY = "oauth_witness_ts";
+
 /**
  * 診断ログ。nonce mismatch の真因調査用に ensureNonce / rotateNonce /
  * Phase A の各イベント発火時点で console.log する。mismatch 検知時点では
@@ -46,19 +49,84 @@ function diag(msg: string): void {
 }
 
 /**
+ * sessionStorage の全 key を summary にする。どの key が生き残っている (or 消えた)
+ * かで wholesale clear か selective clear か判別できる。
+ */
+function dumpSessionKeys(): string {
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k) keys.push(k);
+    }
+    return keys.length === 0 ? "<empty>" : `[${keys.join(", ")}]`;
+  } catch {
+    return "<error>";
+  }
+}
+
+/**
+ * localStorage 側に witness (timestamp) を置く & 読む。sessionStorage だけが
+ * 特殊に消えたのか、全ブラウジング context ごと別物になったのかを区別する。
+ */
+function readWitness(): string | null {
+  try {
+    return localStorage.getItem(WITNESS_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+function writeWitness(): void {
+  try {
+    localStorage.setItem(WITNESS_STORAGE_KEY, new Date().toISOString());
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * navigation の性質を dump。type は "navigate" / "reload" / "back_forward" /
+ * "prerender" のいずれか。referrer も一緒に取る。
+ */
+function dumpEnvironment(): string {
+  const ref = document.referrer || "<empty>";
+  const winName = window.name || "<empty>";
+  let navType = "<unknown>";
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    navType = nav?.type ?? "<none>";
+  } catch {
+    /* ignore */
+  }
+  return `referrer=${ref} winName=${winName} navType=${navType}`;
+}
+
+/**
  * mount 時点で sessionStorage に nonce が無ければ同期的に発行する。
  * useState の lazy init は first render の前に走るため、authorize URL を組み
  * 立てる時点で必ず sessionStorage に nonce が居る状態が保証される。
  */
 function ensureNonce(): string {
   const existing = sessionStorage.getItem(NONCE_STORAGE_KEY);
+  // mount 毎に一度だけ環境情報をダンプ (ensureNonce は Mount ごとに 1 度だけ呼ばれる)
+  diag(
+    `env ${dumpEnvironment()} sessionKeys=${dumpSessionKeys()} witness=${readWitness() ?? "<null>"}`,
+  );
   if (existing) {
     diag(`ensureNonce read=${existing} (no gen)`);
+    writeWitness();
     return existing;
   }
   const fresh = generateNonce();
   sessionStorage.setItem(NONCE_STORAGE_KEY, fresh);
-  diag(`ensureNonce read=<null> generated=${fresh}`);
+  // 書込が即座に見えるか検証 (storage engine のバグや quota exceeded を検出)
+  const verify = sessionStorage.getItem(NONCE_STORAGE_KEY);
+  diag(
+    `ensureNonce read=<null> generated=${fresh} postWriteRead=${verify ?? "<null>"}`,
+  );
+  writeWitness();
   return fresh;
 }
 
