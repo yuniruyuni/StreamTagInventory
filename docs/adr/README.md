@@ -11,7 +11,10 @@
 | [0003](./0003-templates-use-fractional-indexing.md) | テンプレートの並び順は fractional indexing で管理する | superseded → 0004 | 2026-04-17 |
 | [0004](./0004-local-first-sync-with-yjs.md) | テンプレートデータは Yjs による local-first 同期で管理する | accepted | 2026-04-17 |
 | [0005](./0005-session-cookie-hashed-at-rest.md) | session cookie は raw 32B トークン、DB は SHA-256 ハッシュで分離保管する | superseded → 0006 | 2026-04-19 |
-| [0006](./0006-session-token-via-bearer-header.md) | session token は Authorization: Bearer で運び client は sessionStorage に保管する | accepted | 2026-04-19 |
+| [0006](./0006-session-token-via-bearer-header.md) | session token は Authorization: Bearer で運び client は sessionStorage に保管する | superseded → 0007 | 2026-04-19 |
+| [0007](./0007-stateless-jwt-bearer-no-server-session.md) | サーバー側 session を廃止し Twitch id_token を毎回検証する Bearer 認証にする | accepted | 2026-04-19 |
+| [0008](./0008-cloud-run-service-connects-as-dml-only-app-user.md) | Cloud Run service は DML-only の app user で DB 接続する (least privilege) | accepted | 2026-04-23 |
+| [0009](./0009-declarative-per-table-grant-via-pgschema.md) | per-table GRANT を pgschema で declarative に管理し、DB role 本体は NixOS が source of truth | accepted | 2026-04-23 |
 
 ## ADR に書くこと / 書かないこと
 
