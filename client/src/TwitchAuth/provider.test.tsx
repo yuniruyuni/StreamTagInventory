@@ -179,6 +179,9 @@ test("fresh login: Entrance → Twitch callback (matching nonce) → AUTHENTICAT
   );
   // hash が消費されていることも確認 (Phase A の clearHash)
   expect(window.location.hash).toBe("");
+  // login 成功後は nonce を localStorage から削除する (rotate ではなく consume)。
+  // 残すと他タブから見えるゴミになるだけで実用的な意味が無い。
+  expect(localStorage.getItem("oauth_nonce")).toBeNull();
 });
 
 test("returning visitor (valid id_token in storage, no hash) goes directly to AUTHENTICATED", async () => {

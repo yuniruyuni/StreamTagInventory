@@ -104,12 +104,27 @@ export const TwitchAuthProvider: FC<Props> = ({
   /**
    * 現 nonce を消費し、次回ログイン用に新しい nonce を発行する。
    * localStorage と React state の両方を同期的に更新する。
+   * 用途: mismatch で Entrance に戻す / logout / Phase B cleanup。
    */
   const rotateNonce = useCallback(() => {
     localStorage.removeItem(NONCE_STORAGE_KEY);
     const fresh = generateNonce();
     localStorage.setItem(NONCE_STORAGE_KEY, fresh);
     setNonce(fresh);
+  }, []);
+
+  /**
+   * login 成功時に nonce を localStorage から完全に削除する。
+   * ログイン後は authorize URL は再利用されない (idToken 有で useMemo が null
+   * を返すため) ので、storage に残しておく必要がない。次回 Entrance に戻った
+   * 時 (logout / Phase B / タブ再訪) は ensureNonce / rotateNonce が新規発行
+   * するので OK。
+   *
+   * React state は更新しない。idToken 有の間は authorizeUrl で読まれないし、
+   * 状態変化で不要な re-render を起こさないため。
+   */
+  const consumeNonce = useCallback(() => {
+    localStorage.removeItem(NONCE_STORAGE_KEY);
   }, []);
 
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
@@ -133,8 +148,9 @@ export const TwitchAuthProvider: FC<Props> = ({
       return;
     }
 
-    // 一致 → consume + 次回用に新規発行
-    rotateNonce();
+    // 一致 → storage から nonce を消費 (削除)。次回 login では ensureNonce が
+    // 新規発行するので storage に残しておく必要はない。
+    consumeNonce();
     setAccessToken(parsed.accessToken);
     setIdToken(parsed.idToken);
     // 前 session の stale id_token が storage に残っていた場合、mount 時に
