@@ -7,6 +7,8 @@ export { PgDatabase } from "./pg-client";
 export { type SQLFragment, sql } from "./sql";
 
 let db: PgDatabase | null = null;
+const DB_VERIFY_MAX_ATTEMPTS = 20;
+const DB_VERIFY_RETRY_DELAY_MS = 250;
 
 export function getDatabase(): PgDatabase {
   if (!db)
@@ -40,18 +42,42 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
   // シナリオでは startup 検証で fail-early されると困るので、`SKIP_DB_VERIFY=1`
   // が設定されていれば skip する。production では常に未設定にする。
   if (process.env.SKIP_DB_VERIFY !== "1") {
-    try {
-      await db.queryRun(sql`SELECT 1`);
-    } catch (err) {
-      log.error(`Database connection failed: ${String(err)}`);
-      throw err;
-    }
+    await verifyDatabaseConnection(log, db);
   } else {
     log.warn("SKIP_DB_VERIFY=1: skipping startup SELECT 1 (CI / smoke test)");
   }
   log.info("Database ready");
 
   return db;
+}
+
+async function verifyDatabaseConnection(
+  log: ILogger,
+  database: PgDatabase,
+): Promise<void> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= DB_VERIFY_MAX_ATTEMPTS; attempt++) {
+    try {
+      await database.queryRun(sql`SELECT 1`);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt === DB_VERIFY_MAX_ATTEMPTS) break;
+
+      log.warn(
+        `Database connection attempt ${attempt}/${DB_VERIFY_MAX_ATTEMPTS} failed: ${String(err)}`,
+      );
+      await sleep(DB_VERIFY_RETRY_DELAY_MS);
+    }
+  }
+
+  log.error(`Database connection failed: ${String(lastError)}`);
+  throw lastError;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function closeDatabase(): Promise<void> {

@@ -10,11 +10,13 @@ spec:
       annotations:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "2"
+        run.googleapis.com/container-dependencies: '{"app":["db-tunnel"]}'
     spec:
       containerConcurrency: 80
       timeoutSeconds: 60
       containers:
-        - image: IMAGE_PLACEHOLDER
+        - name: app
+          image: IMAGE_PLACEHOLDER
           ports:
             - containerPort: 3000
           resources:
@@ -44,14 +46,15 @@ spec:
               value: d2kz8x5se7k6b1n0picux0r7kaozi3
             - name: APP_BASE_URL
               value: https://tags.yuniruyuni.net
-        - image: cloudflare/cloudflared:latest
+        - name: db-tunnel
+          image: cloudflare/cloudflared:latest
           args:
             - access
             - tcp
             - --hostname
             - db.yuniruyuni.net
             - --url
-            - localhost:5432
+            - 0.0.0.0:5432
           env:
             - name: TUNNEL_SERVICE_TOKEN_ID
               valueFrom:
@@ -67,3 +70,9 @@ spec:
             limits:
               cpu: "0.5"
               memory: "128Mi"
+          startupProbe:
+            tcpSocket:
+              port: 5432
+            periodSeconds: 1
+            timeoutSeconds: 1
+            failureThreshold: 30
