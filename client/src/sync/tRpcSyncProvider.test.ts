@@ -100,6 +100,50 @@ describe("TRpcSyncProvider", () => {
     provider.destroy();
   });
 
+  test("local update during an in-flight sync is sent by a follow-up sync", async () => {
+    const doc = createTemplateDoc();
+    const serverDoc = createTemplateDoc();
+    let releaseFirstSync: (() => void) | undefined;
+    const calls: Array<{ cup?: Uint8Array }> = [];
+    const sync: SyncMutator = {
+      async mutate({ clientStateVector, clientUpdate }) {
+        const csv = fromBase64(clientStateVector);
+        const cup = clientUpdate ? fromBase64(clientUpdate) : undefined;
+        calls.push({ cup });
+        if (calls.length === 1) {
+          await new Promise<void>((resolve) => {
+            releaseFirstSync = resolve;
+          });
+        }
+        if (cup && cup.byteLength > 0) Y.applyUpdate(serverDoc, cup);
+        return {
+          serverUpdate: toBase64(Y.encodeStateAsUpdate(serverDoc, csv)),
+          serverStateVector: toBase64(Y.encodeStateVector(serverDoc)),
+        };
+      },
+    };
+
+    const provider = new TRpcSyncProvider({
+      doc,
+      sync,
+      enableBackgroundTriggers: false,
+      debounceMs: 1,
+    });
+
+    await flushMicrotasks();
+    getTemplatesArray(doc).push([templateToYMap(T1)]);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(calls.length).toBe(1);
+
+    releaseFirstSync?.();
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(calls.length).toBe(2);
+    expect(yMapToTemplate(getTemplatesArray(serverDoc).get(0))).toEqual(T1);
+
+    provider.destroy();
+  });
+
   test("server-side state propagates back to client on next sync", async () => {
     // 別 client が先に T1 を push 済の状況をエミュレート
     const { sync, serverDoc } = makeServerMock();

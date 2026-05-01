@@ -53,6 +53,7 @@ export interface TRpcSyncProviderOptions {
 export class TRpcSyncProvider {
   private lastServerStateVector: Uint8Array | undefined;
   private pending = false;
+  private dirtyWhilePending = false;
   private debounceHandle: ReturnType<typeof setTimeout> | undefined;
   private pollHandle: ReturnType<typeof setInterval> | undefined;
   private destroyed = false;
@@ -114,7 +115,11 @@ export class TRpcSyncProvider {
   }
 
   async sync(): Promise<void> {
-    if (this.destroyed || this.pending) return;
+    if (this.destroyed) return;
+    if (this.pending) {
+      this.dirtyWhilePending = true;
+      return;
+    }
     this.pending = true;
     try {
       const clientSV = encodeStateVector(this.opts.doc);
@@ -137,6 +142,10 @@ export class TRpcSyncProvider {
       this.opts.onError?.(err);
     } finally {
       this.pending = false;
+      if (this.dirtyWhilePending && !this.destroyed) {
+        this.dirtyWhilePending = false;
+        void this.sync();
+      }
     }
   }
 }

@@ -50,25 +50,36 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
     const doc = createTemplateDoc();
     const namespace = `templates:${user.id}`;
     let persistence: IndexeddbPersistence | null = null;
+    let syncProvider: TRpcSyncProvider | null = null;
+    let disposed = false;
 
     // IndexedDB が利用可能な環境のみ persistence を起動 (test 環境は skip)。
     // isReady は whenSynced (IndexedDB ロード完了) まで false。IndexedDB 無し環境は
     // 即 true で render を進めさせる。
+    const startSync = () => {
+      if (disposed) return;
+      const sync: SyncMutator = {
+        mutate: (input) => utils.client.templates.sync.mutate(input),
+      };
+      syncProvider = new TRpcSyncProvider({ doc, sync });
+    };
+
     if (typeof window !== "undefined" && "indexedDB" in window) {
       setValue({ doc, isReady: false });
       persistence = new IndexeddbPersistence(namespace, doc);
-      persistence.whenSynced.then(() => setValue({ doc, isReady: true }));
+      persistence.whenSynced.then(() => {
+        if (disposed) return;
+        setValue({ doc, isReady: true });
+        startSync();
+      });
     } else {
       setValue({ doc, isReady: true });
+      startSync();
     }
 
-    const sync: SyncMutator = {
-      mutate: (input) => utils.client.templates.sync.mutate(input),
-    };
-    const syncProvider = new TRpcSyncProvider({ doc, sync });
-
     return () => {
-      syncProvider.destroy();
+      disposed = true;
+      if (syncProvider) syncProvider.destroy();
       if (persistence) persistence.destroy();
       doc.destroy();
     };
