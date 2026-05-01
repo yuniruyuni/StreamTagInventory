@@ -1,50 +1,29 @@
-import React, { useCallback, useState } from "react";
-import useSWR from "swr";
-import { ulid } from "ulid";
+import type { FC } from "react";
 import { CurrentStreamInfo } from "~/CurrentStreamInfo";
-import { twitch } from "~/fetcher";
-import {
-  useChannelInfo,
-  useTemplateOperations,
-  useTemplateSearch,
-} from "~/hooks";
 import { useTranslation } from "~/i18n";
 import { Menu } from "~/Menu";
-import { newCategory } from "~/model/category";
-import type { Template } from "~/model/template";
-import type { User } from "~/model/user";
-import { useNotification } from "~/Notification";
 import { PostTemplateEditor } from "~/PostTemplateEditor";
-import { usePostTemplate } from "~/sync/usePostTemplate";
-import { useTemplates } from "~/sync/useTemplates";
-import { TwitchAuthContext } from "~/TwitchAuth";
 
 import { AddTemplateButton } from "./AddTemplateButton";
 import { TemplateList } from "./TemplateList";
+import { useMainScreenState } from "./useMainScreenState";
 
-export const MainScreen: React.FC = () => {
-  const { i18n, t } = useTranslation();
-  const { token } = React.useContext(TwitchAuthContext);
-  const { templates } = useTemplates();
-  const { postTemplate, setPostTemplate } = usePostTemplate();
-  const [postTemplateEditorOpen, setPostTemplateEditorOpen] = useState(false);
-
-  const { data: users, isLoading } = useSWR(
-    ["https://api.twitch.tv/helix/users", token, i18n.language],
-    twitch.get<User[]>,
-  );
-
+export const MainScreen: FC = () => {
+  const { t } = useTranslation();
   const {
+    users,
+    isLoading,
     channelInfo,
-    category: channelCategory,
-    isLoading: isChannelLoading,
-  } = useChannelInfo(users?.[0]?.id);
-  const { addNotification } = useNotification();
-
-  const { searchQuery, setSearchQuery, filteredTemplates } =
-    useTemplateSearch(templates);
-
-  const {
+    channelCategory,
+    isChannelLoading,
+    searchQuery,
+    setSearchQuery,
+    filteredTemplates,
+    postTemplate,
+    setPostTemplate,
+    postTemplateEditorOpen,
+    setPostTemplateEditorOpen,
+    onImportCurrentAsTemplate,
     onAddTemplate,
     onMoveTemplate,
     onApplyTemplate,
@@ -53,26 +32,7 @@ export const MainScreen: React.FC = () => {
     onSaveTemplate,
     onImportTemplates,
     onExportTemplates,
-  } = useTemplateOperations({ users });
-
-  const onImportCurrentAsTemplate = useCallback(() => {
-    if (!channelInfo) return;
-
-    const template: Template = {
-      id: ulid(),
-      title: channelInfo.title,
-      category: channelCategory ?? newCategory(),
-      tags: channelInfo.tags,
-    };
-
-    onAddTemplate(template);
-    addNotification({
-      type: "success",
-      title: t("stream.importSuccess"),
-      message: `${channelInfo.title} - ${channelInfo.game_name}`,
-      autoClose: true,
-    });
-  }, [channelInfo, channelCategory, onAddTemplate, addNotification, t]);
+  } = useMainScreenState();
 
   return (
     <div className="container mx-auto">
