@@ -19,7 +19,6 @@ type Props = {
   postTemplate?: string;
 };
 
-// TODO: refine UI design.
 export const TemplateCard: FC<Props> = memo(
   ({
     template,
@@ -48,12 +47,12 @@ export const TemplateCard: FC<Props> = memo(
     return (
       <Card
         data-testid={`template-card-${template.id}`}
-        className="w-96 bg-white shadow-xl"
+        className="w-full max-w-96 bg-white shadow-xl shadow-slate-200/70 ring-1 ring-slate-200/80"
         ref={setNodeRef}
         {...restAttributes}
         style={style}
       >
-        <CardBody>
+        <CardBody className="gap-4">
           <DragHandle listeners={listeners} />
 
           <TemplateForm template={temp} onChange={setTemp} />

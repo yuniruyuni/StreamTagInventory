@@ -44,14 +44,14 @@ export const MainScreen: FC = () => {
         onExport={onExportTemplates}
         onEditPostTemplate={() => setPostTemplateEditorOpen(true)}
       />
-      <div className="flex flex-col gap-4 p-16 pt-24">
+      <div className="flex flex-col gap-4 px-4 py-6 pt-20 sm:px-8 lg:p-16 lg:pt-24">
         <CurrentStreamInfo
           channelInfo={channelInfo}
           category={channelCategory}
           isLoading={isLoading || isChannelLoading}
           onImportAsTemplate={onImportCurrentAsTemplate}
         />
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-start gap-4">
           {filteredTemplates.length > 0 ? (
             <TemplateList
               templates={filteredTemplates}
