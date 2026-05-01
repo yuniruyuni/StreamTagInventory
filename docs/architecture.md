@@ -14,8 +14,8 @@ server 側のクリーンアーキテクチャ規約。**Repository / Usecase �
 │   tRPC routers / Hono middleware                 │
 ├─────────────────────────────────────────────────┤
 │ Usecase (オーケストレーション)                     │
-│   pre→read→process→write→post→result の 6 phase   │
-│   1 usecase = 1 transaction                      │
+│   pre→read→process→write→post→finish→result       │
+│   write がある場合 read/process/write は同一 tx    │
 ├─────────────────────────────────────────────────┤
 │ Repository (能動的: 外部システム呼出)              │
 │   DB / 外部 API / コマンド実行                    │
@@ -367,18 +367,19 @@ export function columnName(key: User.SortKey): SQLFragment {
 
 ### Phase 構成
 
-`pre → read → process → write → post → result` の 6 phase。全 phase は省略可能 (省略時は identity)。
+`pre → read → process → write → post → finish → result` の 7 phase。全 phase は省略可能 (省略時は identity)。
 
 ```
-(引数) → pre → preState → read → readState → process → processState → write → writeState → post → postState → result → output
-                          └────────────── transaction 内 ──────────────┘
-                          └────────────── transaction 外 ─────────────────────────────────┘
+(引数) → pre → preState → read → readState → process → processState → write → writeState → post → postState → finish → finishState → result → output
+                          └────────────── transaction 内 ──────────────┘                         └── 新しい transaction ──┘
+                          └────────────── transaction 外 ───────────────────────────────────────────────────────────────────────┘
 ```
 
 - `read` / `process` / `write` は **同一トランザクション** で実行
 - `pre` / `post` / `result` はトランザクション外
+- `finish` は `post` の外部副作用結果を受けて、別の書き込みトランザクションで実行
 - 各 phase で `fail("CODE", "msg")` を返すと後続 phase は skip され、`Result<T, Fail>` として上位に返る
-- **1 usecase = 1 transaction**: 複数 transaction が必要なら usecase を分ける
+- 通常は 1 usecase 内の DB transaction は 1 つに抑える。外部副作用後の確定処理が必要な場合のみ `finish` を使う
 - **usecase 間呼出禁止**: 共通処理は Model のメソッド/factory に切り出す
 
 ### 例

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check:e2e": "playwright test --update-snapshots",
-    "check:e2e:ui": "playwright test --ui --update-snapshots",
-    "check:e2e:headed": "playwright test --headed --update-snapshots",
+    "check:e2e": "playwright test",
+    "check:e2e:ui": "playwright test --ui",
+    "check:e2e:headed": "playwright test --headed",
+    "fix:e2e:snapshots": "playwright test --update-snapshots",
     "check:e2e:start": "run-s 'check:e2e:build' 'check:e2e:serve'",
     "check:e2e:build": "run-p 'check:e2e:build:**'",
     "check:e2e:build:html": "mkdir -p static && cp ../client/src/index.html static/index.html && cp ../client/src/robots.txt static/robots.txt",
