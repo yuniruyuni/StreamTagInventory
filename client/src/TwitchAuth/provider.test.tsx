@@ -255,6 +255,29 @@ test("session expired (valid token in storage but server 401): Phase B cleans up
   expect(localStorage.getItem("oauth_nonce")).not.toBeNull();
 });
 
+test("expired id_token is cleaned up locally without waiting for server rejection", async () => {
+  const idToken = fakeJwt({
+    nonce: "any",
+    sub: "u1",
+    exp: Math.floor(Date.now() / 1000) - 60,
+  });
+  sessionStorage.setItem(ID_TOKEN_STORAGE_KEY, JSON.stringify(idToken));
+  sessionStorage.setItem("twitch-auth", JSON.stringify("at"));
+
+  const { findByText, queryByText } = renderWithProvider(() => ({
+    ok: true,
+    data: { user: DEFAULT_USER },
+  }));
+
+  expect(
+    await findByText("ENTRANCE", {}, { timeout: 3000 }),
+  ).toBeInTheDocument();
+  expect(queryByText("AUTHENTICATED")).toBeNull();
+  expect(sessionStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+  expect(sessionStorage.getItem("twitch-auth")).toBeNull();
+  expect(localStorage.getItem("oauth_nonce")).not.toBeNull();
+});
+
 // =============================================================================
 // Nonce / callback validation
 // =============================================================================

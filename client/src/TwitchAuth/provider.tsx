@@ -19,6 +19,7 @@ import {
   clearHash,
   generateNonce,
   parseAuthFromHash,
+  peekIdTokenExp,
   peekIdTokenNonce,
 } from "./utils";
 
@@ -135,6 +136,12 @@ export const TwitchAuthProvider: FC<Props> = ({
     localStorage.removeItem(NONCE_STORAGE_KEY);
   }, []);
 
+  const clearLocalSession = useCallback(() => {
+    removeIdToken();
+    removeAccessToken();
+    rotateNonce();
+  }, [removeIdToken, removeAccessToken, rotateNonce]);
+
   // Phase A (one-shot): Twitch callback の URL fragment を消費し、id_token と
   // access_token を sessionStorage に保管する。`callbackHandledRef` で
   // StrictMode の double-invoke もガード。
@@ -180,18 +187,25 @@ export const TwitchAuthProvider: FC<Props> = ({
   useEffect(() => {
     if (idToken && meQuery.isError && !meQuery.isFetching) {
       console.warn("id_token rejected by server; clearing local tokens");
-      removeIdToken();
-      removeAccessToken();
-      rotateNonce();
+      clearLocalSession();
     }
-  }, [
-    idToken,
-    meQuery.isError,
-    meQuery.isFetching,
-    removeIdToken,
-    removeAccessToken,
-    rotateNonce,
-  ]);
+  }, [idToken, meQuery.isError, meQuery.isFetching, clearLocalSession]);
+
+  useEffect(() => {
+    if (!idToken) return;
+
+    const exp = peekIdTokenExp(idToken);
+    if (exp === null) return;
+
+    const expiresInMs = exp * 1000 - Date.now();
+    if (expiresInMs <= 0) {
+      clearLocalSession();
+      return;
+    }
+
+    const timer = setTimeout(clearLocalSession, expiresInMs);
+    return () => clearTimeout(timer);
+  }, [idToken, clearLocalSession]);
 
   // scope は呼出側で毎レンダー新しい配列になり得るので、内容ベースの key で deps 化。
   // string が同じなら React の Object.is 比較で useMemo は前回の値を維持する。

@@ -3,6 +3,7 @@ import {
   clearHash,
   generateNonce,
   parseAuthFromHash,
+  peekIdTokenExp,
   peekIdTokenNonce,
 } from "./utils";
 
@@ -58,6 +59,16 @@ function makeFakeJwt(payload: Record<string, unknown>): string {
 test("peekIdTokenNonce extracts nonce claim from a well-formed JWT", () => {
   const jwt = makeFakeJwt({ sub: "1", nonce: "abc-123" });
   expect(peekIdTokenNonce(jwt)).toBe("abc-123");
+});
+
+test("peekIdTokenExp extracts numeric exp claim from a well-formed JWT", () => {
+  const jwt = makeFakeJwt({ sub: "1", exp: 1234567890 });
+  expect(peekIdTokenExp(jwt)).toBe(1234567890);
+});
+
+test("peekIdTokenExp returns null when exp claim is missing or non-numeric", () => {
+  expect(peekIdTokenExp(makeFakeJwt({ sub: "1" }))).toBeNull();
+  expect(peekIdTokenExp(makeFakeJwt({ sub: "1", exp: "123" }))).toBeNull();
 });
 
 test("peekIdTokenNonce returns null when nonce claim is missing", () => {

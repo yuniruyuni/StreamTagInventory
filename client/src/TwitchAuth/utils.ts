@@ -37,6 +37,16 @@ export function clearHash(): void {
  * callback を reject する。
  */
 export function peekIdTokenNonce(idToken: string): string | null {
+  const claims = peekIdTokenClaims(idToken);
+  return typeof claims?.nonce === "string" ? claims.nonce : null;
+}
+
+export function peekIdTokenExp(idToken: string): number | null {
+  const claims = peekIdTokenClaims(idToken);
+  return typeof claims?.exp === "number" ? claims.exp : null;
+}
+
+function peekIdTokenClaims(idToken: string): Record<string, unknown> | null {
   const parts = idToken.split(".");
   if (parts.length !== 3) return null;
   try {
@@ -45,8 +55,10 @@ export function peekIdTokenNonce(idToken: string): string | null {
     const b64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const padded = b64 + "===".slice((b64.length + 3) % 4);
     const json = atob(padded);
-    const claims = JSON.parse(json) as { nonce?: unknown };
-    return typeof claims.nonce === "string" ? claims.nonce : null;
+    const claims = JSON.parse(json);
+    return claims !== null && typeof claims === "object"
+      ? (claims as Record<string, unknown>)
+      : null;
   } catch {
     return null;
   }
