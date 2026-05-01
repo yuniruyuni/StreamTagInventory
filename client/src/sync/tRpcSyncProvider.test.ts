@@ -100,6 +100,25 @@ describe("TRpcSyncProvider", () => {
     provider.destroy();
   });
 
+  test("reports syncing and synced status", async () => {
+    const doc = createTemplateDoc();
+    const { sync } = makeServerMock();
+    const statuses: string[] = [];
+    const provider = new TRpcSyncProvider({
+      doc,
+      sync,
+      enableBackgroundTriggers: false,
+      onStatusChange: (status, lastSyncedAt) => {
+        statuses.push(`${status}:${lastSyncedAt ? "set" : "empty"}`);
+      },
+    });
+
+    await flushMicrotasks();
+
+    expect(statuses).toEqual(["syncing:empty", "synced:set"]);
+    provider.destroy();
+  });
+
   test("local update during an in-flight sync is sent by a follow-up sync", async () => {
     const doc = createTemplateDoc();
     const serverDoc = createTemplateDoc();

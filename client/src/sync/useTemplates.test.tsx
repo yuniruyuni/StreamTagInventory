@@ -28,7 +28,14 @@ const T3: Template = {
 
 function wrap(doc: Y.Doc | null) {
   return ({ children }: { children: ReactNode }) => (
-    <TemplateDocContext.Provider value={{ doc, isReady: true }}>
+    <TemplateDocContext.Provider
+      value={{
+        doc,
+        isReady: true,
+        syncStatus: "synced",
+        lastSyncedAt: new Date(0),
+      }}
+    >
       {children}
     </TemplateDocContext.Provider>
   );

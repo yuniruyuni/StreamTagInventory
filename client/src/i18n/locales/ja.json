@@ -81,6 +81,13 @@
     "preview": "プレビュー",
     "resetToDefault": "デフォルトに戻す"
   },
+  "sync": {
+    "idle": "同期待機",
+    "syncing": "同期中",
+    "synced": "同期済み",
+    "error": "同期エラー",
+    "lastSyncedAt": "最終同期: {{time}}"
+  },
   "entrance": {
     "tagline": "配信テンプレートを簡単に管理・適用",
     "description": "タイトル・カテゴリ・タグをテンプレートとして保存し、ワンクリックでTwitchに適用できます"

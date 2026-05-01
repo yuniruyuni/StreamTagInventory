@@ -32,7 +32,14 @@ function wrap(doc: ReturnType<typeof createTemplateDoc> | null) {
   return ({ children }: { children: ReactNode }) => (
     <I18nextProvider i18n={i18n}>
       <NotificationProvider>
-        <TemplateDocContext.Provider value={{ doc, isReady: true }}>
+        <TemplateDocContext.Provider
+          value={{
+            doc,
+            isReady: true,
+            syncStatus: "synced",
+            lastSyncedAt: new Date(0),
+          }}
+        >
           {children}
         </TemplateDocContext.Provider>
       </NotificationProvider>

@@ -8,6 +8,7 @@ import { Navbar } from "~/components/Navbar";
 import { useTranslation } from "~/i18n";
 import { LanguageSwitcher } from "~/LanguageSwitcher";
 import type { User } from "~/model/user";
+import { TemplateDocContext } from "~/sync/TemplateDocContext";
 import { TwitchAuthContext } from "~/TwitchAuth";
 
 type Props = {
@@ -29,6 +30,7 @@ export const Menu: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const { logout } = React.useContext(TwitchAuthContext);
+  const { syncStatus, lastSyncedAt } = React.useContext(TemplateDocContext);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(event.target.value);
@@ -87,7 +89,19 @@ export const Menu: React.FC<Props> = ({
           </div>
         </div>
       </div>
-      <div className="flex-none flex gap-4">
+      <div className="flex-none flex items-center gap-4">
+        <span
+          className={syncStatusClassName(syncStatus)}
+          title={
+            lastSyncedAt
+              ? t("sync.lastSyncedAt", {
+                  time: lastSyncedAt.toLocaleTimeString(),
+                })
+              : t(`sync.${syncStatus}`)
+          }
+        >
+          {t(`sync.${syncStatus}`)}
+        </span>
         <LanguageSwitcher />
         <Dropdown align="end">
           <Button
@@ -144,3 +158,18 @@ export const Menu: React.FC<Props> = ({
     </Navbar>
   );
 };
+
+function syncStatusClassName(status: string): string {
+  const base =
+    "hidden sm:inline-flex items-center rounded-full px-2 py-1 text-xs font-medium";
+  switch (status) {
+    case "syncing":
+      return `${base} bg-sky-50 text-sky-700`;
+    case "synced":
+      return `${base} bg-emerald-50 text-emerald-700`;
+    case "error":
+      return `${base} bg-rose-50 text-rose-700`;
+    default:
+      return `${base} bg-slate-100 text-slate-600`;
+  }
+}

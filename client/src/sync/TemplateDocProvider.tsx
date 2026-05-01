@@ -34,6 +34,8 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
   const [value, setValue] = useState<TemplateDocContextValue>({
     doc: null,
     isReady: false,
+    syncStatus: "idle",
+    lastSyncedAt: null,
   });
 
   // tRPC mutation を SyncMutator interface に適合させる。React Query を介さず
@@ -43,7 +45,12 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
   // biome-ignore lint/correctness/useExhaustiveDependencies: utils.client は stable (trpc client は singleton)
   useEffect(() => {
     if (!user) {
-      setValue({ doc: null, isReady: false });
+      setValue({
+        doc: null,
+        isReady: false,
+        syncStatus: "idle",
+        lastSyncedAt: null,
+      });
       return;
     }
 
@@ -61,19 +68,45 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
       const sync: SyncMutator = {
         mutate: (input) => utils.client.templates.sync.mutate(input),
       };
-      syncProvider = new TRpcSyncProvider({ doc, sync });
+      syncProvider = new TRpcSyncProvider({
+        doc,
+        sync,
+        onStatusChange: (syncStatus, lastSyncedAt) => {
+          if (disposed) return;
+          setValue((current) => ({
+            ...current,
+            syncStatus,
+            lastSyncedAt,
+          }));
+        },
+      });
     };
 
     if (typeof window !== "undefined" && "indexedDB" in window) {
-      setValue({ doc, isReady: false });
+      setValue({
+        doc,
+        isReady: false,
+        syncStatus: "idle",
+        lastSyncedAt: null,
+      });
       persistence = new IndexeddbPersistence(namespace, doc);
       persistence.whenSynced.then(() => {
         if (disposed) return;
-        setValue({ doc, isReady: true });
+        setValue({
+          doc,
+          isReady: true,
+          syncStatus: "idle",
+          lastSyncedAt: null,
+        });
         startSync();
       });
     } else {
-      setValue({ doc, isReady: true });
+      setValue({
+        doc,
+        isReady: true,
+        syncStatus: "idle",
+        lastSyncedAt: null,
+      });
       startSync();
     }
 

@@ -81,6 +81,13 @@
     "preview": "Preview",
     "resetToDefault": "Reset to Default"
   },
+  "sync": {
+    "idle": "Sync idle",
+    "syncing": "Syncing",
+    "synced": "Synced",
+    "error": "Sync error",
+    "lastSyncedAt": "Last synced: {{time}}"
+  },
   "entrance": {
     "tagline": "Easily manage and apply stream templates",
     "description": "Save your titles, categories, and tags as templates and apply them to Twitch with one click"

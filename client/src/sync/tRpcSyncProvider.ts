@@ -1,4 +1,5 @@
 import type * as Y from "yjs";
+import type { SyncStatus } from "./TemplateDocContext";
 import {
   applyRemoteUpdate,
   encodeStateAsUpdate,
@@ -26,6 +27,7 @@ export interface TRpcSyncProviderOptions {
   doc: Y.Doc;
   sync: SyncMutator;
   onError?: (err: unknown) => void;
+  onStatusChange?: (status: SyncStatus, lastSyncedAt: Date | null) => void;
   /**
    * test 注入用フラグ。`true` (default = `typeof window !== "undefined"`) で
    * window event listener と setInterval poll を登録する。test では false にして
@@ -121,6 +123,7 @@ export class TRpcSyncProvider {
       return;
     }
     this.pending = true;
+    this.opts.onStatusChange?.("syncing", this.lastSyncedAt);
     try {
       const clientSV = encodeStateVector(this.opts.doc);
       const clientUpdate = this.lastServerStateVector
@@ -138,7 +141,10 @@ export class TRpcSyncProvider {
         applyRemoteUpdate(this.opts.doc, serverUpdate);
       }
       this.lastServerStateVector = fromBase64(res.serverStateVector);
+      this.lastSyncedAt = new Date();
+      this.opts.onStatusChange?.("synced", this.lastSyncedAt);
     } catch (err) {
+      this.opts.onStatusChange?.("error", this.lastSyncedAt);
       this.opts.onError?.(err);
     } finally {
       this.pending = false;
@@ -148,4 +154,6 @@ export class TRpcSyncProvider {
       }
     }
   }
+
+  private lastSyncedAt: Date | null = null;
 }
