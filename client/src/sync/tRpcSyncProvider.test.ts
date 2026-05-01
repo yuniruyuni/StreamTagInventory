@@ -263,4 +263,40 @@ describe("TRpcSyncProvider", () => {
 
     provider.destroy();
   });
+
+  test("failed sync is retried automatically", async () => {
+    const doc = createTemplateDoc();
+    const serverDoc = createTemplateDoc();
+    let shouldFail = true;
+    const calls: string[] = [];
+    const sync: SyncMutator = {
+      async mutate({ clientStateVector, clientUpdate }) {
+        calls.push("mutate");
+        if (shouldFail) {
+          shouldFail = false;
+          throw new Error("temporary failure");
+        }
+        const csv = fromBase64(clientStateVector);
+        const cup = clientUpdate ? fromBase64(clientUpdate) : undefined;
+        if (cup && cup.byteLength > 0) Y.applyUpdate(serverDoc, cup);
+        return {
+          serverUpdate: toBase64(Y.encodeStateAsUpdate(serverDoc, csv)),
+          serverStateVector: toBase64(Y.encodeStateVector(serverDoc)),
+        };
+      },
+    };
+
+    const provider = new TRpcSyncProvider({
+      doc,
+      sync,
+      enableBackgroundTriggers: false,
+      retryInitialMs: 1,
+      retryMaxMs: 1,
+    });
+
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(calls).toEqual(["mutate", "mutate"]);
+    provider.destroy();
+  });
 });
