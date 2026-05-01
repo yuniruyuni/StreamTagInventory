@@ -86,3 +86,20 @@ jobs:
           gcloud run services replace cloudrun.yaml \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID"
+
+      - name: Smoke test deployed service
+        run: |
+          curl --fail --silent --show-error https://tags.yuniruyuni.net/health
+
+          auth_status="$(
+            curl --silent --show-error \
+              --output /tmp/auth-me.json \
+              --write-out "%{http_code}" \
+              "https://tags.yuniruyuni.net/api/trpc/auth.me?batch=1&input=%7B%7D"
+          )"
+          if [ "$auth_status" != "401" ]; then
+            echo "Expected auth.me to return 401 for an unauthenticated request, got ${auth_status}"
+            cat /tmp/auth-me.json
+            exit 1
+          fi
+          grep --quiet '"UNAUTHORIZED"' /tmp/auth-me.json
