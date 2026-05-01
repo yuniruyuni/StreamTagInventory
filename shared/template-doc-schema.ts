@@ -2,6 +2,7 @@ export const TEMPLATE_DOC_KEYS = {
   templates: "templates",
   settings: "settings",
   postTemplate: "postTemplate",
+  schemaVersion: "schemaVersion",
   template: {
     id: "id",
     title: "title",
@@ -11,6 +12,8 @@ export const TEMPLATE_DOC_KEYS = {
     tags: "tags",
   },
 } as const;
+
+export const TEMPLATE_DOC_SCHEMA_VERSION = 1;
 
 export const TEMPLATE_DOC_ALLOWED_TOP_LEVEL_KEYS = [
   TEMPLATE_DOC_KEYS.templates,
@@ -28,4 +31,5 @@ export const TEMPLATE_DOC_ALLOWED_TEMPLATE_FIELDS = [
 
 export const TEMPLATE_DOC_ALLOWED_SETTING_KEYS = [
   TEMPLATE_DOC_KEYS.postTemplate,
+  TEMPLATE_DOC_KEYS.schemaVersion,
 ] as const;

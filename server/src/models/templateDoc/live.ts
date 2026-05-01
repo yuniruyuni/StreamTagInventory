@@ -1,4 +1,7 @@
-import { TEMPLATE_DOC_KEYS } from "@shared/template-doc-schema";
+import {
+  TEMPLATE_DOC_KEYS,
+  TEMPLATE_DOC_SCHEMA_VERSION,
+} from "@shared/template-doc-schema";
 import * as Y from "yjs";
 import { type Fail, fail } from "@/models/common";
 import {
@@ -184,6 +187,16 @@ function validateDocShape(doc: Y.Doc): Fail | null {
       return fail(
         "INVALID_DOC_SHAPE",
         `settings.postTemplate too long (max ${SYNC_LIMITS.MAX_POST_TEMPLATE_LEN})`,
+      );
+    }
+  }
+
+  const schemaVersion = settings.get(TEMPLATE_DOC_KEYS.schemaVersion);
+  if (schemaVersion != null) {
+    if (schemaVersion !== TEMPLATE_DOC_SCHEMA_VERSION) {
+      return fail(
+        "INVALID_DOC_SHAPE",
+        `settings.schemaVersion must be ${TEMPLATE_DOC_SCHEMA_VERSION}`,
       );
     }
   }

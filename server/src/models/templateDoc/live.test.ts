@@ -216,6 +216,18 @@ describe("validate", () => {
     expect(f?.code).toBe("INVALID_DOC_SHAPE");
     expect(f?.message).toContain("rogue");
   });
+
+  test("rejects unsupported schemaVersion in settings", () => {
+    const { update } = makeDoc((doc) => {
+      const settings = doc.getMap("settings");
+      settings.set("schemaVersion", 999);
+    });
+    const live = LiveTemplateDoc.empty("u1");
+    live.applyClientUpdate(update);
+    const f = live.validate();
+    expect(f?.code).toBe("INVALID_DOC_SHAPE");
+    expect(f?.message).toContain("schemaVersion");
+  });
 });
 
 // --- computeDiff ---

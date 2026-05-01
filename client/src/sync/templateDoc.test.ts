@@ -10,6 +10,7 @@ import {
   getTemplatesArray,
   REMOTE_ORIGIN,
   readPostTemplate,
+  readSchemaVersion,
   templateToYMap,
   toBase64,
   writePostTemplate,
@@ -33,6 +34,11 @@ describe("templateDoc Y.Doc structure", () => {
     const doc = createTemplateDoc();
     expect(getTemplatesArray(doc)).toBeInstanceOf(Y.Array);
     expect(getSettingsMap(doc)).toBeInstanceOf(Y.Map);
+  });
+
+  test("createTemplateDoc writes the current schema version", () => {
+    const doc = createTemplateDoc();
+    expect(readSchemaVersion(doc)).toBe(1);
   });
 });
 

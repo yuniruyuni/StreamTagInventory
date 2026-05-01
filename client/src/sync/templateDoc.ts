@@ -1,4 +1,7 @@
-import { TEMPLATE_DOC_KEYS } from "@shared/template-doc-schema";
+import {
+  TEMPLATE_DOC_KEYS,
+  TEMPLATE_DOC_SCHEMA_VERSION,
+} from "@shared/template-doc-schema";
 import * as Y from "yjs";
 import type { Template } from "~/model/template";
 
@@ -17,7 +20,11 @@ export const TEMPLATES_KEY = TEMPLATE_DOC_KEYS.templates;
 export const SETTINGS_KEY = TEMPLATE_DOC_KEYS.settings;
 export const POST_TEMPLATE_KEY = TEMPLATE_DOC_KEYS.postTemplate;
 
-export const createTemplateDoc = (): Y.Doc => new Y.Doc();
+export const createTemplateDoc = (): Y.Doc => {
+  const doc = new Y.Doc();
+  writeSchemaVersion(doc);
+  return doc;
+};
 
 export function getTemplatesArray(doc: Y.Doc): Y.Array<Y.Map<unknown>> {
   return doc.getArray<Y.Map<unknown>>(TEMPLATES_KEY);
@@ -63,6 +70,18 @@ export function readPostTemplate(doc: Y.Doc): string {
 
 export function writePostTemplate(doc: Y.Doc, value: string): void {
   getSettingsMap(doc).set(POST_TEMPLATE_KEY, value);
+}
+
+export function readSchemaVersion(doc: Y.Doc): number | null {
+  const v = getSettingsMap(doc).get(TEMPLATE_DOC_KEYS.schemaVersion);
+  return typeof v === "number" ? v : null;
+}
+
+function writeSchemaVersion(doc: Y.Doc): void {
+  getSettingsMap(doc).set(
+    TEMPLATE_DOC_KEYS.schemaVersion,
+    TEMPLATE_DOC_SCHEMA_VERSION,
+  );
 }
 
 export function encodeStateVector(doc: Y.Doc): Uint8Array {
