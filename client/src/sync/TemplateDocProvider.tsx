@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { IndexeddbPersistence } from "y-indexeddb";
+import type * as Y from "yjs";
 import { TwitchAuthContext } from "~/TwitchAuth";
 import { trpc } from "~/trpc/client";
 import {
@@ -14,6 +15,23 @@ import {
 } from "./TemplateDocContext";
 import { createTemplateDoc } from "./templateDoc";
 import { type SyncMutator, TRpcSyncProvider } from "./tRpcSyncProvider";
+
+type PersistenceLike = {
+  whenSynced: Promise<unknown>;
+  destroy: () => void;
+};
+
+type SyncProviderLike = {
+  destroy: () => void;
+};
+
+type Props = {
+  children: ReactNode;
+  createPersistence?: (namespace: string, doc: Y.Doc) => PersistenceLike;
+  createSyncProvider?: (
+    opts: ConstructorParameters<typeof TRpcSyncProvider>[0],
+  ) => SyncProviderLike;
+};
 
 /**
  * Y.Doc + y-indexeddb + tRPC sync provider を React context に束ねる
@@ -27,8 +45,11 @@ import { type SyncMutator, TRpcSyncProvider } from "./tRpcSyncProvider";
  * IndexedDB の namespace を user id で分けることで同一端末で別 user に
  * ログインし直しても Y.Doc が混ざらない。
  */
-export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
+export const TemplateDocProvider: FC<Props> = ({
   children,
+  createPersistence = (namespace, doc) =>
+    new IndexeddbPersistence(namespace, doc),
+  createSyncProvider = (opts) => new TRpcSyncProvider(opts),
 }) => {
   const { user } = useContext(TwitchAuthContext);
   const [value, setValue] = useState<TemplateDocContextValue>({
@@ -56,8 +77,8 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
 
     const doc = createTemplateDoc();
     const namespace = `templates:${user.id}`;
-    let persistence: IndexeddbPersistence | null = null;
-    let syncProvider: TRpcSyncProvider | null = null;
+    let persistence: PersistenceLike | null = null;
+    let syncProvider: SyncProviderLike | null = null;
     let disposed = false;
 
     // IndexedDB が利用可能な環境のみ persistence を起動 (test 環境は skip)。
@@ -68,7 +89,7 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
       const sync: SyncMutator = {
         mutate: (input) => utils.client.templates.sync.mutate(input),
       };
-      syncProvider = new TRpcSyncProvider({
+      syncProvider = createSyncProvider({
         doc,
         sync,
         onStatusChange: (syncStatus, lastSyncedAt) => {
@@ -89,7 +110,7 @@ export const TemplateDocProvider: FC<{ children: ReactNode }> = ({
         syncStatus: "idle",
         lastSyncedAt: null,
       });
-      persistence = new IndexeddbPersistence(namespace, doc);
+      persistence = createPersistence(namespace, doc);
       persistence.whenSynced.then(() => {
         if (disposed) return;
         setValue({

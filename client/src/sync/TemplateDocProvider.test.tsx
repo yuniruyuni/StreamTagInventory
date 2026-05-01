@@ -1,10 +1,15 @@
 import { afterEach, beforeEach, expect, mock, test } from "bun:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react";
+import type { TRPCLink } from "@trpc/client";
+import { observable } from "@trpc/server/observable";
 import { type ReactNode, useContext } from "react";
 import type * as Y from "yjs";
 import { TwitchAuthContext } from "~/TwitchAuth";
+import { trpc } from "~/trpc/client";
 import type { TemplateDocContextValue } from "./TemplateDocContext";
 import { TemplateDocContext } from "./TemplateDocContext";
+import { TemplateDocProvider } from "./TemplateDocProvider";
 
 interface MockPersistence {
   namespace: string;
@@ -22,59 +27,32 @@ interface MockSyncProvider {
 const persistenceInstances: MockPersistence[] = [];
 const syncProviderInstances: MockSyncProvider[] = [];
 
-mock.module("y-indexeddb", () => {
-  return {
-    IndexeddbPersistence: class implements MockPersistence {
-      namespace: string;
-      doc: Y.Doc;
-      whenSynced: Promise<void>;
-      resolve!: () => void;
-      destroy = mock(() => {});
+class TestPersistence implements MockPersistence {
+  namespace: string;
+  doc: Y.Doc;
+  whenSynced: Promise<void>;
+  resolve!: () => void;
+  destroy = mock(() => {});
 
-      constructor(namespace: string, doc: Y.Doc) {
-        this.namespace = namespace;
-        this.doc = doc;
-        this.whenSynced = new Promise<void>((resolve) => {
-          this.resolve = resolve;
-        });
-        persistenceInstances.push(this);
-      }
-    },
-  };
-});
+  constructor(namespace: string, doc: Y.Doc) {
+    this.namespace = namespace;
+    this.doc = doc;
+    this.whenSynced = new Promise<void>((resolve) => {
+      this.resolve = resolve;
+    });
+    persistenceInstances.push(this);
+  }
+}
 
-mock.module("./tRpcSyncProvider", () => {
-  return {
-    TRpcSyncProvider: class implements MockSyncProvider {
-      opts: { doc: Y.Doc };
-      destroy = mock(() => {});
+class TestSyncProvider implements MockSyncProvider {
+  opts: { doc: Y.Doc };
+  destroy = mock(() => {});
 
-      constructor(opts: { doc: Y.Doc }) {
-        this.opts = opts;
-        syncProviderInstances.push(this);
-      }
-    },
-  };
-});
-
-mock.module("~/trpc/client", () => {
-  return {
-    trpc: {
-      useUtils: () => ({
-        client: {
-          templates: {
-            sync: {
-              mutate: mock(async () => ({
-                serverUpdate: "",
-                serverStateVector: "",
-              })),
-            },
-          },
-        },
-      }),
-    },
-  };
-});
+  constructor(opts: { doc: Y.Doc }) {
+    this.opts = opts;
+    syncProviderInstances.push(this);
+  }
+}
 
 const USER = {
   id: "u1",
@@ -102,19 +80,44 @@ afterEach(() => {
 });
 
 function renderProvider(children: ReactNode) {
-  const { TemplateDocProvider } =
-    require("./TemplateDocProvider") as typeof import("./TemplateDocProvider");
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const link: TRPCLink<never> = () => () =>
+    observable((observer) => {
+      observer.next({
+        result: {
+          data: {
+            serverUpdate: "",
+            serverStateVector: "",
+          },
+        },
+      });
+      observer.complete();
+    });
+  const client = trpc.createClient({ links: [link] });
 
   return render(
-    <TwitchAuthContext.Provider
-      value={{
-        token: "token",
-        user: USER,
-        logout: async () => {},
-      }}
-    >
-      <TemplateDocProvider>{children}</TemplateDocProvider>
-    </TwitchAuthContext.Provider>,
+    <trpc.Provider client={client} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <TwitchAuthContext.Provider
+          value={{
+            token: "token",
+            user: USER,
+            logout: async () => {},
+          }}
+        >
+          <TemplateDocProvider
+            createPersistence={(namespace, doc) =>
+              new TestPersistence(namespace, doc)
+            }
+            createSyncProvider={(opts) => new TestSyncProvider(opts)}
+          >
+            {children}
+          </TemplateDocProvider>
+        </TwitchAuthContext.Provider>
+      </QueryClientProvider>
+    </trpc.Provider>,
   );
 }
 
