@@ -12,6 +12,7 @@ COPY client/package.json /work/client/
 COPY server/package.json /work/server/
 COPY e2e/package.json /work/e2e/
 RUN bun install --frozen-lockfile
+COPY shared/ /work/shared/
 COPY client/ /work/client/
 WORKDIR /work/client
 RUN bun run build
@@ -23,6 +24,7 @@ COPY client/package.json /work/client/
 COPY server/package.json /work/server/
 COPY e2e/package.json /work/e2e/
 RUN bun install --frozen-lockfile
+COPY shared/ /work/shared/
 COPY server/ /work/server/
 WORKDIR /work/server
 RUN bun build src/index.ts --compile --outfile /work/dist/server

@@ -1,3 +1,4 @@
+import { TEMPLATE_DOC_KEYS } from "@shared/template-doc-schema";
 import { useCallback, useContext, useEffect, useState } from "react";
 import type * as Y from "yjs";
 import type { Template } from "~/model/template";
@@ -68,13 +69,18 @@ export const useTemplates = (): UseTemplatesResult => {
       doc.transact(() => {
         for (let i = 0; i < arr.length; i++) {
           const m = arr.get(i);
-          if (String(m.get("id")) === t.id) {
-            m.set("title", t.title);
-            m.set("categoryId", t.category.id);
-            m.set("categoryName", t.category.name);
-            m.set("categoryBoxArtUrl", t.category.box_art_url);
+          if (String(m.get(TEMPLATE_DOC_KEYS.template.id)) === t.id) {
+            m.set(TEMPLATE_DOC_KEYS.template.title, t.title);
+            m.set(TEMPLATE_DOC_KEYS.template.categoryId, t.category.id);
+            m.set(TEMPLATE_DOC_KEYS.template.categoryName, t.category.name);
+            m.set(
+              TEMPLATE_DOC_KEYS.template.categoryBoxArtUrl,
+              t.category.box_art_url,
+            );
             // tags は差分更新でなく置換 (内側の Y.Array を作り直さず中身を入れ替え)
-            const tagsArr = m.get("tags") as Y.Array<string>;
+            const tagsArr = m.get(
+              TEMPLATE_DOC_KEYS.template.tags,
+            ) as Y.Array<string>;
             tagsArr.delete(0, tagsArr.length);
             tagsArr.push(t.tags);
             return;
@@ -91,7 +97,7 @@ export const useTemplates = (): UseTemplatesResult => {
       const arr = getTemplatesArray(doc);
       doc.transact(() => {
         for (let i = 0; i < arr.length; i++) {
-          if (String(arr.get(i).get("id")) === id) {
+          if (String(arr.get(i).get(TEMPLATE_DOC_KEYS.template.id)) === id) {
             arr.delete(i, 1);
             return;
           }
@@ -110,7 +116,7 @@ export const useTemplates = (): UseTemplatesResult => {
         let srcIdx = -1;
         let dstIdx = -1;
         for (let i = 0; i < arr.length; i++) {
-          const id = String(arr.get(i).get("id"));
+          const id = String(arr.get(i).get(TEMPLATE_DOC_KEYS.template.id));
           if (id === sourceId) srcIdx = i;
           if (id === destinationId) dstIdx = i;
         }

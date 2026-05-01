@@ -10,7 +10,10 @@
     "strict": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
   },
   "include": ["**/*.ts"],
   "exclude": ["static/**/*", "__snapshots__/**/*"]

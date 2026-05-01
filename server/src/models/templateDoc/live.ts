@@ -1,3 +1,4 @@
+import { TEMPLATE_DOC_KEYS } from "@shared/template-doc-schema";
 import * as Y from "yjs";
 import { type Fail, fail } from "@/models/common";
 import {
@@ -156,7 +157,7 @@ function validateDocShape(doc: Y.Doc): Fail | null {
     }
   }
 
-  const templates = doc.getArray("templates");
+  const templates = doc.getArray(TEMPLATE_DOC_KEYS.templates);
   if (templates.length > SYNC_LIMITS.MAX_TEMPLATES) {
     return fail(
       "INVALID_DOC_SHAPE",
@@ -168,13 +169,13 @@ function validateDocShape(doc: Y.Doc): Fail | null {
     if (v) return v;
   }
 
-  const settings = doc.getMap("settings");
+  const settings = doc.getMap(TEMPLATE_DOC_KEYS.settings);
   for (const key of settings.keys()) {
     if (!ALLOWED_SETTING_KEYS.has(key)) {
       return fail("INVALID_DOC_SHAPE", `disallowed settings key: ${key}`);
     }
   }
-  const postTemplate = settings.get("postTemplate");
+  const postTemplate = settings.get(TEMPLATE_DOC_KEYS.postTemplate);
   if (postTemplate != null) {
     if (typeof postTemplate !== "string") {
       return fail("INVALID_DOC_SHAPE", "settings.postTemplate must be string");
@@ -222,15 +223,24 @@ function validateTemplateMap(item: unknown, index: number): Fail | null {
   };
 
   const checks: Array<Fail | null> = [
-    stringField("id", SYNC_LIMITS.MAX_TEMPLATE_ID_LEN),
-    stringField("title", SYNC_LIMITS.MAX_TITLE_LEN),
-    stringField("categoryId", SYNC_LIMITS.MAX_CATEGORY_ID_LEN),
-    stringField("categoryName", SYNC_LIMITS.MAX_CATEGORY_NAME_LEN),
-    stringField("categoryBoxArtUrl", SYNC_LIMITS.MAX_CATEGORY_BOX_ART_URL_LEN),
+    stringField(TEMPLATE_DOC_KEYS.template.id, SYNC_LIMITS.MAX_TEMPLATE_ID_LEN),
+    stringField(TEMPLATE_DOC_KEYS.template.title, SYNC_LIMITS.MAX_TITLE_LEN),
+    stringField(
+      TEMPLATE_DOC_KEYS.template.categoryId,
+      SYNC_LIMITS.MAX_CATEGORY_ID_LEN,
+    ),
+    stringField(
+      TEMPLATE_DOC_KEYS.template.categoryName,
+      SYNC_LIMITS.MAX_CATEGORY_NAME_LEN,
+    ),
+    stringField(
+      TEMPLATE_DOC_KEYS.template.categoryBoxArtUrl,
+      SYNC_LIMITS.MAX_CATEGORY_BOX_ART_URL_LEN,
+    ),
   ];
   for (const c of checks) if (c) return c;
 
-  const tags = item.get("tags");
+  const tags = item.get(TEMPLATE_DOC_KEYS.template.tags);
   if (tags != null) {
     if (!isYArrayLike(tags)) {
       return fail(

@@ -1,3 +1,9 @@
+import {
+  TEMPLATE_DOC_ALLOWED_SETTING_KEYS,
+  TEMPLATE_DOC_ALLOWED_TEMPLATE_FIELDS,
+  TEMPLATE_DOC_ALLOWED_TOP_LEVEL_KEYS,
+} from "@shared/template-doc-schema";
+
 /**
  * Y.Doc の shape / サイズ制約定数。
  * 攻撃者や壊れたクライアントが送りつけてくる「巨大」「定義外」「型が違う」
@@ -23,17 +29,16 @@ export const SYNC_LIMITS = {
 } as const;
 
 /** トップレベルで許可するキー。定義外は reject */
-export const ALLOWED_TOP_LEVEL_KEYS = new Set(["templates", "settings"]);
+export const ALLOWED_TOP_LEVEL_KEYS = new Set<string>(
+  TEMPLATE_DOC_ALLOWED_TOP_LEVEL_KEYS,
+);
 
 /** templates 配列の各要素で許可するフィールド */
-export const ALLOWED_TEMPLATE_FIELDS = new Set([
-  "id",
-  "title",
-  "categoryId",
-  "categoryName",
-  "categoryBoxArtUrl",
-  "tags",
-]);
+export const ALLOWED_TEMPLATE_FIELDS = new Set<string>(
+  TEMPLATE_DOC_ALLOWED_TEMPLATE_FIELDS,
+);
 
 /** settings Map で許可するキー */
-export const ALLOWED_SETTING_KEYS = new Set(["postTemplate"]);
+export const ALLOWED_SETTING_KEYS = new Set<string>(
+  TEMPLATE_DOC_ALLOWED_SETTING_KEYS,
+);

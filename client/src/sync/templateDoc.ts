@@ -1,3 +1,4 @@
+import { TEMPLATE_DOC_KEYS } from "@shared/template-doc-schema";
 import * as Y from "yjs";
 import type { Template } from "~/model/template";
 
@@ -12,9 +13,9 @@ import type { Template } from "~/model/template";
  * Y.Map のキーは camelCase (`categoryId` / `categoryName` / `categoryBoxArtUrl`)。
  * client の Template 型は snake_case (`box_art_url`) を持つので、変換時にここで吸収する。
  */
-export const TEMPLATES_KEY = "templates";
-export const SETTINGS_KEY = "settings";
-export const POST_TEMPLATE_KEY = "postTemplate";
+export const TEMPLATES_KEY = TEMPLATE_DOC_KEYS.templates;
+export const SETTINGS_KEY = TEMPLATE_DOC_KEYS.settings;
+export const POST_TEMPLATE_KEY = TEMPLATE_DOC_KEYS.postTemplate;
 
 export const createTemplateDoc = (): Y.Doc => new Y.Doc();
 
@@ -27,14 +28,16 @@ export function getSettingsMap(doc: Y.Doc): Y.Map<unknown> {
 }
 
 export function yMapToTemplate(m: Y.Map<unknown>): Template {
-  const tags = m.get("tags");
+  const tags = m.get(TEMPLATE_DOC_KEYS.template.tags);
   return {
-    id: String(m.get("id") ?? ""),
-    title: String(m.get("title") ?? ""),
+    id: String(m.get(TEMPLATE_DOC_KEYS.template.id) ?? ""),
+    title: String(m.get(TEMPLATE_DOC_KEYS.template.title) ?? ""),
     category: {
-      id: String(m.get("categoryId") ?? ""),
-      name: String(m.get("categoryName") ?? ""),
-      box_art_url: String(m.get("categoryBoxArtUrl") ?? ""),
+      id: String(m.get(TEMPLATE_DOC_KEYS.template.categoryId) ?? ""),
+      name: String(m.get(TEMPLATE_DOC_KEYS.template.categoryName) ?? ""),
+      box_art_url: String(
+        m.get(TEMPLATE_DOC_KEYS.template.categoryBoxArtUrl) ?? "",
+      ),
     },
     tags: tags instanceof Y.Array ? tags.toArray().map(String) : [],
   };
@@ -42,14 +45,14 @@ export function yMapToTemplate(m: Y.Map<unknown>): Template {
 
 export function templateToYMap(t: Template): Y.Map<unknown> {
   const m = new Y.Map<unknown>();
-  m.set("id", t.id);
-  m.set("title", t.title);
-  m.set("categoryId", t.category.id);
-  m.set("categoryName", t.category.name);
-  m.set("categoryBoxArtUrl", t.category.box_art_url);
+  m.set(TEMPLATE_DOC_KEYS.template.id, t.id);
+  m.set(TEMPLATE_DOC_KEYS.template.title, t.title);
+  m.set(TEMPLATE_DOC_KEYS.template.categoryId, t.category.id);
+  m.set(TEMPLATE_DOC_KEYS.template.categoryName, t.category.name);
+  m.set(TEMPLATE_DOC_KEYS.template.categoryBoxArtUrl, t.category.box_art_url);
   const tags = new Y.Array<string>();
   tags.push(t.tags);
-  m.set("tags", tags);
+  m.set(TEMPLATE_DOC_KEYS.template.tags, tags);
   return m;
 }
 
