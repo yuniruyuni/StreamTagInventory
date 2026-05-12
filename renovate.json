@@ -1,0 +1,84 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "schedule": ["before 10am on monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group minor and patch updates",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "minor-patch updates"
+    },
+    {
+      "description": "React",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "groupName": "react"
+    },
+    {
+      "description": "tRPC",
+      "matchPackageNames": ["@trpc/*", "@hono/trpc-server"],
+      "groupName": "trpc"
+    },
+    {
+      "description": "TanStack",
+      "matchPackageNames": ["@tanstack/*"],
+      "groupName": "tanstack"
+    },
+    {
+      "description": "dnd-kit",
+      "matchPackageNames": ["@dnd-kit/*"],
+      "groupName": "dnd-kit"
+    },
+    {
+      "description": "i18n",
+      "matchPackageNames": ["i18next", "i18next-*", "react-i18next"],
+      "groupName": "i18n"
+    },
+    {
+      "description": "Yjs",
+      "matchPackageNames": ["yjs", "y-*"],
+      "groupName": "yjs"
+    },
+    {
+      "description": "Testing",
+      "matchPackageNames": [
+        "@testing-library/*",
+        "@playwright/test",
+        "@happy-dom/*",
+        "happy-dom",
+        "bun-bagel"
+      ],
+      "groupName": "testing"
+    },
+    {
+      "description": "Build tools",
+      "matchPackageNames": [
+        "typescript",
+        "tailwindcss",
+        "@tailwindcss/*",
+        "sharp",
+        "sharp-ico",
+        "npm-run-all2"
+      ],
+      "groupName": "build-tools"
+    },
+    {
+      "description": "Linters",
+      "matchPackageNames": ["@biomejs/*"],
+      "groupName": "linters"
+    },
+    {
+      "description": "Types",
+      "matchPackageNames": ["@types/*"],
+      "groupName": "types"
+    },
+    {
+      "description": "GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "commitMessagePrefix": "ci(deps):",
+      "addLabels": ["github-actions"]
+    }
+  ]
+}
