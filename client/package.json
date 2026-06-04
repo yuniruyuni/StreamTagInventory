@@ -34,7 +34,7 @@
     "i18next": "^26.0.8",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.5",
-    "react-call": "^1.8.2",
+    "react-call": "^2.0.0",
     "react-dom": "^19.2.5",
     "react-i18next": "^17.0.6",
     "swr": "^2.4.1",
