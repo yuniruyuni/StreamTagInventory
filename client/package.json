@@ -57,7 +57,7 @@
     "@types/react-dom": "^19.2.3",
     "bun-bagel": "^1.2.0",
     "happy-dom": "^20.8.9",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.0",
     "sharp": "^0.34.5",
     "sharp-ico": "^0.1.5",
     "tailwindcss": "^4.2.2",
