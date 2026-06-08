@@ -21,12 +21,17 @@ async function expectNoHorizontalScroll(page: Page) {
       page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
+        innerWidth: window.innerWidth,
       })),
     )
     .toMatchObject({
       clientWidth: 360,
-      scrollWidth: 360,
     });
+  const { scrollWidth, innerWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    innerWidth: window.innerWidth,
+  }));
+  expect(scrollWidth).toBeLessThanOrEqual(Math.ceil(innerWidth));
 }
 
 async function expectLocatorWithinViewport(locator: Locator) {

@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { BaseActions } from "../../../base/BaseActions";
 import { NavbarPage } from "./NavbarPage";
 
@@ -16,7 +16,11 @@ export class NavbarActions extends BaseActions {
     } catch {
       await this.navbarPage.avatarButton.click({ force: true });
     }
-    await this.navbarPage.userMenuDropdown.waitFor({ state: "visible" });
+    if (!(await this.navbarPage.userMenuDropdown.isVisible())) {
+      await this.navbarPage.avatarButton.focus();
+      await this.page.keyboard.press("Enter");
+    }
+    await expect(this.navbarPage.userMenuDropdown).toBeVisible();
   }
 
   async logout(): Promise<void> {

@@ -115,22 +115,29 @@ export class TemplateCardActions extends BaseActions {
   }
 
   async dragHandleTo(target: Locator): Promise<void> {
+    await this.templateCardPage.dragHandle.scrollIntoViewIfNeeded();
+    await target.scrollIntoViewIfNeeded();
     const sourceBox = await this.templateCardPage.dragHandle.boundingBox();
     const targetBox = await target.boundingBox();
     expect(sourceBox).not.toBeNull();
     expect(targetBox).not.toBeNull();
     if (!sourceBox || !targetBox) return;
 
-    await this.templateCardPage.dragHandle.dragTo(target, {
-      sourcePosition: {
-        x: sourceBox.width / 2,
-        y: sourceBox.height / 2,
-      },
-      targetPosition: {
-        x: targetBox.width / 2,
-        y: Math.min(24, targetBox.height / 4),
-      },
-    });
+    const source = {
+      x: sourceBox.x + sourceBox.width / 2,
+      y: sourceBox.y + sourceBox.height / 2,
+    };
+    const destination = {
+      x: targetBox.x + targetBox.width / 2,
+      y: targetBox.y + targetBox.height / 2,
+    };
+
+    await this.page.mouse.move(source.x, source.y);
+    await this.page.mouse.down();
+    await this.waitForTimeout(100);
+    await this.page.mouse.move(destination.x, destination.y, { steps: 24 });
+    await this.waitForTimeout(100);
+    await this.page.mouse.up();
   }
 
   async reorderWithKeyboard(keys: string[]): Promise<void> {
