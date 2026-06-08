@@ -8,6 +8,7 @@ type ComboboxListProps<T> = {
   onSelect: (index: number) => void;
   getItemId: (item: T) => string;
   renderItem: (item: T, isSelected: boolean) => React.ReactNode;
+  emptyLabel?: string;
 };
 
 const ComboboxListInner = <T,>({
@@ -17,6 +18,7 @@ const ComboboxListInner = <T,>({
   onSelect,
   getItemId,
   renderItem,
+  emptyLabel,
 }: ComboboxListProps<T>) => {
   const ref = useRef<HTMLUListElement>(null);
 
@@ -33,6 +35,9 @@ const ComboboxListInner = <T,>({
       ref={ref}
       className="w-full max-h-80 py-0 p-2 flex-nowrap overflow-auto"
     >
+      {items.length === 0 && emptyLabel && (
+        <li className="px-4 py-3 text-sm text-slate-500">{emptyLabel}</li>
+      )}
       {items.map((item, index) => (
         <li key={getItemId(item)}>
           <button

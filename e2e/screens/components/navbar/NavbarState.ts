@@ -18,6 +18,14 @@ export class NavbarState extends BaseState {
     await expect(this.navbarPage.userMenuDropdown).toBeVisible();
   }
 
+  async expectDesktopSearchHidden(): Promise<void> {
+    await expect(this.navbarPage.searchInput).toBeHidden();
+  }
+
+  async expectDesktopSearchVisible(): Promise<void> {
+    await expect(this.navbarPage.searchInput).toBeVisible();
+  }
+
   async expectNavbarScreenshot(name: string): Promise<void> {
     await expect(this.navbarPage.navbar).toHaveScreenshot(name, {
       animations: "disabled",

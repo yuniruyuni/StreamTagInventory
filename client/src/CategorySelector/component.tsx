@@ -6,6 +6,7 @@ import type { Category } from "~/model/category";
 import { useCategorySearch } from "./useCategorySearch";
 
 type Props = {
+  id?: string;
   value?: Category;
   onChange: (category: Category) => void;
 };
@@ -37,7 +38,7 @@ const renderSelected = (value: Category | undefined) =>
     />
   ) : null;
 
-export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
+export const CategorySelector: FC<Props> = memo(({ id, value, onChange }) => {
   const { t } = useTranslation();
 
   const { query, setQuery, categories } = useCategorySearch({
@@ -59,7 +60,8 @@ export const CategorySelector: FC<Props> = memo(({ value, onChange }) => {
       renderItem={renderItem}
       renderSelected={renderSelected}
       placeholder={t("template.pickCategory")}
-      id="category"
+      emptyLabel={t("template.noResults")}
+      id={id}
     />
   );
 });

@@ -13,6 +13,10 @@ export class TemplateCardPage extends BasePage {
     return this.cardLocator.getByRole("combobox");
   }
 
+  get tagInput(): Locator {
+    return this.cardLocator.getByRole("textbox", { name: /tags|タグ/i });
+  }
+
   get titleInput(): Locator {
     return this.cardLocator.getByRole("textbox", { name: /title|タイトル/i });
   }
@@ -29,6 +33,14 @@ export class TemplateCardPage extends BasePage {
     return this.cardLocator.getByRole("button", { name: "apply template" });
   }
 
+  get cloneButton(): Locator {
+    return this.cardLocator.getByRole("button", { name: "clone template" });
+  }
+
+  get removeButton(): Locator {
+    return this.cardLocator.getByRole("button", { name: "remove template" });
+  }
+
   get revertButton(): Locator {
     return this.cardLocator.getByRole("button", { name: "revert template" });
   }
@@ -37,7 +49,29 @@ export class TemplateCardPage extends BasePage {
     return this.cardLocator.getByRole("listitem");
   }
 
+  get tagCounter(): Locator {
+    return this.cardLocator.getByTestId("tag-counter");
+  }
+
+  get announceOnXButton(): Locator {
+    return this.cardLocator.getByRole("button", { name: "announce on x" });
+  }
+
+  get dragHandle(): Locator {
+    return this.cardLocator.getByRole("button", { name: /drag handle/i });
+  }
+
   getCategoryOption(name: string): Locator {
     return this.categoryDropdown.getByText(name);
+  }
+
+  getEditTagButton(name: string): Locator {
+    return this.cardLocator.getByRole("button", { name: `edit tag ${name}` });
+  }
+
+  getRemoveTagButton(index: number): Locator {
+    return this.cardLocator
+      .getByRole("button", { name: "remove tag" })
+      .nth(index);
   }
 }

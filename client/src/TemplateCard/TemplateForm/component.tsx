@@ -15,12 +15,15 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
   const { t } = useTranslation();
   const tagCount = template.tags?.length ?? 0;
   const atLimit = tagCount >= MAX_TAGS;
+  const titleId = `title-${template.id}`;
+  const categoryId = `category-${template.id}`;
+  const tagsId = `tags-${template.id}`;
 
   return (
     <>
-      <label htmlFor="title">{t("template.title")}</label>
+      <label htmlFor={titleId}>{t("template.title")}</label>
       <Input
-        id="title"
+        id={titleId}
         name="title"
         type="text"
         className="w-full"
@@ -28,14 +31,15 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         value={template.title}
       />
 
-      <label htmlFor="category">{t("template.category")}</label>
+      <label htmlFor={categoryId}>{t("template.category")}</label>
       <CategorySelector
+        id={categoryId}
         value={template.category}
         onChange={(category) => onChange({ ...template, category })}
       />
 
       <div className="flex items-baseline justify-between">
-        <label htmlFor="tags">{t("template.tags")}</label>
+        <label htmlFor={tagsId}>{t("template.tags")}</label>
         <span
           data-testid="tag-counter"
           className={clsx(
@@ -50,6 +54,7 @@ export const TemplateForm: React.FC<Props> = ({ template, onChange }) => {
         </span>
       </div>
       <InputTags
+        id={tagsId}
         tags={template.tags ?? []}
         onChange={(tags) => onChange({ ...template, tags })}
       />

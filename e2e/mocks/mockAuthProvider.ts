@@ -33,12 +33,19 @@ export class MockAuthProvider implements AuthProvider {
     return this.token === null;
   }
 
-  getEntranceUri(
-    _redirectUrl: string,
-    _scope: string[],
-    _nonce: string,
-  ): string {
-    // Mock login URL。Bearer フロー用の e2e mock 再設計は PR 8 で行う予定。
-    return "#mock-login";
+  getEntranceUri(redirectUrl: string, scope: string[], nonce: string): string {
+    const params = new URLSearchParams({
+      response_type: "token id_token",
+      client_id:
+        process.env.BUN_PUBLIC_TWITCH_CLIENT_ID ??
+        "d2kz8x5se7k6b1n0picux0r7kaozi3",
+      redirect_uri: redirectUrl,
+      scope: ["openid", ...scope].join(" "),
+      nonce,
+      claims: JSON.stringify({
+        id_token: { preferred_username: null },
+      }),
+    });
+    return `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
   }
 }

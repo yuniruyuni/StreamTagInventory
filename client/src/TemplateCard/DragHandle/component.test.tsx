@@ -2,6 +2,17 @@ import { expect, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { DragHandle } from "./component";
 
+const attributes = {
+  role: "button",
+  tabIndex: 0,
+  "aria-disabled": false,
+  "aria-pressed": false,
+  "aria-roledescription": "sortable",
+  "aria-describedby": "DndDescribedBy-0",
+};
+
+const setActivatorNodeRef = () => {};
+
 test("DragHandleコンポーネントが正しくレンダリングされる", () => {
   // モックのリスナー
   const listeners = {
@@ -10,7 +21,11 @@ test("DragHandleコンポーネントが正しくレンダリングされる", (
   };
 
   const { getByRole, getByTitle } = render(
-    <DragHandle listeners={listeners} />,
+    <DragHandle
+      attributes={attributes}
+      listeners={listeners}
+      setActivatorNodeRef={setActivatorNodeRef}
+    />,
   );
 
   // ボタン要素が存在することを確認
@@ -33,7 +48,13 @@ test("リスナーが正しくボタンに渡される", () => {
     onTouchStart: () => {},
   };
 
-  const { getByRole } = render(<DragHandle listeners={mockListeners} />);
+  const { getByRole } = render(
+    <DragHandle
+      attributes={attributes}
+      listeners={mockListeners}
+      setActivatorNodeRef={setActivatorNodeRef}
+    />,
+  );
 
   // ボタン要素を取得
   const button = getByRole("button");
@@ -46,7 +67,11 @@ test("リスナーが正しくボタンに渡される", () => {
 
 test("リスナーがundefinedの場合も正しくレンダリングされる", () => {
   const { getByRole, getByTitle } = render(
-    <DragHandle listeners={undefined} />,
+    <DragHandle
+      attributes={attributes}
+      listeners={undefined}
+      setActivatorNodeRef={setActivatorNodeRef}
+    />,
   );
 
   // ボタン要素が存在することを確認

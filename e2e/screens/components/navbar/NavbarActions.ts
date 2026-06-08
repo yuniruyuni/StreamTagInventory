@@ -19,4 +19,27 @@ export class NavbarActions extends BaseActions {
     await this.openUserMenu();
     await this.navbarPage.logoutButton.click();
   }
+
+  async searchTemplates(query: string): Promise<void> {
+    await this.navbarPage.searchInput.fill(query);
+  }
+
+  async selectLanguage(language: "en" | "ja"): Promise<void> {
+    await this.navbarPage.languageSelect.selectOption(language);
+  }
+
+  async openPostTemplateEditor(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.postTemplateButton.click();
+  }
+
+  async importTemplates(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.importTemplatesButton.click();
+  }
+
+  async exportTemplates(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.exportTemplatesButton.click();
+  }
 }

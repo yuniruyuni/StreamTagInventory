@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { FC } from "react";
-import React, { memo } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { Card, CardBody } from "~/components/Card";
 import { isTemplateEqual, type Template } from "~/model/template";
 
@@ -15,6 +15,7 @@ type Props = {
   onRemove: (template: Template) => void;
   onClone: (template: Template) => void;
   onSave: (template: Template) => void;
+  onKeyboardMove?: (templateId: string, direction: -1 | 1) => void;
   userLogin?: string;
   postTemplate?: string;
 };
@@ -26,15 +27,18 @@ export const TemplateCard: FC<Props> = memo(
     onApply,
     onClone,
     onSave,
+    onKeyboardMove,
     userLogin,
     postTemplate,
   }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } =
-      useSortable({ id: template.id });
-
-    // dnd-kit sets role="button" in attributes, which overrides <article>'s
-    // implicit role. Destructure it out so the Card keeps role="article".
-    const { role: _role, ...restAttributes } = attributes;
+    const {
+      attributes,
+      listeners,
+      setActivatorNodeRef,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id: template.id });
 
     const style = {
       transform: CSS.Transform.toString(transform),
@@ -42,6 +46,14 @@ export const TemplateCard: FC<Props> = memo(
     };
 
     const [temp, setTemp] = React.useState<Template>(template);
+    const previousTemplateRef = useRef(template);
+    useEffect(() => {
+      const previousTemplate = previousTemplateRef.current;
+      previousTemplateRef.current = template;
+      setTemp((current) =>
+        isTemplateEqual(previousTemplate, current) ? template : current,
+      );
+    }, [template]);
     const changed = !isTemplateEqual(template, temp);
 
     return (
@@ -49,11 +61,17 @@ export const TemplateCard: FC<Props> = memo(
         data-testid={`template-card-${template.id}`}
         className="w-full max-w-96 bg-white shadow-xl shadow-slate-200/70 ring-1 ring-slate-200/80"
         ref={setNodeRef}
-        {...restAttributes}
         style={style}
       >
         <CardBody className="gap-4">
-          <DragHandle listeners={listeners} />
+          <DragHandle
+            attributes={attributes}
+            listeners={listeners}
+            onKeyboardMove={(direction) =>
+              onKeyboardMove?.(template.id, direction)
+            }
+            setActivatorNodeRef={setActivatorNodeRef}
+          />
 
           <TemplateForm template={temp} onChange={setTemp} />
 

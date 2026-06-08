@@ -25,4 +25,12 @@ export class InventoryActions extends BaseActions {
     await this.openUserMenu();
     await this.inventoryPage.logoutButton.click();
   }
+
+  async addTemplate(): Promise<void> {
+    await this.inventoryPage.addTemplateButton.click();
+  }
+
+  async importCurrentStreamAsTemplate(): Promise<void> {
+    await this.inventoryPage.importCurrentStreamButton.click();
+  }
 }

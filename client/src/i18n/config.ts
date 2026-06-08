@@ -35,7 +35,7 @@ i18n
       escapeValue: false, // Reactではすでにエスケープされている
     },
     detection: {
-      order: ["localStorage", "navigator"], // 検出順序を変更（localStorageを優先）
+      order: ["localStorage"], // 未知の保存値では navigator へ進まず fallbackLng に落とす
       caches: ["localStorage"], // 言語設定をキャッシュ
       lookupLocalStorage: LANGUAGE_STORAGE_KEY, // LocalStorageに保存するキーを明示的に指定
     },
