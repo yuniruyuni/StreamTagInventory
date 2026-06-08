@@ -1,18 +1,17 @@
 import type { Page } from "@playwright/test";
 
 export async function waitForCSS(page: Page) {
-  // CSSファイルが読み込まれていることを確認
+  // The visual tests must fail before taking screenshots if Tailwind is absent.
   await page.waitForFunction(
     () => {
-      const styleSheets = Array.from(document.styleSheets);
-      return styleSheets.some((sheet) => {
+      return Array.from(document.styleSheets).some((sheet) => {
         try {
           return (
-            sheet.href?.includes("index.css") ||
-            (sheet.cssRules && sheet.cssRules.length > 0)
+            sheet.href?.endsWith("/index.css") &&
+            sheet.cssRules &&
+            sheet.cssRules.length > 0
           );
         } catch (_e) {
-          // CORS制限などでアクセスできない場合はスキップ
           return false;
         }
       });
@@ -20,17 +19,26 @@ export async function waitForCSS(page: Page) {
     { timeout: 30000 },
   );
 
-  // DaisyUIのスタイルが適用されていることを確認
   await page.waitForFunction(
     () => {
-      const testElement = document.createElement("div");
-      testElement.className = "btn";
-      document.body.appendChild(testElement);
-      const computed = window.getComputedStyle(testElement);
-      document.body.removeChild(testElement);
+      const sizedIcon = document.querySelector(".w-5");
+      if (sizedIcon) {
+        const iconStyle = window.getComputedStyle(sizedIcon);
+        return (
+          Number.parseFloat(iconStyle.width) <= 32 &&
+          Number.parseFloat(iconStyle.height) <= 32
+        );
+      }
 
-      // DaisyUIのボタンスタイルが適用されているかチェック
-      return computed.display !== "inline" || computed.padding !== "0px";
+      const main = document.querySelector("main");
+      if (!main) return false;
+      const mainStyle = window.getComputedStyle(main);
+
+      return (
+        mainStyle.display === "flex" &&
+        mainStyle.alignItems === "center" &&
+        mainStyle.justifyContent === "center"
+      );
     },
     { timeout: 30000 },
   );

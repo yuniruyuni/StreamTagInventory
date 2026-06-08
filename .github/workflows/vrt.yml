@@ -21,7 +21,7 @@ jobs:
         id: prepare
 
   expected:
-    if: ${{ !cancelled() && !failure() && needs.prepare.outputs.expected-cache-hit != 'true' }}
+    if: ${{ !cancelled() && !failure() }}
     needs: prepare
     runs-on: ubuntu-latest
     steps:
@@ -49,10 +49,10 @@ jobs:
       - uses: yorifuji/easy-vrt/expected@v2
         with:
           expected-dir: e2e/__snapshots__/
-          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
+          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}-${{ github.run_id }}
 
   actual:
-    if: ${{ !cancelled() && !failure() && needs.prepare.outputs.actual-cache-hit != 'true' }}
+    if: ${{ !cancelled() && !failure() }}
     needs: prepare
     runs-on: ubuntu-latest
     steps:
@@ -80,7 +80,7 @@ jobs:
       - uses: yorifuji/easy-vrt/actual@v2
         with:
           actual-dir: e2e/__snapshots__/
-          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
+          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}-${{ github.run_id }}
 
   compare:
     if: ${{ !cancelled() && !failure() }}
@@ -89,7 +89,26 @@ jobs:
     steps:
       - uses: yorifuji/easy-vrt/compare@v2
         with:
-          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
-          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
+          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}-${{ github.run_id }}
+          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}-${{ github.run_id }}
           summary-comment: true
           review-comment: true
+
+      - name: Fail on visual differences
+        run: |
+          node <<'JS'
+          const fs = require("node:fs");
+          const report = JSON.parse(
+            fs.readFileSync(".easy-vrt/report.json", "utf8"),
+          );
+          const changed =
+            report.failedItems.length +
+            report.newItems.length +
+            report.deletedItems.length;
+          if (changed > 0) {
+            console.error(
+              `Visual differences detected: ${report.failedItems.length} changed, ${report.newItems.length} new, ${report.deletedItems.length} deleted`,
+            );
+            process.exit(1);
+          }
+          JS
