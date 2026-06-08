@@ -30,17 +30,22 @@ async function doInit(dataDir: string): Promise<PgDatabase> {
   );
 
   if (!result?.exists) {
-    // 本番 migration と同じ pgschema バイナリを呼ぶ。自作のパーサで
-    // `\i tables/` を inline するより、実際の pgschema 挙動 (declarative diff /
-    // shadow schema / FK 順序解決) を再現できる。
     const schemaParams = {
       connection: pgManager.connectionParams,
       schemaMainPath: SCHEMA_MAIN,
     };
-    try {
-      await applyPgSchema(schemaParams);
-    } catch (error) {
-      if (!isPgSchemaDownloadError(error)) throw error;
+
+    // CI では GitHub Releases 由来の pgschema binary download / apply が不安定に
+    // なるため、通常の unit test は SQL を直接適用する。pgschema との parity 確認が
+    // 必要な場合だけ明示的に opt-in する。
+    if (process.env.USE_PGSCHEMA_IN_TESTS === "1") {
+      try {
+        await applyPgSchema(schemaParams);
+      } catch (error) {
+        if (!isPgSchemaDownloadError(error)) throw error;
+        await applySchemaSqlDirectly(schemaParams);
+      }
+    } else {
       await applySchemaSqlDirectly(schemaParams);
     }
   }
