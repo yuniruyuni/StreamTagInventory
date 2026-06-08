@@ -21,23 +21,23 @@ export async function waitForCSS(page: Page) {
 
   await page.waitForFunction(
     () => {
-      const probe = document.createElement("div");
-      probe.className = "h-screen w-screen flex items-center justify-center";
-      probe.style.position = "fixed";
-      probe.style.left = "-10000px";
-      probe.style.top = "0";
-      document.body.appendChild(probe);
+      return Array.from(document.styleSheets).some((sheet) => {
+        try {
+          if (!sheet.href?.endsWith("/index.css") || !sheet.cssRules) {
+            return false;
+          }
 
-      const probeStyle = window.getComputedStyle(probe);
-      const matches =
-        probeStyle.display === "flex" &&
-        probeStyle.alignItems === "center" &&
-        probeStyle.justifyContent === "center" &&
-        Number.parseFloat(probeStyle.width) > 0 &&
-        Number.parseFloat(probeStyle.height) > 0;
-
-      document.body.removeChild(probe);
-      return matches;
+          return Array.from(sheet.cssRules).some((rule) => {
+            return (
+              rule.cssText.includes(".flex") ||
+              rule.cssText.includes(".h-screen") ||
+              rule.cssText.includes(".w-screen")
+            );
+          });
+        } catch (_e) {
+          return false;
+        }
+      });
     },
     { timeout: 30000 },
   );
