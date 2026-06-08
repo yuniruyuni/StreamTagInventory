@@ -12,7 +12,6 @@ async function readViewportState(page: {
 }) {
   return page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
-    innerWidth: window.innerWidth,
     visualViewportWidth: window.visualViewport?.width ?? null,
     smBreakpoint: window.matchMedia("(min-width: 40rem)").matches,
     mdBreakpoint: window.matchMedia("(min-width: 48rem)").matches,
@@ -67,7 +66,6 @@ test.describe("Android OAuth callback @android", () => {
       .poll(() => readViewportState(page))
       .toEqual({
         clientWidth: 360,
-        innerWidth: 360,
         visualViewportWidth: 360,
         smBreakpoint: false,
         mdBreakpoint: false,

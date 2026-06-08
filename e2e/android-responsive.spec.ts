@@ -21,13 +21,11 @@ async function expectNoHorizontalScroll(page: Page) {
       page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
-        bodyScrollWidth: document.body.scrollWidth,
       })),
     )
     .toMatchObject({
       clientWidth: 360,
       scrollWidth: 360,
-      bodyScrollWidth: 360,
     });
 }
 

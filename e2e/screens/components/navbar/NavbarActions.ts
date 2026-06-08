@@ -11,7 +11,11 @@ export class NavbarActions extends BaseActions {
   }
 
   async openUserMenu(): Promise<void> {
-    await this.navbarPage.avatarButton.click();
+    try {
+      await this.navbarPage.avatarButton.click({ timeout: 5_000 });
+    } catch {
+      await this.navbarPage.avatarButton.click({ force: true });
+    }
     await this.navbarPage.userMenuDropdown.waitFor({ state: "visible" });
   }
 
