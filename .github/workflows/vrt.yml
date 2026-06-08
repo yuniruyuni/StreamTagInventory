@@ -31,7 +31,9 @@ jobs:
           ref: ${{ needs.prepare.outputs.expected-sha }}
 
       - name: Use current VRT harness
-        run: git checkout ${{ needs.prepare.outputs.actual-sha }} -- e2e/helpers/waitForCSS.ts
+        run: |
+          git fetch --depth=1 origin ${{ needs.prepare.outputs.actual-sha }}
+          git checkout ${{ needs.prepare.outputs.actual-sha }} -- e2e/helpers/waitForCSS.ts
 
       - name: Setup Bun
         run: npm install -g bun@1.3.11
