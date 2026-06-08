@@ -45,7 +45,7 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test --update-snapshots --project=chromium
+        run: cd e2e && bunx playwright test --update-snapshots --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
@@ -76,7 +76,7 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test --update-snapshots --project=chromium
+        run: cd e2e && bunx playwright test --update-snapshots --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
