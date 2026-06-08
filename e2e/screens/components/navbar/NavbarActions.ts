@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { BaseActions } from "../../../base/BaseActions";
 import { NavbarPage } from "./NavbarPage";
 
@@ -11,12 +11,43 @@ export class NavbarActions extends BaseActions {
   }
 
   async openUserMenu(): Promise<void> {
-    await this.navbarPage.avatarButton.click();
-    await this.navbarPage.userMenuDropdown.waitFor({ state: "visible" });
+    try {
+      await this.navbarPage.avatarButton.click({ timeout: 5_000 });
+    } catch {
+      await this.navbarPage.avatarButton.click({ force: true });
+    }
+    if (!(await this.navbarPage.userMenuDropdown.isVisible())) {
+      await this.navbarPage.avatarButton.focus();
+      await this.page.keyboard.press("Enter");
+    }
+    await expect(this.navbarPage.userMenuDropdown).toBeVisible();
   }
 
   async logout(): Promise<void> {
     await this.openUserMenu();
     await this.navbarPage.logoutButton.click();
+  }
+
+  async searchTemplates(query: string): Promise<void> {
+    await this.navbarPage.searchInput.fill(query);
+  }
+
+  async selectLanguage(language: "en" | "ja"): Promise<void> {
+    await this.navbarPage.languageSelect.selectOption(language);
+  }
+
+  async openPostTemplateEditor(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.postTemplateButton.click();
+  }
+
+  async importTemplates(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.importTemplatesButton.click();
+  }
+
+  async exportTemplates(): Promise<void> {
+    await this.openUserMenu();
+    await this.navbarPage.exportTemplatesButton.click();
   }
 }

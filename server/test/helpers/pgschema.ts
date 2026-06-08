@@ -1,7 +1,16 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import pg from "pg";
 
 /**
  * 本番 migration (Dockerfile.migration) と同じ宣言的 schema apply をテストでも
@@ -119,5 +128,67 @@ export async function applyPgSchema(
     throw new Error(
       `pgschema apply failed (exit ${result.status}):\n${stderr}\n${stdout}`,
     );
+  }
+}
+
+function expandPgSchemaIncludes(
+  filePath: string,
+  seen = new Set<string>(),
+): string {
+  if (seen.has(filePath)) return "";
+  seen.add(filePath);
+
+  const baseDir = dirname(filePath);
+  const lines = readFileSync(filePath, "utf8").split("\n");
+
+  return lines
+    .map((line) => {
+      const include = line.match(/^\\i\s+(.+?)\s*$/);
+      if (!include) return line;
+
+      const includePath = join(baseDir, include[1]);
+      if (statSync(includePath).isDirectory()) {
+        return readdirSync(includePath)
+          .filter((entry) => entry.endsWith(".sql"))
+          .sort()
+          .map((entry) =>
+            expandPgSchemaIncludes(join(includePath, entry), seen),
+          )
+          .join("\n");
+      }
+
+      return expandPgSchemaIncludes(includePath, seen);
+    })
+    .join("\n");
+}
+
+export function isPgSchemaDownloadError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.startsWith("Failed to download pgschema from ")
+  );
+}
+
+/**
+ * CI 環境で GitHub Releases が 504 を返した場合の test-only fallback。
+ * pgschema の宣言的 diff 検証はできないため、download 失敗時にだけ使う。
+ */
+export async function applySchemaSqlDirectly(
+  params: ApplyPgSchemaParams,
+): Promise<void> {
+  const { connection, schemaMainPath } = params;
+  const client = new pg.Client({
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
+  });
+
+  await client.connect();
+  try {
+    await client.query(expandPgSchemaIncludes(schemaMainPath));
+  } finally {
+    await client.end();
   }
 }

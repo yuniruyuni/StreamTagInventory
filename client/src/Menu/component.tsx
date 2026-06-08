@@ -109,7 +109,7 @@ export const Menu: React.FC<Props> = ({
             tabIndex={0}
             variant="ghost"
             shape="circle"
-            className="avatar"
+            className="avatar h-10 w-10 shrink-0 overflow-hidden"
             aria-label="user menu"
           >
             <Avatar>

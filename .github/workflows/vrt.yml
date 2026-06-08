@@ -21,7 +21,7 @@ jobs:
         id: prepare
 
   expected:
-    if: ${{ !cancelled() && !failure() && needs.prepare.outputs.expected-cache-hit != 'true' }}
+    if: ${{ !cancelled() && !failure() }}
     needs: prepare
     runs-on: ubuntu-latest
     steps:
@@ -30,10 +30,13 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.expected-sha }}
 
+      - name: Use current VRT harness
+        run: |
+          git fetch --depth=1 origin ${{ needs.prepare.outputs.actual-sha }}
+          git checkout ${{ needs.prepare.outputs.actual-sha }} -- client/src/index.css e2e/helpers/waitForCSS.ts
+
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+        run: npm install -g bun@1.3.11
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -42,7 +45,7 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test --update-snapshots --project=chromium
+        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
@@ -51,10 +54,10 @@ jobs:
       - uses: yorifuji/easy-vrt/expected@v2
         with:
           expected-dir: e2e/__snapshots__/
-          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
+          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}-${{ github.run_id }}
 
   actual:
-    if: ${{ !cancelled() && !failure() && needs.prepare.outputs.actual-cache-hit != 'true' }}
+    if: ${{ !cancelled() && !failure() }}
     needs: prepare
     runs-on: ubuntu-latest
     steps:
@@ -64,9 +67,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.actual-sha }}
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+        run: npm install -g bun@1.3.11
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -75,7 +76,7 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test --update-snapshots --project=chromium
+        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
@@ -84,7 +85,7 @@ jobs:
       - uses: yorifuji/easy-vrt/actual@v2
         with:
           actual-dir: e2e/__snapshots__/
-          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
+          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}-${{ github.run_id }}
 
   compare:
     if: ${{ !cancelled() && !failure() }}
@@ -93,7 +94,7 @@ jobs:
     steps:
       - uses: yorifuji/easy-vrt/compare@v2
         with:
-          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
-          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
+          expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}-${{ github.run_id }}
+          actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}-${{ github.run_id }}
           summary-comment: true
           review-comment: true

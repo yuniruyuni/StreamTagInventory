@@ -36,8 +36,64 @@ export class TemplateCardState extends BaseState {
     await expect(this.templateCardPage.applyButton).toBeVisible();
   }
 
+  async expectApplyButtonDisabled(): Promise<void> {
+    await expect(this.templateCardPage.applyButton).toBeDisabled();
+  }
+
+  async expectSaveButtonHidden(): Promise<void> {
+    await expect(this.templateCardPage.saveButton).toBeHidden();
+  }
+
+  async expectRevertButtonVisible(): Promise<void> {
+    await expect(this.templateCardPage.revertButton).toBeVisible();
+  }
+
+  async expectRevertButtonHidden(): Promise<void> {
+    await expect(this.templateCardPage.revertButton).toBeHidden();
+  }
+
   async expectTagsVisible(): Promise<void> {
     await expect(this.templateCardPage.tags.first()).toBeVisible();
+  }
+
+  async expectTagVisible(name: string): Promise<void> {
+    await expect(this.templateCardPage.getEditTagButton(name)).toBeVisible();
+  }
+
+  async expectTagHidden(name: string): Promise<void> {
+    await expect(this.templateCardPage.getEditTagButton(name)).toBeHidden();
+  }
+
+  async expectTagCount(count: number): Promise<void> {
+    await expect(this.templateCardPage.tags).toHaveCount(count);
+  }
+
+  async expectTagInputHidden(): Promise<void> {
+    await expect(this.templateCardPage.tagInput).toBeHidden();
+  }
+
+  async expectTagCounterText(text: string): Promise<void> {
+    await expect(this.templateCardPage.tagCounter).toHaveText(text);
+  }
+
+  async expectTagTextsInOrder(tags: string[]): Promise<void> {
+    await expect
+      .poll(() =>
+        this.templateCardPage.tags.evaluateAll((items) =>
+          items.map((item) =>
+            (item.textContent ?? "").replace(/remove tag/i, "").trim(),
+          ),
+        ),
+      )
+      .toEqual(tags);
+  }
+
+  async expectAnnounceOnXVisible(): Promise<void> {
+    await expect(this.templateCardPage.announceOnXButton).toBeVisible();
+  }
+
+  async expectAnnounceOnXHidden(): Promise<void> {
+    await expect(this.templateCardPage.announceOnXButton).toBeHidden();
   }
 
   async expectCardScreenshot(name: string): Promise<void> {

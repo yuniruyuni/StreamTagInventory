@@ -20,6 +20,7 @@ import { TagList } from "./TagList";
 export const MAX_TAGS = 10;
 
 type Props = {
+  id?: string;
   tags: string[];
   onChange: (tags: string[]) => void;
 };
@@ -62,7 +63,7 @@ export function handleTagKeyDown(
   e.preventDefault();
 }
 
-export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
+export const InputTags: React.FC<Props> = ({ id, tags, onChange }) => {
   const [active, setActive] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -130,6 +131,7 @@ export const InputTags: React.FC<Props> = ({ tags, onChange }) => {
       </DndContext>
       {!atLimit && (
         <TagInput
+          id={id}
           ref={inputRef}
           onFocus={() => setActive(true)}
           onBlur={() => setActive(false)}

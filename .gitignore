@@ -49,6 +49,7 @@ typings/
 /playwright-report/
 /e2e/test-results/
 /e2e/playwright-report/
+/e2e/__snapshots__/**/*-chromium-darwin.png
 
 # Test coverage
 /coverage/

@@ -28,23 +28,65 @@ const MOCK_TEMPLATE = {
   tags: ["English", "Gaming"],
 };
 
-/** クライアントの sync interaction を模倣する mini Y.Doc server */
-function makeMockServer() {
-  const serverDoc = new Y.Doc();
-  // 初期 mock template を 1 件入れておく (e2e の見た目を決定的にする)
-  const arr = serverDoc.getArray<Y.Map<unknown>>("templates");
+type MockUser = {
+  id: string;
+  twitchUserId: string;
+  login: string;
+  displayName: string;
+};
+
+const DEFAULT_MOCK_USER: MockUser = {
+  id: "mock-twitch-user-id",
+  twitchUserId: "mock-twitch-user-id",
+  login: "mockuser",
+  displayName: "Mock User",
+};
+
+function makeTemplateMap(index: number): Y.Map<unknown> {
   const m = new Y.Map<unknown>();
-  m.set("id", MOCK_TEMPLATE.id);
-  m.set("title", MOCK_TEMPLATE.title);
+  m.set("id", `test-template-${index + 1}`);
+  m.set(
+    "title",
+    index === 0 ? MOCK_TEMPLATE.title : `${MOCK_TEMPLATE.title} ${index + 1}`,
+  );
   m.set("categoryId", MOCK_TEMPLATE.category.id);
   m.set("categoryName", MOCK_TEMPLATE.category.name);
   m.set("categoryBoxArtUrl", MOCK_TEMPLATE.category.box_art_url);
   const tags = new Y.Array<string>();
   tags.push(MOCK_TEMPLATE.tags);
   m.set("tags", tags);
-  arr.push([m]);
+  return m;
+}
+
+function setTemplateTitle(
+  serverDoc: Y.Doc,
+  templateId: string,
+  title: string,
+): void {
+  const arr = serverDoc.getArray<Y.Map<unknown>>("templates");
+  for (let i = 0; i < arr.length; i++) {
+    const template = arr.get(i);
+    if (String(template.get("id")) === templateId) {
+      template.set("title", title);
+      return;
+    }
+  }
+}
+
+/** クライアントの sync interaction を模倣する mini Y.Doc server */
+function makeMockServer(templateCount: number) {
+  const serverDoc = new Y.Doc();
+  // 初期 mock template を入れておく (e2e の見た目を決定的にする)
+  const arr = serverDoc.getArray<Y.Map<unknown>>("templates");
+  arr.push(
+    Array.from({ length: templateCount }, (_, index) => makeTemplateMap(index)),
+  );
 
   return {
+    setTemplateTitle(templateId: string, title: string): void {
+      setTemplateTitle(serverDoc, templateId, title);
+    },
+
     /** クライアント sync 1 回分を処理: clientUpdate を取り込み、clientStateVector に対する diff を返す */
     apply(input: { clientStateVector: string; clientUpdate?: string }): {
       serverUpdate: string;
@@ -68,18 +110,59 @@ function makeMockServer() {
   };
 }
 
-export async function setupMocks(page: Page) {
+type SetupMocksOptions = {
+  authenticated?: boolean;
+  language?: string;
+  templateCount?: number;
+  user?: Partial<MockUser>;
+  migratedAt?: string | null;
+  legacyTemplates?: unknown[];
+  legacyPostTemplate?: string | null;
+};
+
+type MockServer = ReturnType<typeof makeMockServer>;
+
+export type SetupMocksController = {
+  setUser: (user: Partial<MockUser>, templateCount?: number) => void;
+  setRemoteTemplateTitle: (
+    templateId: string,
+    title: string,
+    userId?: string,
+  ) => void;
+  setSyncFailure: (enabled: boolean) => void;
+};
+
+export async function setupMocks(
+  page: Page,
+  {
+    authenticated = true,
+    language = "en",
+    templateCount = 1,
+    user,
+    migratedAt = "2026-01-01T00:00:00.000Z",
+    legacyTemplates,
+    legacyPostTemplate,
+  }: SetupMocksOptions = {},
+): Promise<SetupMocksController> {
+  let currentUser: MockUser = { ...DEFAULT_MOCK_USER, ...user };
+  const servers = new Map<string, MockServer>();
+  const getServer = (userId = currentUser.id, count = templateCount) => {
+    let server = servers.get(userId);
+    if (!server) {
+      server = makeMockServer(count);
+      servers.set(userId, server);
+    }
+    return server;
+  };
+  getServer(currentUser.id, templateCount);
+  let syncFailureEnabled = false;
+
   await page.route("**/api/trpc/auth.me*", async (route) => {
     const response = [
       {
         result: {
           data: {
-            user: {
-              id: "mock-twitch-user-id",
-              twitchUserId: "mock-twitch-user-id",
-              login: "mockuser",
-              displayName: "Mock User",
-            },
+            user: currentUser,
           },
         },
       },
@@ -96,8 +179,16 @@ export async function setupMocks(page: Page) {
   // カンマ区切り procedure 名 (例 `templates.sync,templates.sync`) を出す。
   // 同期に同じ procedure が複数並ぶ場合、body は `{"0": {input}, "1": {input}}` 形式で
   // 入力が並ぶため、それぞれを順に処理して同数の result を返す必要がある。
-  const server = makeMockServer();
   await page.route("**/api/trpc/**templates.sync*", async (route) => {
+    if (syncFailureEnabled) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "sync unavailable" }),
+      });
+      return;
+    }
+
     const url = new URL(route.request().url());
     const path = url.pathname.split("/").pop() ?? "";
     const count = Math.max(1, path.split(",").length);
@@ -133,7 +224,7 @@ export async function setupMocks(page: Page) {
     }
 
     const response = inputs.map((input) => ({
-      result: { data: server.apply(input) },
+      result: { data: getServer().apply(input) },
     }));
     await route.fulfill({
       status: 200,
@@ -142,20 +233,63 @@ export async function setupMocks(page: Page) {
     });
   });
 
-  await page.addInitScript(() => {
-    sessionStorage.setItem(
-      "twitch-id-token",
-      JSON.stringify("mock-jwt-token-for-e2e"),
-    );
-    sessionStorage.setItem(
-      "twitch-auth",
-      JSON.stringify("mock-access-token-for-e2e"),
-    );
+  await page.addInitScript(
+    ({
+      shouldAuthenticate,
+      mockLanguage,
+      mockMigratedAt,
+      mockLegacyTemplates,
+      mockLegacyPostTemplate,
+    }) => {
+      if (shouldAuthenticate) {
+        sessionStorage.setItem(
+          "twitch-id-token",
+          JSON.stringify("mock-jwt-token-for-e2e"),
+        );
+        sessionStorage.setItem(
+          "twitch-auth",
+          JSON.stringify("mock-access-token-for-e2e"),
+        );
+      }
+      if (localStorage.getItem("language") === null) {
+        localStorage.setItem("language", mockLanguage);
+      }
+      if (mockLegacyTemplates !== undefined) {
+        localStorage.setItem("templates", JSON.stringify(mockLegacyTemplates));
+      }
+      if (mockLegacyPostTemplate !== undefined) {
+        if (mockLegacyPostTemplate === null) {
+          localStorage.removeItem("postTemplate");
+        } else {
+          localStorage.setItem(
+            "postTemplate",
+            JSON.stringify(mockLegacyPostTemplate),
+          );
+        }
+      }
+      if (mockMigratedAt !== null) {
+        localStorage.setItem("templates_migrated_at", mockMigratedAt);
+      }
+    },
+    {
+      shouldAuthenticate: authenticated,
+      mockLanguage: language,
+      mockMigratedAt: migratedAt,
+      mockLegacyTemplates: legacyTemplates,
+      mockLegacyPostTemplate: legacyPostTemplate,
+    },
+  );
 
-    localStorage.setItem("language", "en");
-    localStorage.setItem(
-      "templates_migrated_at",
-      new Date("2026-01-01T00:00:00.000Z").toISOString(),
-    );
-  });
+  return {
+    setUser(nextUser, nextTemplateCount = 0) {
+      currentUser = { ...DEFAULT_MOCK_USER, ...nextUser };
+      getServer(currentUser.id, nextTemplateCount);
+    },
+    setRemoteTemplateTitle(templateId, title, userId = currentUser.id) {
+      getServer(userId).setTemplateTitle(templateId, title);
+    },
+    setSyncFailure(enabled) {
+      syncFailureEnabled = enabled;
+    },
+  };
 }

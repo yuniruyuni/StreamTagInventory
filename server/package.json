@@ -11,7 +11,7 @@
     "build": "bun build src/index.ts --compile --outfile dist/server",
     "check:arch": "depcruise src --config .dependency-cruiser.cjs --output-type err",
     "check:lint": "biome check .",
-    "check:test": "bun test src/",
+    "check:test": "bun test --max-concurrency=1 src/",
     "check:type": "tsc --noEmit",
     "fix:lint": "biome check --write .",
     "watch:test": "bun test --watch src/",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@hono/trpc-server": "^0.4.2",
     "@trpc/server": "^11.17.0",
-    "hono": "^4.12.18",
+    "hono": "^4.12.21",
     "jose": "^6",
     "pg": "^8.20.0",
     "yjs": "^13.6.30",

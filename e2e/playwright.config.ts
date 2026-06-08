@@ -33,6 +33,28 @@ const PORT = process.env.E2E_PORT
 process.env.E2E_PORT = String(PORT);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
+const desktopChromiumProject = {
+  name: "chromium",
+  grepInvert: /@android/,
+  use: { ...devices["Desktop Chrome"] },
+};
+
+const androidChromeProject = {
+  name: "android-chrome",
+  grep: /@android/,
+  use: {
+    ...devices["Galaxy S24"],
+    // Xperia 5 V は 1080px 幅 / DPR 3 系のため、CSS px では 360px 幅相当。
+    // Playwright に Xperia preset は無いので、Galaxy S24 preset をベースに
+    // Android Chrome の UA/touch/mobile 設定を保ちつつ viewport を寄せる。
+    viewport: { width: 360, height: 840 },
+    screen: { width: 360, height: 840 },
+    deviceScaleFactor: 3,
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 15; XQ-DE44 Build/67.2.A.3.163) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.7827.59 Mobile Safari/537.36",
+  },
+};
+
 export default defineConfig({
   testDir: ".",
   fullyParallel: true,
@@ -65,27 +87,20 @@ export default defineConfig({
   },
 
   projects: process.env.CI
-    ? [
-        {
-          name: "chromium",
-          use: { ...devices["Desktop Chrome"] },
-        },
-      ]
+    ? [desktopChromiumProject, androidChromeProject]
     : [
-        {
-          name: "chromium",
-          use: { ...devices["Desktop Chrome"] },
-        },
-
+        desktopChromiumProject,
         {
           name: "firefox",
+          grepInvert: /@android/,
           use: { ...devices["Desktop Firefox"] },
         },
-
         {
           name: "webkit",
+          grepInvert: /@android/,
           use: { ...devices["Desktop Safari"] },
         },
+        androidChromeProject,
       ],
 
   webServer: {
@@ -99,6 +114,8 @@ export default defineConfig({
       // server/src/index.ts の REQUIRED_ENV 検査を通すためのダミー。
       // e2e は OIDC を実通信しない (mocks/api 側で stub する) ので aud 値は無意味。
       TWITCH_CLIENT_ID: "e2e-dummy-client-id",
+      BUN_PUBLIC_TWITCH_CLIENT_ID: "e2e-dummy-client-id",
+      BUN_PUBLIC_APP_BASE_URL: BASE_URL,
       // e2e では DB mock を使うため実 PostgreSQL は不要。起動時の SELECT 1 検証を skip する。
       SKIP_DB_VERIFY: "1",
     },

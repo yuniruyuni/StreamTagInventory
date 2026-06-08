@@ -50,6 +50,14 @@ export const TemplateList: React.FC<Props> = ({
     }
   };
 
+  const handleKeyboardMove = (templateId: string, direction: -1 | 1) => {
+    const sourceIndex = templates.findIndex(({ id }) => id === templateId);
+    if (sourceIndex < 0) return;
+    const destinationIndex = sourceIndex + direction;
+    if (destinationIndex < 0 || destinationIndex >= templates.length) return;
+    onMove(templateId, templates[destinationIndex].id);
+  };
+
   return (
     <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
       <SortableContext items={templates}>
@@ -61,6 +69,7 @@ export const TemplateList: React.FC<Props> = ({
             onRemove={onRemove}
             onClone={onClone}
             onSave={onSave}
+            onKeyboardMove={handleKeyboardMove}
             userLogin={userLogin}
             postTemplate={postTemplate}
           />

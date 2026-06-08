@@ -26,6 +26,20 @@ export class InventoryPage extends BasePage {
     return this.getByRole("article");
   }
 
+  get addTemplateButton(): Locator {
+    return this.getByRole("button", { name: /add|追加/i });
+  }
+
+  get addTemplateCard(): Locator {
+    return this.getByTestId("add-template-card");
+  }
+
+  get importCurrentStreamButton(): Locator {
+    return this.getByRole("button", {
+      name: /import as template|テンプレートとして取り込み/i,
+    });
+  }
+
   templateCard(index: number): Locator {
     return this.templateCards.nth(index);
   }

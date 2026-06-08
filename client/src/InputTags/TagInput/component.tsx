@@ -1,15 +1,17 @@
 import React from "react";
 
 type Props = {
+  id?: string;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onFocus: () => void;
   onBlur: () => void;
 };
 
 export const TagInput = React.forwardRef<HTMLInputElement, Props>(
-  ({ onKeyDown, onFocus, onBlur }, ref) => {
+  ({ id, onKeyDown, onFocus, onBlur }, ref) => {
     return (
       <input
+        id={id}
         ref={ref}
         type="text"
         // size=1 + min-w-[6ch] で input の intrinsic width を縮め、

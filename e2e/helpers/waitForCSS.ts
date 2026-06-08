@@ -1,18 +1,17 @@
 import type { Page } from "@playwright/test";
 
 export async function waitForCSS(page: Page) {
-  // CSSファイルが読み込まれていることを確認
+  // The visual tests must fail before taking screenshots if Tailwind is absent.
   await page.waitForFunction(
     () => {
-      const styleSheets = Array.from(document.styleSheets);
-      return styleSheets.some((sheet) => {
+      return Array.from(document.styleSheets).some((sheet) => {
         try {
           return (
-            sheet.href?.includes("index.css") ||
-            (sheet.cssRules && sheet.cssRules.length > 0)
+            sheet.href?.endsWith("/index.css") &&
+            sheet.cssRules &&
+            sheet.cssRules.length > 0
           );
         } catch (_e) {
-          // CORS制限などでアクセスできない場合はスキップ
           return false;
         }
       });
@@ -20,17 +19,25 @@ export async function waitForCSS(page: Page) {
     { timeout: 30000 },
   );
 
-  // DaisyUIのスタイルが適用されていることを確認
   await page.waitForFunction(
     () => {
-      const testElement = document.createElement("div");
-      testElement.className = "btn";
-      document.body.appendChild(testElement);
-      const computed = window.getComputedStyle(testElement);
-      document.body.removeChild(testElement);
+      return Array.from(document.styleSheets).some((sheet) => {
+        try {
+          if (!sheet.href?.endsWith("/index.css") || !sheet.cssRules) {
+            return false;
+          }
 
-      // DaisyUIのボタンスタイルが適用されているかチェック
-      return computed.display !== "inline" || computed.padding !== "0px";
+          return Array.from(sheet.cssRules).some((rule) => {
+            return (
+              rule.cssText.includes(".flex") ||
+              rule.cssText.includes(".h-screen") ||
+              rule.cssText.includes(".w-screen")
+            );
+          });
+        } catch (_e) {
+          return false;
+        }
+      });
     },
     { timeout: 30000 },
   );

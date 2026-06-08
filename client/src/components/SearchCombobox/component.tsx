@@ -19,6 +19,7 @@ export type SearchComboboxProps<T> = {
   className?: string;
   inputClassName?: string;
   id?: string;
+  emptyLabel?: string;
 };
 
 const SearchComboboxInner = <T,>({
@@ -35,6 +36,7 @@ const SearchComboboxInner = <T,>({
   className,
   inputClassName,
   id,
+  emptyLabel,
 }: SearchComboboxProps<T>) => {
   const {
     open,
@@ -56,7 +58,8 @@ const SearchComboboxInner = <T,>({
   });
 
   const hasResults = items !== undefined && items.length > 0;
-  const showDropdown = open && hasResults;
+  const showEmpty = items !== undefined && items.length === 0 && query !== "";
+  const showDropdown = open && (hasResults || showEmpty);
   const autoId = useId();
   const inputId = id ?? autoId;
 
@@ -111,6 +114,7 @@ const SearchComboboxInner = <T,>({
             onSelect={handleSelect}
             getItemId={getItemId}
             renderItem={renderItem}
+            emptyLabel={emptyLabel}
           />
         </div>
       )}
