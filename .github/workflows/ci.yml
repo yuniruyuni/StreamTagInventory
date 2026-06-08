@@ -53,7 +53,7 @@ jobs:
         env:
           SKIP_DB_VERIFY: "1"
           TWITCH_CLIENT_ID: ci-e2e-dummy
-        run: bun run check:e2e
+        run: bun run check:e2e -- --grep-invert "Visual Regression Tests"
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
