@@ -21,24 +21,23 @@ export async function waitForCSS(page: Page) {
 
   await page.waitForFunction(
     () => {
-      const sizedIcon = document.querySelector(".w-5");
-      if (sizedIcon) {
-        const iconStyle = window.getComputedStyle(sizedIcon);
-        return (
-          Number.parseFloat(iconStyle.width) <= 32 &&
-          Number.parseFloat(iconStyle.height) <= 32
-        );
-      }
+      const probe = document.createElement("div");
+      probe.className = "h-screen w-screen flex items-center justify-center";
+      probe.style.position = "fixed";
+      probe.style.left = "-10000px";
+      probe.style.top = "0";
+      document.body.appendChild(probe);
 
-      const main = document.querySelector("main");
-      if (!main) return false;
-      const mainStyle = window.getComputedStyle(main);
+      const probeStyle = window.getComputedStyle(probe);
+      const matches =
+        probeStyle.display === "flex" &&
+        probeStyle.alignItems === "center" &&
+        probeStyle.justifyContent === "center" &&
+        Number.parseFloat(probeStyle.width) > 0 &&
+        Number.parseFloat(probeStyle.height) > 0;
 
-      return (
-        mainStyle.display === "flex" &&
-        mainStyle.alignItems === "center" &&
-        mainStyle.justifyContent === "center"
-      );
+      document.body.removeChild(probe);
+      return matches;
     },
     { timeout: 30000 },
   );
