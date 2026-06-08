@@ -2,7 +2,11 @@ import { join } from "node:path";
 import type { Database } from "@/infra/db/database";
 import { PgDatabase } from "@/infra/db/pg-client";
 import { sql } from "@/infra/db/sql";
-import { applyPgSchema } from "./pgschema";
+import {
+  applyPgSchema,
+  applySchemaSqlDirectly,
+  isPgSchemaDownloadError,
+} from "./pgschema";
 import { EmbeddedPostgresManager } from "./postgres";
 
 let pgManager: EmbeddedPostgresManager | null = null;
@@ -29,10 +33,16 @@ async function doInit(dataDir: string): Promise<PgDatabase> {
     // 本番 migration と同じ pgschema バイナリを呼ぶ。自作のパーサで
     // `\i tables/` を inline するより、実際の pgschema 挙動 (declarative diff /
     // shadow schema / FK 順序解決) を再現できる。
-    await applyPgSchema({
+    const schemaParams = {
       connection: pgManager.connectionParams,
       schemaMainPath: SCHEMA_MAIN,
-    });
+    };
+    try {
+      await applyPgSchema(schemaParams);
+    } catch (error) {
+      if (!isPgSchemaDownloadError(error)) throw error;
+      await applySchemaSqlDirectly(schemaParams);
+    }
   }
 
   return db;
