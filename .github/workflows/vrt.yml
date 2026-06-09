@@ -77,6 +77,12 @@ jobs:
           SKIP_DB_VERIFY: "1"
           TWITCH_CLIENT_ID: ci-vrt-dummy
 
+      - name: Upload raw actual snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-actual-visual-snapshots
+          path: e2e/__snapshots__/visual.spec.ts-snapshots/
+
       - uses: yorifuji/easy-vrt/actual@v2
         with:
           actual-dir: e2e/__snapshots__/
