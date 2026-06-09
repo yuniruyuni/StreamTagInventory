@@ -78,7 +78,7 @@ jobs:
           TWITCH_CLIENT_ID: ci-vrt-dummy
 
       - name: Upload raw actual snapshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: raw-actual-visual-snapshots
           path: e2e/__snapshots__/visual.spec.ts-snapshots/
