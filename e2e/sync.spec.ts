@@ -129,6 +129,12 @@ test.describe("Template sync", () => {
     await inventoryScreen
       .getTemplateCardScreen(0)
       .state.expectTitleValue("Remote Updated Title");
+    await inventoryScreen
+      .getTemplateCardScreen(0)
+      .state.expectSaveButtonHidden();
+    await inventoryScreen
+      .getTemplateCardScreen(0)
+      .state.expectRevertButtonHidden();
   });
 
   test("keeps offline edits locally and syncs them after reconnect", async ({
