@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { waitForCSS } from "../helpers/waitForCSS";
+import { waitForCSS, waitForEntranceStyles } from "../helpers/waitForCSS";
 import { setupMocks } from "../mocks/setupMocks";
 import { NavbarScreen } from "../screens/components/navbar/NavbarScreen";
 import { InventoryScreen } from "../screens/inventory/InventoryScreen";
@@ -14,7 +14,7 @@ test.describe("Visual Regression Tests - Unauthenticated", () => {
 
     await loginScreen.actions.waitForLoadState("domcontentloaded");
     await loginScreen.actions.waitForLoadState("networkidle");
-    await waitForCSS(page);
+    await waitForEntranceStyles(page);
 
     await loginScreen.state.expectScreenshot("login-page.png", {
       fullPage: true,

@@ -40,7 +40,7 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots --project=chromium --timeout=60000
+        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots=all --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
@@ -71,11 +71,17 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Generate screenshots
-        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots --project=chromium --timeout=60000
+        run: cd e2e && bunx playwright test visual.spec.ts --update-snapshots=all --project=chromium --timeout=60000
         env:
           CI: true
           SKIP_DB_VERIFY: "1"
           TWITCH_CLIENT_ID: ci-vrt-dummy
+
+      - name: Upload raw actual snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-actual-visual-snapshots
+          path: e2e/__snapshots__/visual.spec.ts-snapshots/
 
       - uses: yorifuji/easy-vrt/actual@v2
         with:
