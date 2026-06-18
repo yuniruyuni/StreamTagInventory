@@ -33,7 +33,7 @@ jobs:
       BUILD_ARGS: ${{ inputs.build_args }}
       SHA: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
