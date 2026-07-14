@@ -9,7 +9,6 @@
     "types": ["@types/bun"],
 
     /* Alias */
-    "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
       "@/*": ["../server/src/*"],
