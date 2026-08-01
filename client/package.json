@@ -47,7 +47,7 @@
     "@happy-dom/global-registrator": "^20.8.9",
     "@tailwindcss/cli": "^4.2.4",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@trpc/server": "^11.17.0",
