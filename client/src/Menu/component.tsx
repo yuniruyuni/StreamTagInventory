@@ -142,6 +142,11 @@ export const Menu: React.FC<Props> = ({
                   {t("settings.postTemplate")}
                 </button>
               </li>
+              <li data-testid="third-party-licenses-menu-item">
+                <a href="/third-party-licenses.html">
+                  {t("legal.thirdPartyLicenses")}
+                </a>
+              </li>
               {/* 区切り線をメニュー幅いっぱいに表示 */}
               <div className="py-0.5">
                 <hr className="border-t border-slate-200 w-full" />

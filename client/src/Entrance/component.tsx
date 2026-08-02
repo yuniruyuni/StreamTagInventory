@@ -33,6 +33,12 @@ export const Entrance: React.FC<Props> = ({ uri }) => {
 
       <div className="absolute bottom-8 flex flex-col items-center gap-3">
         <AuthorInfo />
+        <Link
+          className="text-sm text-slate-500 hover:text-sky-600"
+          href="/third-party-licenses.html"
+        >
+          {t("legal.thirdPartyLicenses")}
+        </Link>
       </div>
     </main>
   );

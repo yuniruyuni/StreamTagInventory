@@ -53,6 +53,17 @@ bun run fix:lint     # Biome auto-fix
 bun run build
 ```
 
+### サードパーティライセンスページ
+
+`bun run build`（および`bun run watch:run`）は、`client/package.json`と
+`server/package.json`の本番依存を再帰的に調べ、lockfileに対応した
+`client/static/third-party-licenses.html`を生成します。配信後は
+`/third-party-licenses.html`で確認できます。
+
+このHTMLと`THIRD_PARTY_NOTICES.md`のような一覧ファイルはビルド生成物であり、Gitには
+コミットしません。CIとDocker image buildが毎回生成します。ライセンス本文を同梱していない
+npmパッケージに限り、レビュー済みの入力を`scripts/license-overrides/`で管理します。
+
 ## 本番環境セットアップ
 
 本アプリを Cloud Run にデプロイして運用するために必要な外部リソースとセットアップ手順。新規にクローンして自分のドメインで運用する開発者向け。

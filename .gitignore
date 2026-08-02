@@ -44,6 +44,10 @@ typings/
 /server/dist/
 /e2e/static/
 
+# Third-party notices are generated during builds/CI, never committed.
+/THIRD_PARTY_NOTICES.md
+/THIRDPARTY_NOTICE.md
+
 # Playwright test results and reports
 /test-results/
 /playwright-report/

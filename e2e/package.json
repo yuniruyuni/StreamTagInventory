@@ -13,6 +13,7 @@
     "check:e2e:build:html": "mkdir -p static && cp ../client/src/index.html static/index.html && cp ../client/src/robots.txt static/robots.txt",
     "check:e2e:build:favicon": "bun run ../client/bin/generate-favicon.js",
     "check:e2e:build:avatar": "bun run ../client/bin/generate-avatar.js",
+    "check:e2e:build:licenses": "bun run ../scripts/generate-third-party-licenses.ts --output=./static/third-party-licenses.html",
     "check:e2e:build:tailwind": "tailwindcss --minify --input ../client/src/index.css --output ./static/index.css",
     "check:e2e:build:bundle": "bun run ../client/bin/build.ts --entry=../client/src/index.e2e.tsx --outdir=./static/ --entry-naming=[dir]/index.[ext]",
     "check:e2e:serve": "STATIC_DIR=./static bun run ../server/src/index.ts",

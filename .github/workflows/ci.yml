@@ -32,6 +32,17 @@ jobs:
       - name: Build project
         run: bun run build
 
+      - name: Verify generated third-party license page
+        run: |
+          test -s client/static/third-party-licenses.html
+          if git ls-files -- \
+            client/static/third-party-licenses.html \
+            THIRD_PARTY_NOTICES.md \
+            THIRDPARTY_NOTICE.md | grep --quiet .; then
+            echo "Third-party notice outputs must be generated, not committed."
+            exit 1
+          fi
+
   e2e:
     runs-on: ubuntu-latest
     needs: test

@@ -21,6 +21,9 @@
     "login": "Login with Twitch",
     "logout": "Logout"
   },
+  "legal": {
+    "thirdPartyLicenses": "Third-party licenses"
+  },
   "template": {
     "title": "Title",
     "category": "Category",

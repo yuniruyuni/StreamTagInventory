@@ -150,6 +150,22 @@ test("アプリ名がホームページへのリンクになっている", () =>
   expect(appNameLink?.getAttribute("href")).toBe("/");
 });
 
+test("サードパーティライセンスページへのリンクが表示される", () => {
+  const { getByText } = render(
+    <Menu
+      user={createMockUser()}
+      onSearch={() => {}}
+      onImport={() => {}}
+      onExport={() => {}}
+      onEditPostTemplate={() => {}}
+    />,
+    { wrapper: TestWrapper },
+  );
+
+  const licensesLink = getByText("Third-party licenses").closest("a");
+  expect(licensesLink?.getAttribute("href")).toBe("/third-party-licenses.html");
+});
+
 // ユーザーアバターのテスト
 test("ユーザーアバターが正しく表示される", () => {
   const user = createMockUser();
