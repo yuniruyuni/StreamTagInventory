@@ -20,6 +20,28 @@ test("generated third-party license page is publicly available", async ({
   await expect(page.getByText(/bun\.lock SHA-256/)).toHaveCount(0);
   await expect(page.locator("details.component").first()).toBeVisible();
   await expect(
-    page.locator(".component-name").filter({ hasText: /^react\s/ }),
+    page.getByRole("heading", { name: /^ライセンス本文/ }),
+  ).toHaveCount(0);
+
+  const reactComponent = page.locator("details.component").filter({
+    has: page.locator(".component-name", { hasText: /^react\s/ }),
+  });
+  const reactLicenseDocument = reactComponent
+    .locator(".license-document")
+    .first();
+
+  await expect(reactComponent).toHaveCount(1);
+  await expect(reactLicenseDocument).toBeHidden();
+  await reactComponent.locator("summary").click();
+  await expect(reactLicenseDocument).toBeVisible();
+  await expect(reactLicenseDocument.locator("pre")).toContainText(
+    "MIT License",
+  );
+
+  const firstComponent = page.locator("details.component").first();
+  await firstComponent.locator("summary").click();
+  await expect(
+    firstComponent.locator(".license-document").first(),
   ).toBeVisible();
+  await expect(reactLicenseDocument).toBeHidden();
 });

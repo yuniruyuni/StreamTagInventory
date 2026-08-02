@@ -53,12 +53,11 @@ interface Component {
   version: string;
 }
 
-interface IndexedDocument {
-  componentNames: Set<string>;
-  hash: string;
-  names: Set<string>;
-  text: string;
-}
+const licenseDocumentOriginLabels: Record<LicenseDocumentOrigin, string> = {
+  "canonical-fallback": "標準本文による補完",
+  "package-file": "パッケージ同梱ファイル",
+  "reviewed-override": "確認済み上流文書による補完",
+};
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -415,30 +414,6 @@ function collectComponents(): Component[] {
   );
 }
 
-function indexDocuments(components: readonly Component[]): IndexedDocument[] {
-  const documents = new Map<string, IndexedDocument>();
-  for (const component of components) {
-    const componentName = `${component.name} ${component.version}`;
-    for (const document of component.documents) {
-      const existing = documents.get(document.hash);
-      if (existing) {
-        existing.componentNames.add(componentName);
-        existing.names.add(document.name);
-      } else {
-        documents.set(document.hash, {
-          componentNames: new Set([componentName]),
-          hash: document.hash,
-          names: new Set([document.name]),
-          text: document.text,
-        });
-      }
-    }
-  }
-  return [...documents.values()].sort((left, right) =>
-    compareText(left.hash, right.hash),
-  );
-}
-
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -450,7 +425,6 @@ function escapeHtml(value: string): string {
 
 function renderHtml(
   components: readonly Component[],
-  documents: readonly IndexedDocument[],
   bunLockSha256: string,
 ): string {
   const componentSections = components
@@ -463,13 +437,16 @@ function renderHtml(
         component.authors.length > 0
           ? `<p><strong>Authors:</strong> ${escapeHtml(component.authors.join(", "))}</p>`
           : "";
-      const documentLinks = component.documents
+      const documentSections = component.documents
         .map(
           (document) =>
-            `<a href="#license-${document.hash}">${escapeHtml(document.name)}</a>`,
+            `<section class="license-document">
+      <h4>${escapeHtml(licenseDocumentOriginLabels[document.origin])}: ${escapeHtml(document.name)}</h4>
+      <pre>${escapeHtml(document.text)}</pre>
+    </section>`,
         )
-        .join(" / ");
-      return `<details class="component">
+        .join("\n");
+      return `<details class="component" name="third-party-component">
   <summary>
     <span class="component-name">${escapeHtml(component.name)} <small>${escapeHtml(component.version)}</small></span>
     <span class="component-meta">${escapeHtml(targetLabels)} · ${escapeHtml(component.license)}</span>
@@ -477,22 +454,13 @@ function renderHtml(
   <div class="component-body">
     <p><strong>Source:</strong> <a href="${escapeHtml(component.source)}" target="_blank" rel="noopener noreferrer">${escapeHtml(component.source)}</a></p>
     ${authors}
-    <p><strong>License documents:</strong> ${documentLinks}</p>
+    <div class="license-documents">
+      <h3>ライセンス文書</h3>
+      ${documentSections}
+    </div>
   </div>
 </details>`;
     })
-    .join("\n");
-
-  const documentSections = documents
-    .map(
-      (
-        document,
-      ) => `<section class="license-document" id="license-${document.hash}">
-  <h3>${escapeHtml([...document.names].sort(compareText).join(" / "))}</h3>
-  <p class="used-by">Used by: ${escapeHtml([...document.componentNames].sort(compareText).join(", "))}</p>
-  <pre>${escapeHtml(document.text)}</pre>
-</section>`,
-    )
     .join("\n");
 
   return `<!doctype html>
@@ -507,22 +475,25 @@ function renderHtml(
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { width: min(68rem, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 5rem; }
-    h1, h2, h3 { line-height: 1.25; }
+    h1, h2, h3, h4 { line-height: 1.25; }
     h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); margin: 1rem 0 .5rem; }
     h2 { border-top: 1px solid #cbd5e1; margin-top: 2.5rem; padding-top: 1.5rem; }
     a { color: #0369a1; overflow-wrap: anywhere; }
     a:hover { text-decoration: none; }
     .back { display: inline-block; }
     .description { color: #475569; max-width: 52rem; }
-    .used-by { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
     .component { background: #fff; border: 1px solid #cbd5e1; border-radius: .75rem; margin: .625rem 0; overflow: hidden; }
     .component summary { cursor: pointer; display: flex; gap: 1rem; justify-content: space-between; padding: .875rem 1rem; }
     .component summary:hover { background: #f1f5f9; }
     .component-name { font-weight: 600; }
     .component-name small { color: #64748b; font-weight: 400; }
     .component-meta { color: #475569; font-size: .875rem; text-align: right; }
-    .component-body { border-top: 1px solid #e2e8f0; padding: .25rem 1rem; }
-    .license-document { border-top: 1px solid #cbd5e1; margin-top: 2rem; padding-top: 1rem; scroll-margin-top: 1rem; }
+    .component-body { border-top: 1px solid #e2e8f0; padding: .25rem 1rem 1rem; }
+    .license-documents { border-top: 1px solid #cbd5e1; margin-top: 1rem; padding-top: .75rem; }
+    .license-documents > h3 { font-size: 1.125rem; margin: 0; }
+    .license-document { margin-top: 1.25rem; }
+    .license-document h4 { font-size: 1rem; margin: 0 0 .5rem; }
+    .license-document pre { margin-bottom: 0; }
     pre { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: .75rem; font: .8125rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: auto; padding: 1rem; white-space: pre-wrap; }
     @media (max-width: 640px) {
       main { width: min(100% - 1.25rem, 68rem); padding-top: 1.25rem; }
@@ -540,9 +511,6 @@ function renderHtml(
 
     <h2>第三者コンポーネント (${components.length})</h2>
     ${componentSections}
-
-    <h2>ライセンス本文 (${documents.length})</h2>
-    ${documentSections}
   </main>
 </body>
 </html>
@@ -560,12 +528,11 @@ function outputPath(): string {
 }
 
 const components = collectComponents();
-const documents = indexDocuments(components);
 const output = outputPath();
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(
   output,
-  renderHtml(components, documents, sha256File(join(projectRoot, "bun.lock"))),
+  renderHtml(components, sha256File(join(projectRoot, "bun.lock"))),
 );
 console.log(
   `Generated ${relative(projectRoot, output)} for ${components.length} third-party components.`,
