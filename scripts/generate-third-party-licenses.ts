@@ -514,8 +514,7 @@ function renderHtml(
     a:hover { text-decoration: none; }
     .back { display: inline-block; }
     .description { color: #475569; max-width: 52rem; }
-    .meta, .used-by { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
-    .scope { background: #e0f2fe; border-radius: .75rem; padding: 1rem 1.25rem; }
+    .used-by { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
     .component { background: #fff; border: 1px solid #cbd5e1; border-radius: .75rem; margin: .625rem 0; overflow: hidden; }
     .component summary { cursor: pointer; display: flex; gap: 1rem; justify-content: space-between; padding: .875rem 1rem; }
     .component summary:hover { background: #f1f5f9; }
@@ -533,16 +532,11 @@ function renderHtml(
   </style>
 </head>
 <body>
+  <!-- Generated from bun.lock SHA-256: ${bunLockSha256} -->
   <main>
     <a class="back" href="/">← Stream Tag Inventoryへ戻る</a>
     <h1>サードパーティライセンス</h1>
-    <p class="description">Stream Tag Inventoryの配布物に含まれる第三者製npmパッケージと、そのライセンス文書を掲載しています。</p>
-    <div class="scope">
-      <strong>対象範囲</strong>
-      <p>ブラウザ用JavaScriptとコンパイル済みサーバーに含まれる、本番依存関係をclient/package.json・server/package.jsonから再帰的に収集しています。開発・テスト専用依存は含みません。</p>
-      <p>BunランタイムとDistroless/Debianコンテナの構成要素はbun.lockのnpmパッケージ一覧外です。それぞれの配布条件は<a href="https://bun.sh/docs/project/license" target="_blank" rel="noopener noreferrer">Bunのライセンス情報</a>および<a href="https://github.com/GoogleContainerTools/distroless" target="_blank" rel="noopener noreferrer">Distroless</a>を参照してください。</p>
-    </div>
-    <p class="meta">bun.lock SHA-256: ${bunLockSha256}</p>
+    <p class="description">Stream Tag Inventoryで使用している第三者ソフトウェアのライセンス情報です。</p>
 
     <h2>第三者コンポーネント (${components.length})</h2>
     ${componentSections}
