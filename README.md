@@ -104,8 +104,8 @@ printf "%s" "<another-random-32chars>" | \
   gcloud secrets create stream-tag-inventory-db-app-password --data-file=-
 
 # Cloudflare Access Service Token (DB トンネル用)
-printf "%s" "<cf-client-id>" | \
-  gcloud secrets create cf-db-access-client-id --data-file=-
+# client_id は Secret Manager に置かず GitHub Actions secret から deploy 時に
+# 埋め込む (手順 6 参照)。Secret Manager は active version 数で課金されるため。
 printf "%s" "<cf-client-secret>" | \
   gcloud secrets create cf-db-access-client-secret --data-file=-
 ```
@@ -129,7 +129,7 @@ server 側は `Cache-Control: no-store` + `Vary: Authorization` も併用して�
 PostgreSQL は public IP を持たず、Cloud Run ↔ DB は Cloudflare Tunnel で接続する。
 
 1. Cloudflare **Zero Trust** → **Access** → **Service Auth** → **Service Tokens** → "Create service token"
-2. client ID / secret が発行されるので **Secret Manager に登録** (上記手順 2 の `cf-db-access-client-id` / `cf-db-access-client-secret`)
+2. client secret は **Secret Manager に登録** (上記手順 2 の `cf-db-access-client-secret`)、client ID は **GitHub Actions secret `CF_DB_ACCESS_CLIENT_ID`** に登録 (手順 6)
 3. Cloudflare Tunnel で `db.<your-domain>` を内部 DB (`<db-host>:5432`) にマッピング
 4. Cloud Run の `cloudrun.yaml` / `cloudrun-job.yaml` の `cloudflared` サイドカーに渡す `--hostname` を `db.<your-domain>` に合わせる
 
@@ -144,6 +144,7 @@ PostgreSQL は public IP を持たず、Cloud Run ↔ DB は Cloudflare Tunnel �
 - `GCP_PROJECT_ID`
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`
 - `GCP_SERVICE_ACCOUNT`
+- `CF_DB_ACCESS_CLIENT_ID` — Cloudflare Access service token の client ID。deploy 時に `cloudrun.yaml` / `cloudrun-job.yaml` の `CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER` へ置換される
 
 Workload Identity Federation を使う前提。サービスアカウントには `roles/run.admin` / `roles/artifactregistry.writer` / `roles/iam.serviceAccountUser` / `roles/secretmanager.secretAccessor` を付与する。
 

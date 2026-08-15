@@ -154,7 +154,7 @@ DB 表は `template_docs` (Y.Doc バイナリ、PK = Twitch user id) **1 枚の�
 
 - **Cache Rule**: Cloudflare 側で `/api/*` Bypass を設定。origin の `Cache-Control: no-store` + `Vary: Authorization` が利かない場合 `api/*` が中間 CDN にキャッシュされ、他ユーザーに user 情報が混じる事故に繋がる
 - **Insights beacon**: `static.cloudflareinsights.com/beacon.min.js` が Cloudflare プロキシで自動注入される。CSP の `scriptSrc` / `connectSrc` で許可済 (`server/src/presentation/index.ts`)
-- **Access (DB Tunnel)**: Cloud Run → `db.yuniruyuni.net` は Cloudflare Access 経由のトンネル。cloudflared サイドカーが `cf-db-access-client-id` / `cf-db-access-client-secret` で認証
+- **Access (DB Tunnel)**: Cloud Run → `db.yuniruyuni.net` は Cloudflare Access 経由のトンネル。cloudflared サイドカーが client ID / secret で認証。secret のみ Secret Manager (`cf-db-access-client-secret`)、client ID は GitHub Actions secret `CF_DB_ACCESS_CLIENT_ID` から deploy 時に埋め込む
 
 ## Testing
 
@@ -232,7 +232,14 @@ Secret Manager の `stream-tag-inventory-db-password` / `stream-tag-inventory-db
 
 ### cloudflared サイドカー
 
-DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続する。`cloudrun.yaml` と `cloudrun-job.yaml` の **両方** に `cloudflared` サイドカーが必要で、`cf-db-access-client-id` / `cf-db-access-client-secret` の secret を参照する。
+DB アクセスは Cloudflare Tunnel 経由で `db.yuniruyuni.net` へ接続する。`cloudrun.yaml` と `cloudrun-job.yaml` の **両方** に `cloudflared` サイドカーが必要。
+
+認証情報の置き場所が 2 つに分かれている点に注意:
+
+- `TUNNEL_SERVICE_TOKEN_SECRET` → Secret Manager の `cf-db-access-client-secret` を `secretKeyRef` で参照
+- `TUNNEL_SERVICE_TOKEN_ID` → yaml には `CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER` と書いておき、`deploy.yml` が GitHub Actions secret `CF_DB_ACCESS_CLIENT_ID` で `sed` 置換する
+
+client ID は `CF-Access-Client-Id` ヘッダで送られる識別子で単体では認証に使えないため、Secret Manager の active version 課金 ($0.06/version/月) を避けてこちら側に置いている。public repo なので値そのものは commit しない。
 
 ### pgschema の declarative GRANT と role 宣言
 
