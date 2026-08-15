@@ -57,9 +57,21 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Run migration
+        env:
+          CF_DB_ACCESS_CLIENT_ID: ${{ secrets.CF_DB_ACCESS_CLIENT_ID }}
         run: |
+          if [ -z "$CF_DB_ACCESS_CLIENT_ID" ]; then
+            echo "CF_DB_ACCESS_CLIENT_ID secret is not set" >&2
+            exit 1
+          fi
           MIGRATE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${SERVICE_NAME}-migrate:${SHA}"
           sed -i "s|IMAGE_PLACEHOLDER|$MIGRATE_TAG|g" cloudrun-job.yaml
+          sed -i "s|CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER|$CF_DB_ACCESS_CLIENT_ID|g" cloudrun-job.yaml
+          # 置換漏れは cloudflared の認証失敗として実行時にしか現れないのでここで落とす
+          if grep -q CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER cloudrun-job.yaml; then
+            echo "CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER was not substituted" >&2
+            exit 1
+          fi
           gcloud run jobs replace cloudrun-job.yaml \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID"
@@ -84,9 +96,21 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Deploy to Cloud Run
+        env:
+          CF_DB_ACCESS_CLIENT_ID: ${{ secrets.CF_DB_ACCESS_CLIENT_ID }}
         run: |
+          if [ -z "$CF_DB_ACCESS_CLIENT_ID" ]; then
+            echo "CF_DB_ACCESS_CLIENT_ID secret is not set" >&2
+            exit 1
+          fi
           IMAGE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${SERVICE_NAME}:${SHA}"
           sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_TAG|g" cloudrun.yaml
+          sed -i "s|CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER|$CF_DB_ACCESS_CLIENT_ID|g" cloudrun.yaml
+          # 置換漏れは cloudflared の認証失敗として実行時にしか現れないのでここで落とす
+          if grep -q CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER cloudrun.yaml; then
+            echo "CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER was not substituted" >&2
+            exit 1
+          fi
           gcloud run services replace cloudrun.yaml \
             --region "$GCP_REGION" \
             --project "$GCP_PROJECT_ID"

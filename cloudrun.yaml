@@ -56,11 +56,12 @@ spec:
             - --url
             - 0.0.0.0:5432
           env:
+            # client_id は CF-Access-Client-Id ヘッダで送る識別子で、認証には
+            # client_secret が要る。Secret Manager は active version 数で課金される
+            # ため、秘匿の要らない client_id は deploy 時に CI から埋め込む。
+            # public repo なので値は commit せず GitHub secret 経由で置換する。
             - name: TUNNEL_SERVICE_TOKEN_ID
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: cf-db-access-client-id
+              value: CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER
             - name: TUNNEL_SERVICE_TOKEN_SECRET
               valueFrom:
                 secretKeyRef:

@@ -41,11 +41,9 @@ spec:
                 - --url
                 - 0.0.0.0:5432
               env:
+                # cloudrun.yaml と同様、client_id は deploy 時に CI から埋め込む。
                 - name: TUNNEL_SERVICE_TOKEN_ID
-                  valueFrom:
-                    secretKeyRef:
-                      key: latest
-                      name: cf-db-access-client-id
+                  value: CF_DB_ACCESS_CLIENT_ID_PLACEHOLDER
                 - name: TUNNEL_SERVICE_TOKEN_SECRET
                   valueFrom:
                     secretKeyRef:
