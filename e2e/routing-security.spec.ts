@@ -25,7 +25,14 @@ test.describe("Routing and security smoke", () => {
     expect(response.headers()["cache-control"]).toBe(
       "no-store, no-cache, must-revalidate, private, max-age=0",
     );
-    expect(response.headers().vary).toBe("Authorization");
+    // hono 4.13 から compress() が Vary に Accept-Encoding を追記する。
+    // 圧縮の有無が Accept-Encoding に依存する以上そちらが正しいので、
+    // 「Authorization が載っていること」だけを見る。ここが落ちると
+    // キャッシュが利用者をまたいで応答を配りうるので緩めないこと。
+    const vary = (response.headers().vary ?? "")
+      .split(",")
+      .map((value) => value.trim());
+    expect(vary).toContain("Authorization");
   });
 
   test("exposes a safe author link", async ({ page }) => {
