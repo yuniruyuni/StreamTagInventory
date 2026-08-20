@@ -51,7 +51,9 @@ describe("presentation/createApp smoke", () => {
     // 圧縮の有無が Accept-Encoding に依存する以上そちらが正しいので、
     // 「Authorization が載っていること」だけを見る。ここが落ちると
     // キャッシュが利用者をまたいで応答を配りうるので緩めないこと。
-    const vary = (res.headers.get("Vary") ?? "").split(",").map((v) => v.trim());
+    const vary = (res.headers.get("Vary") ?? "")
+      .split(",")
+      .map((v) => v.trim());
     expect(vary).toContain("Authorization");
   });
 
