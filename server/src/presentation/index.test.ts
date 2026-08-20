@@ -47,7 +47,12 @@ describe("presentation/createApp smoke", () => {
     expect(res.headers.get("Cache-Control")).toBe(
       "no-store, no-cache, must-revalidate, private, max-age=0",
     );
-    expect(res.headers.get("Vary")).toBe("Authorization");
+    // hono 4.13 から compress() が Vary に Accept-Encoding を追記する。
+    // 圧縮の有無が Accept-Encoding に依存する以上そちらが正しいので、
+    // 「Authorization が載っていること」だけを見る。ここが落ちると
+    // キャッシュが利用者をまたいで応答を配りうるので緩めないこと。
+    const vary = (res.headers.get("Vary") ?? "").split(",").map((v) => v.trim());
+    expect(vary).toContain("Authorization");
   });
 
   test("non-/api/* path does not carry no-store (serves static / SPA)", async () => {
