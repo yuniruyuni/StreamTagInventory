@@ -98,4 +98,4 @@ jobs:
             --arg token "$GHCR_TOKEN" \
             --rawfile manifest yunirun.jsonc \
             '{token: $token, manifest: $manifest}' \
-            | ssh -o ConnectTimeout=20 yunirun-tags2@ssh.yuniruyuni.net "yunirun deploy $SHA"
+            | ssh -o ConnectTimeout=20 yunirun-tags@ssh.yuniruyuni.net "yunirun deploy $SHA"
