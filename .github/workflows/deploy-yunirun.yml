@@ -1,0 +1,101 @@
+# yunirun 経由での VPS デプロイ (検証中)
+#
+# 既存の deploy-vps.yml と並行して動く。yuniruyuni.net 側のアプリ名が tags2 な
+# ので、コンテナも HAProxy の経路も既存とは別に立つ。DB は既存のものを共有する
+# (yunirun.jsonc で databaseName と databasePasswords を指定)。
+name: Deploy via yunirun
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-yunirun-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    with:
+      dockerfile: Dockerfile
+      image_name: stream-tag-inventory
+      build_args: |
+        BUN_PUBLIC_TWITCH_CLIENT_ID=d2kz8x5se7k6b1n0picux0r7kaozi3
+        BUN_PUBLIC_APP_BASE_URL=https://tags.yuniruyuni.net
+    secrets: inherit
+
+  build-migration:
+    uses: ./.github/workflows/build-image.yml
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    with:
+      dockerfile: Dockerfile.migration
+      image_name: stream-tag-inventory-migration
+    secrets: inherit
+
+  deploy:
+    needs: [build, build-migration]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install cloudflared
+        run: |
+          CLOUDFLARED_VERSION="2026.7.3"
+          curl -Lf "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64" -o /usr/local/bin/cloudflared
+          chmod +x /usr/local/bin/cloudflared
+
+      - name: Install opkssh
+        env:
+          OPKSSH_VERSION: v0.16.0
+          OPKSSH_SHA256: c018c3e7baf98612b923e742dd87be38650bf61e3b755fb2bc90de177568b1bf
+        run: |
+          curl -sSLf "https://github.com/openpubkey/opkssh/releases/download/${OPKSSH_VERSION}/opkssh-linux-amd64" -o /usr/local/bin/opkssh
+          echo "${OPKSSH_SHA256}  /usr/local/bin/opkssh" | sha256sum -c -
+          chmod +x /usr/local/bin/opkssh
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cp ssh/known_hosts ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat >> ~/.ssh/config << 'SSHCONF'
+          Host ssh.yuniruyuni.net
+            ProxyCommand cloudflared access ssh --hostname %h
+            StrictHostKeyChecking yes
+          SSHCONF
+          chmod 600 ~/.ssh/config
+
+      - name: Login (OIDC -> short-lived SSH certificate)
+        run: opkssh login github
+
+      - name: Deploy
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          # トークンとマニフェストを stdin の JSON で渡す。argv に載せると
+          # ps から見えるため、また VPS が GitHub を取りに行かずに済むため。
+          jq -n \
+            --arg token "$GHCR_TOKEN" \
+            --rawfile manifest yunirun.jsonc \
+            '{token: $token, manifest: $manifest}' \
+            | ssh -o ConnectTimeout=20 yunirun-tags2@ssh.yuniruyuni.net "yunirun deploy $SHA"

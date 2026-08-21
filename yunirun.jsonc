@@ -1,0 +1,37 @@
+// yunirun のデプロイ宣言。
+//
+// ここに書くのは「アプリだけが知っていること」に限る。ホスト側のポートや uid は
+// yunirun が導出するので現れない。秘密の値も書かない。
+{
+  "app": {
+    // yuniruyuni.net 側のアプリ名は tags2 (旧 apps.nix 側と並行して動かすため)
+    // だが、push している image は stream-tag-inventory。
+    "image": "stream-tag-inventory",
+
+    "database": true,
+
+    // 既存の DB をそのまま使う。アプリ名から導くと tags2 という別の DB が
+    // 作られてデータが引き継がれない。
+    "databaseName": "stream_tag_inventory",
+
+    // 既存のパスワードをそのまま使う。yunirun が生成して ALTER ROLE で
+    // 上書きすると、旧 apps.nix 側の稼働中コンテナが即座に認証に失敗する。
+    // 移行が済んだら外してよい。
+    "databasePasswords": {
+      "owner": "db-password-stream_tag_inventory",
+      "app": "db-password-stream_tag_inventory_app"
+    },
+
+    // 秘密でない環境変数。OAuth の client_id は仕様上公開される値。
+    "env": {
+      "TWITCH_CLIENT_ID": "d2kz8x5se7k6b1n0picux0r7kaozi3",
+      "APP_BASE_URL": "https://tags.yuniruyuni.net"
+    }
+  },
+
+  "workloads": {
+    "migration": {
+      "image": "stream-tag-inventory-migration"
+    }
+  }
+}
