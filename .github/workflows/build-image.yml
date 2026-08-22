@@ -14,6 +14,10 @@ on:
       image_name:
         required: true
         type: string
+      build_args:
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -26,6 +30,7 @@ jobs:
       REPO_OWNER: ${{ github.repository_owner }}
       IMAGE_NAME: ${{ inputs.image_name }}
       DOCKERFILE: ${{ inputs.dockerfile }}
+      BUILD_ARGS: ${{ inputs.build_args }}
       SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v7
@@ -40,7 +45,18 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image
-        run: docker build -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
+        # `build_args` は改行区切りの "KEY=VALUE" 列。空なら追加引数なし。
+        # eg. "BUN_PUBLIC_APP_BASE_URL=https://example.com\nBUN_PUBLIC_X=foo"
+        # `$BUILD_ARGS` は env 経由 (security: shell injection 回避)。
+        run: |
+          BUILD_ARG_FLAGS=""
+          if [ -n "$BUILD_ARGS" ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              BUILD_ARG_FLAGS="$BUILD_ARG_FLAGS --build-arg $line"
+            done <<< "$BUILD_ARGS"
+          fi
+          docker build $BUILD_ARG_FLAGS -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
 
       - name: Push to GHCR
         run: |
