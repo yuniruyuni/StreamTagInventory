@@ -1,3 +1,8 @@
+# image をビルドして GHCR へ push する。
+#
+# かつては Artifact Registry を正として GHCR へは archive として push して
+# いたが、Cloud Run を撤去し AR も消したので GHCR だけになった。VPS 上の
+# yunirun はここに置いた image を生の commit SHA で取りに来る。
 name: Build and Push Image
 
 on:
@@ -9,40 +14,23 @@ on:
       image_name:
         required: true
         type: string
-      build_args:
-        required: false
-        type: string
-        default: ""
 
 permissions:
   contents: read
-  id-token: write
   packages: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GCP_REGION: us-west1
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       REPO_OWNER: ${{ github.repository_owner }}
       IMAGE_NAME: ${{ inputs.image_name }}
       DOCKERFILE: ${{ inputs.dockerfile }}
-      # `${{ ... }}` を run: の中に直接展開すると shell injection 可能になるため、
-      # env で先に変数として受けて run の中では `$BUILD_ARGS` で参照する。
-      BUILD_ARGS: ${{ inputs.build_args }}
       SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v7
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+          persist-credentials: false
 
       - name: Login to GHCR
         uses: docker/login-action@v4
@@ -52,26 +40,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image
-        # `build_args` は改行区切りの "KEY=VALUE" 列。空なら追加引数なし。
-        # eg. "BUN_PUBLIC_APP_BASE_URL=https://example.com\nBUN_PUBLIC_X=foo"
-        # `$BUILD_ARGS` は env 経由 (security: shell injection 回避)。
-        run: |
-          BUILD_ARG_FLAGS=""
-          if [ -n "$BUILD_ARGS" ]; then
-            while IFS= read -r line; do
-              [ -z "$line" ] && continue
-              BUILD_ARG_FLAGS="$BUILD_ARG_FLAGS --build-arg $line"
-            done <<< "$BUILD_ARGS"
-          fi
-          docker build $BUILD_ARG_FLAGS -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
+        run: docker build -f "$DOCKERFILE" -t "${IMAGE_NAME}:${SHA}" .
 
-      - name: Push to Artifact Registry
-        run: |
-          IMAGE_TAG="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/apps/${IMAGE_NAME}:${SHA}"
-          docker tag "${IMAGE_NAME}:${SHA}" "$IMAGE_TAG"
-          docker push "$IMAGE_TAG"
-
-      - name: Push to GHCR (archive)
+      - name: Push to GHCR
         run: |
           GHCR_TAG="ghcr.io/${REPO_OWNER}/${IMAGE_NAME}:${SHA}"
           docker tag "${IMAGE_NAME}:${SHA}" "$GHCR_TAG"
