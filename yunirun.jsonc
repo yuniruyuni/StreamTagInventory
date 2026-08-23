@@ -4,23 +4,18 @@
 // yunirun が導出するので現れない。秘密の値も書かない。
 {
   "app": {
-    // yuniruyuni.net 側のアプリ名は tags2 (旧 apps.nix 側と並行して動かすため)
-    // だが、push している image は stream-tag-inventory。
+    // yuniruyuni.net 側のアプリ名は tags だが、push している image は
+    // stream-tag-inventory。名前が違うので明示する。
     "image": "stream-tag-inventory",
 
     "database": true,
 
-    // 既存の DB をそのまま使う。アプリ名から導くと tags2 という別の DB が
-    // 作られてデータが引き継がれない。
+    // DB 名はアプリ名から導かない。アプリ名は tags なので、書かないと
+    // tags という別の DB が作られてデータが引き継がれない。
+    //
+    // ロール名もここから決まる (stream_tag_inventory と
+    // stream_tag_inventory_app)。schema 側の GRANT 先と一致している必要がある。
     "databaseName": "stream_tag_inventory",
-
-    // 既存のパスワードをそのまま使う。yunirun が生成して ALTER ROLE で
-    // 上書きすると、旧 apps.nix 側の稼働中コンテナが即座に認証に失敗する。
-    // 移行が済んだら外してよい。
-    "databasePasswords": {
-      "owner": "db-password-stream_tag_inventory",
-      "app": "db-password-stream_tag_inventory_app"
-    },
 
     // 秘密でない環境変数。OAuth の client_id は仕様上公開される値。
     "env": {
