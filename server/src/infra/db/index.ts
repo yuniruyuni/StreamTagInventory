@@ -32,7 +32,25 @@ export async function initDatabase(logger: ILogger): Promise<PgDatabase> {
   const database = process.env.DB_NAME ?? "stream_tag_inventory";
 
   log.info(`Connecting to PostgreSQL at ${host}:${port}/${database}...`);
-  db = new PgDatabase({ host, port, user, password, database });
+  db = new PgDatabase({
+    host,
+    port,
+    user,
+    password,
+    database,
+
+    // 接続を最低 1 本保つ。
+    //
+    // 既定は min=0 / idleTimeoutMillis=10000 で、10 秒使わないと接続が閉じる。
+    // 次の要求は接続の確立からやり直しになり、scram-sha-256 の認証
+    // (PBKDF2 4096 回) が毎回走る。SCRAM は意図的に遅いので数十ミリ秒かかる。
+    //
+    // 実測 (StreamerPost): 間を空けると 73〜100ms、連続だと 11〜18ms。
+    // トレースでも「トランザクションの取得だけで 62ms」として現れていた。
+    //
+    // 代償は保ちっぱなしの 1 接続。実測で 1 本あたりの実消費 (PSS) は約 1MB。
+    min: 1,
+  });
 
   // 起動時に 1 回 `SELECT 1` を叩いて接続を実検証する。pg pool は lazy connect
   // なので、この確認をしないと起動ログが "Database ready" と嘘をつく一方で
