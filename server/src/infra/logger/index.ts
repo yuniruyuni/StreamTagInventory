@@ -47,7 +47,16 @@ export class ConsoleLogger implements ILogger {
         console.log(formatted, ...args);
         break;
       case "warn":
-        console.warn(formatted, ...args);
+        // console.warn は stderr へ書く。コンテナの stderr は journald が
+        // 一律 err として受けるので、warn が err として積み上がり、本物の
+        // 異常がその中に埋もれる (実測で 1 日 25,000 行が warn だった)。
+        //
+        // systemd の <N> 接頭辞は使えない。podman はそれを解釈せず、文字列の
+        // まま通す (実機で確認した)。振り分けられるのは stdout か stderr かだけ。
+        //
+        // 印を残して stdout へ出す。優先度では区別できなくなるが、grep で
+        // 引ける。err が本当に err だけになることの方が価値が大きい。
+        console.log(`[warn] ${formatted}`, ...args);
         break;
       case "error":
         console.error(formatted, ...args);
