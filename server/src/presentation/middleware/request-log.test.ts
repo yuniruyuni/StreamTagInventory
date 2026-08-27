@@ -58,4 +58,15 @@ describe("要求ログ", () => {
     await appWith(logger).request("/api/x?token=secret-value");
     expect(lines[0]).not.toContain("secret-value");
   });
+  // パスの一部がそのまま資格情報になっている経路がある (共有 URL)。実際の
+  // 値を書くと、ログを読める相手に共有先を配ってしまう。当たった型だけ残す。
+  test("経路に埋め込まれた値は残さない", async () => {
+    const { lines, logger } = collector();
+    const app = new Hono();
+    app.use(requestLog(logger));
+    app.get("/s/:id", (c) => c.text("ok"));
+    await app.request("/s/SECRET-SHARE-KEY");
+    expect(lines[0]).not.toContain("SECRET-SHARE-KEY");
+    expect(lines[0]).toContain("path=/s/:id");
+  });
 });

@@ -11,6 +11,11 @@
  *
  * 形は logfmt にする。人が読めて、そのまま検索の条件にも使える。JSON は
  * 検索には向くが、journalctl で追うときに読みにくい。
+ *
+ * 経路は当たった型 (/s/:id) を残し、実際の値は残さない。パスの一部が
+ * そのまま資格情報になっている経路があり (共有 URL)、実際の値を書くと
+ * ログを読める相手に共有先を配ってしまう。集計に要るのは型の方なので、
+ * 失うものも無い。
  */
 import type { Context, MiddlewareHandler } from "hono";
 import type { ILogger } from "../../infra/logger/types";
@@ -44,7 +49,8 @@ export function requestLog(logger: ILogger): MiddlewareHandler {
       const ms = Math.round(performance.now() - started);
       const fields: [string, string | number][] = [
         ["method", c.req.method],
-        ["path", c.req.path],
+        // routePath は当たった型。値そのものは残さない。
+        ["path", c.req.routePath],
         ["status", status],
         ["ms", ms],
       ];
