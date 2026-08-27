@@ -6,6 +6,7 @@ import { secureHeaders } from "hono/secure-headers";
 import type { Context } from "../usecases/context";
 import { createJwtAuthMiddleware } from "./middleware/jwt-auth";
 import { noStoreMiddleware } from "./middleware/no-store";
+import { requestLog } from "./middleware/request-log";
 import { appRouter } from "./trpc/routers";
 
 // hono-context.d.ts に ContextVariableMap 拡張あり。明示的に import はせず
@@ -16,6 +17,8 @@ const STATIC_DIR = process.env.STATIC_DIR ?? "./static";
 export function createApp(ctx: Context) {
   const app = new Hono();
 
+  // いちばん外側に置く。内側で何が起きても 1 行は残る。
+  app.use(requestLog(ctx.logger));
   app.use(compress());
 
   app.use(
