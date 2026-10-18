@@ -1,27 +1,34 @@
-# yunirun 経由での VPS デプロイ (検証中)
+# yunirun 経由での VPS デプロイ。
 #
-# 既存の deploy-vps.yml と並行して動く。yuniruyuni.net 側のアプリ名が tags2 な
-# ので、コンテナも HAProxy の経路も既存とは別に立つ。DB は既存のものを共有する
-# (yunirun.jsonc で databaseName と databasePasswords を指定)。
+# push では起動しない。ci.yml が test / e2e / security / docker の成功後に
+# workflow_call で呼ぶ。以前は push で独立に走っていたため、CI が赤い
+# commit でもデプロイされていた。workflow_dispatch は手動の再デプロイ用に残す。
+#
+# yuniruyuni.net 側のアプリ名は tags2 (VPS 上の SSH ユーザーは yunirun-tags)。
+# DB は既存のものを共有する (yunirun.jsonc で databaseName と databasePasswords を指定)。
+#
+# 認証は GitHub Actions の OIDC トークンから opkssh が発行する短命の SSH
+# 証明書。VPS 側 (yuniruyuni.net の nixos/services/yunirun.nix) は sub を
+#   repo:yuniruyuni@85034901/StreamTagInventory@<id>:ref:refs/heads/main
+# と完全一致で照合する。sub はワークフローのファイル名や呼び出し元を含まず、
+# 呼び出された場合も呼び出し元の ref で決まるので、ci.yml から呼んでも変わらない。
+# deploy job に environment: を付けてはいけない (sub が :environment:<name> になる)。
 name: Deploy via yunirun
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
-
-concurrency:
-  group: deploy-yunirun-${{ github.ref }}
-  cancel-in-progress: false
 
 permissions: {}
 
 jobs:
   build:
     uses: ./.github/workflows/build-image.yml
+    # build-image.yml が宣言している権限を渡す。再利用ワークフローは呼び出し側より
+    # 多い権限を持てないので、足りないとワークフロー自体が読み込みを拒否され
+    # startup_failure になる。
     permissions:
       contents: read
-      id-token: write
       packages: write
     with:
       dockerfile: Dockerfile
@@ -33,9 +40,11 @@ jobs:
 
   build-migration:
     uses: ./.github/workflows/build-image.yml
+    # build-image.yml が宣言している権限を渡す。再利用ワークフローは呼び出し側より
+    # 多い権限を持てないので、足りないとワークフロー自体が読み込みを拒否され
+    # startup_failure になる。
     permissions:
       contents: read
-      id-token: write
       packages: write
     with:
       dockerfile: Dockerfile.migration
@@ -45,9 +54,17 @@ jobs:
   deploy:
     needs: [build, build-migration]
     runs-on: ubuntu-latest
+    # デプロイの中断は blue/green の入れ替えや migration を中途半端な状態で
+    # 止めうるので途中キャンセルはしない。
+    concurrency:
+      group: deploy-yunirun
+      cancel-in-progress: false
     permissions:
+      # opkssh が OIDC トークンを取得するのに必須
       id-token: write
       contents: read
+      # VPS が GHCR から pull するためのトークンを渡すのに使う。push は build
+      # job だけが行うので、VPS に渡るトークンには write を持たせない。
       packages: read
 
     steps:
@@ -89,6 +106,7 @@ jobs:
 
       - name: Deploy
         env:
+          # job の終了とともに失効するので VPS には長期の資格情報を残さない。
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ github.sha }}
         run: |

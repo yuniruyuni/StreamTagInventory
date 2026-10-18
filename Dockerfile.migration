@@ -1,4 +1,4 @@
-FROM pgschema/pgschema:latest
+FROM pgschema/pgschema@sha256:5e4b387fe97d6dfd5bc6ff64ee25c8696fb3ce9be52aa351e9cb05abd3ee73b0
 USER root
 RUN apk add --no-cache postgresql-client
 USER pgschema

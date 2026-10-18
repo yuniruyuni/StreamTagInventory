@@ -17,8 +17,9 @@ import pg from "pg";
  * 再現するため、`pgschema` の公式リリースバイナリをダウンロードして呼び出す。
  * 初回のみ `~/.stream-tag-inventory/bin/pgschema` にキャッシュされ、以降は再利用。
  *
- * Dockerfile.migration が `FROM pgschema/pgschema:latest` なのに対し、テスト側は
- * 決定的な動作を保つため version を pin する。差異が出た場合は CI で検知できる。
+ * Dockerfile.migration は `pgschema/pgschema:latest` が指していた image (2026-02-07
+ * 更新) を digest で pin している。テスト側も決定的な動作を保つため version を
+ * pin する。差異が出た場合は CI で検知できる。
  */
 const PGSCHEMA_VERSION = "1.8.0";
 const BIN_DIR = join(homedir(), ".stream-tag-inventory", "bin");
