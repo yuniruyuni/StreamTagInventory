@@ -32,7 +32,7 @@ jobs:
             git archive origin/main -- schema/ | tar -x -C /tmp/main_schema
             docker run --rm --network host \
               -v /tmp/main_schema/schema:/schema:ro \
-              pgschema/pgschema apply \
+              pgschema/pgschema@sha256:5e4b387fe97d6dfd5bc6ff64ee25c8696fb3ce9be52aa351e9cb05abd3ee73b0 apply \
               --file /schema/main.sql \
               --host localhost --port 5432 \
               --user planuser --password planpass --db plandb \
@@ -48,7 +48,7 @@ jobs:
         run: |
           docker run --rm --network host \
             -v "${WORKSPACE}/schema:/schema:ro" \
-            pgschema/pgschema plan \
+            pgschema/pgschema@sha256:5e4b387fe97d6dfd5bc6ff64ee25c8696fb3ce9be52aa351e9cb05abd3ee73b0 plan \
             --file /schema/main.sql \
             --host localhost --port 5432 \
             --user planuser --password planpass --db plandb \

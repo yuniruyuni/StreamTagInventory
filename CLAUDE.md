@@ -13,7 +13,7 @@ StreamTagInventory — Twitch 配信者向けのカテゴリ・タグ管理ツ�
 - **Testing:** bun:test (unit), Playwright (e2e)
 - **i18n:** i18next + react-i18next (ja/en)
 - **DB Migration:** pgschema (declarative)
-- **Deployment:** Docker (distroless) → Cloud Run
+- **Deployment:** Docker (distroless) → GHCR → VPS (yunirun)
 
 ## Commands
 
@@ -164,12 +164,21 @@ DB 表は `template_docs` (Y.Doc バイナリ、PK = Twitch user id) **1 枚の�
 
 ## CI (.github/workflows/)
 
-- `ci.yml`: check:type → check:lint → check:test → build → check:e2e → docker
-- `vrt.yml`: Visual Regression Testing (easy-vrt)
-- `deploy.yml`: build-app + build-migration → migrate → deploy (Cloud Run)
+- `ci.yml`: test (type / lint / unit / build) → e2e → security (bun audit) → docker smoke → **deploy** (main への push のみ)
+- `deploy-yunirun.yml`: `workflow_call` (+ 手動の `workflow_dispatch`)。build-image.yml で app / migration image を GHCR に push → opkssh (OIDC) で VPS に入り `yunirun deploy <sha>`
+- `build-image.yml`: 再利用 workflow (GHCR push)
+- `security.yml`: 週次の `bun audit` (schedule + workflow_dispatch)。デプロイには関与しない
+- `vrt.yml`: Visual Regression Testing (easy-vrt)。deploy のゲートではない
 - `schema-plan.yml`: PR 上で pgschema plan をコメント表示
 
-## Cloud Run デプロイの注意点
+デプロイは `push` では直接起動しない。`ci.yml` の test / e2e / security / docker が
+すべて成功した main への push だけが `deploy-yunirun.yml` を呼ぶ。VPS 側
+(`yuniruyuni.net` の `nixos/services/yunirun.nix`) は OIDC の `sub`
+(`repo:yuniruyuni@85034901/StreamTagInventory@836372101:ref:refs/heads/main`) を
+完全一致で照合するので、deploy job に `environment:` を付けてはいけない。
+`pgschema/pgschema` は `Dockerfile.migration` / `schema-plan.yml` で digest pin している。
+
+## Cloud Run デプロイの注意点 (旧構成。VPS 移行済みで参考情報)
 
 今後の refactor で再発させてはいけない落とし穴。命名・環境変数・memory・パスワードの扱いを間違えるとデプロイが壊れる。
 

@@ -1,3 +1,5 @@
+# main への push のときだけ、全 job の成功後に deploy (deploy-yunirun.yml) を呼ぶ。
+# 定期の依存監査は security.yml が受け持つ。
 name: CI
 
 on:
@@ -5,6 +7,9 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -113,3 +118,17 @@ jobs:
           sleep 5
           curl -f http://localhost:3000/health || exit 1
           docker stop test-container
+
+  deploy:
+    # test / e2e / security / docker がすべて成功した main への push だけ。
+    # OIDC の sub は ref:refs/heads/main になり、VPS 側の認可と一致する。
+    needs: [test, e2e, security, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-yunirun.yml
+    # 呼ばれる側の job が使う権限の上限。再利用ワークフローは呼び出し側より
+    # 多い権限を持てないので、足りないと startup_failure になる。
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    secrets: inherit
