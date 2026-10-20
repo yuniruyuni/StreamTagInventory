@@ -3,11 +3,6 @@
   "extends": ["local>yuniruyuni/renovate-config"],
   "packageRules": [
     {
-      "description": "Keep the compiler API on TypeScript 6 until dependency-cruiser supports TypeScript 7",
-      "matchDepNames": ["typescript"],
-      "allowedVersions": "<7"
-    },
-    {
       "description": "Yjs",
       "matchPackageNames": ["yjs", "y-*"],
       "groupName": "yjs"

@@ -87,6 +87,9 @@ module.exports = {
   options: {
     doNotFollow: { path: "node_modules" },
     tsPreCompilationDeps: true,
+    // TypeScript 7 (native) ships no JS compiler API, so parse with swc
+    // instead of the tsc parser (dependency-cruiser supports typescript <7).
+    parser: "swc",
     tsConfig: { fileName: "tsconfig.json" },
     enhancedResolveOptions: {
       exportsFields: ["exports"],
