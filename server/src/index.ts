@@ -1,3 +1,4 @@
+import "./infra/http/install-fetch-guard";
 import { createContext } from "./context";
 import { closeDatabase, initDatabase } from "./infra/db";
 import { createLogger } from "./infra/logger";
