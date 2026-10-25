@@ -26,7 +26,7 @@
     "css-loader": "^7.1.4",
     "i18next": "^26.0.0",
     "i18next-browser-languagedetector": "^8.2.1",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.23",
     "postcss-loader": "^8.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -36,5 +36,16 @@
     "swr": "^2.4.1",
     "tailwindcss": "^4.2.1",
     "ulid": "^3.0.2"
+  },
+  "overrides": {
+    "baseline-browser-mapping": "2.11.0",
+    "browserslist": "4.28.7",
+    "fast-uri": "3.1.9",
+    "js-yaml": "4.3.2",
+    "nanoid": "3.3.18",
+    "postcss-selector-parser": "7.1.6",
+    "source-map-js": "1.2.2",
+    "ws": "8.21.0",
+    "zod": "4.6.6"
   }
 }
