@@ -15,7 +15,8 @@
 | [0007](./0007-stateless-jwt-bearer-no-server-session.md) | サーバー側 session を廃止し Twitch id_token を毎回検証する Bearer 認証にする | accepted | 2026-04-19 |
 | [0008](./0008-cloud-run-service-connects-as-dml-only-app-user.md) | Cloud Run service は DML-only の app user で DB 接続する (least privilege) | accepted | 2026-04-23 |
 | [0009](./0009-declarative-per-table-grant-via-pgschema.md) | per-table GRANT を pgschema で declarative に管理し、DB role 本体は NixOS が source of truth | accepted | 2026-04-23 |
-| [0010](./0010-temporarily-disable-fetch-response-decoding.md) | Bun の修正版が出るまで外向き fetch の応答展開を止める | accepted | 2026-10-22 |
+| [0010](./0010-temporarily-disable-fetch-response-decoding.md) | Bun の修正版が出るまで外向き fetch の応答展開を止める | superseded → 0011 | 2026-10-22 |
+| [0011](./0011-retain-fetch-guard-during-patched-runtime-rollout.md) | Bun 1.4.4 の修正版導入時も fetch の応答展開ガードを維持する | accepted | 2026-10-25 |
 
 ## ADR に書くこと / 書かないこと
 

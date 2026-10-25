@@ -1,10 +1,10 @@
 ---
 id: "0010"
 title: "Bun の Brotli 修正版が出るまで外向き fetch の応答展開を止める"
-status: "accepted"
+status: "superseded"
 date: "2026-10-22"
 supersedes: null
-superseded_by: null
+superseded_by: "0011"
 related_specres: []
 tags: [security, runtime]
 ---
