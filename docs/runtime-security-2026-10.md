@@ -1,7 +1,31 @@
-# October 2026 runtime security containment
+# October 2026 runtime security
 
-This is a temporary mitigation, **not a patched Bun runtime**. Bun remains 1.4.3.
-The stable release available on 2026-10-22 embeds Brotli source preceding the
+## Patched stable runtime — 2026-10-25
+
+Docker build stages and CI now use stable Bun 1.4.4. The official image is pinned
+to index digest `sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d`.
+Its release revision is `38afee6c84fcf48c0edb2466aa4b27d287a59c30`. Tagged
+Bun source pins Brotli 1.2.1 commit `db24a98aed38a16de78cc05ca15cdd8dc2a0d92d`,
+which includes the CVE-2026-111497 backport `b418fa81c48262a86a95332b0bc6d62c30aa78b6`.
+The official Linux release binary and the pinned image binary were SHA-256 matched.
+
+The existing global fetch guard remains enabled. This rollout changes the runtime
+and build tooling while preserving the existing identity-only outbound response
+policy. Removing the guard is a separate reviewed change. The Docker build checks
+the compiled server's Bun version/revision against the compiler and asserts that
+response decompression remains disabled. Live verification must check both
+containers and origin health after the normal gated deployment.
+
+The retained policy is recorded in [ADR 0011](./adr/0011-retain-fetch-guard-during-patched-runtime-rollout.md).
+
+- https://github.com/oven-sh/bun/releases/tag/bun-v1.4.4
+- https://github.com/oven-sh/bun/blob/bun-v1.4.4/scripts/build/deps/brotli.ts
+- https://github.com/google/brotli/commit/b418fa81c48262a86a95332b0bc6d62c30aa78b6
+
+## Initial containment — 2026-10-22
+
+The initial change was a temporary mitigation, **not a patched Bun runtime**; it retained Bun 1.4.3.
+The stable release verified during that early-morning rollout embedded Brotli source preceding the
 upstream fix for CVE-2026-111497. Rebuilding the unchanged runtime alone does not fix it.
 
 ## Behavior
@@ -36,13 +60,16 @@ production dependencies must continue to be reviewed when upgraded.
   digests with the deployment artifact. Verify origin health, not cached CDN HTML.
 - Replace the pinned Bun version/digest only after the stable upstream source
   contains the Brotli fix; rebuild embedded binaries, run CI and verify live probes.
-  Then remove the guard and its temporary CLI indicator together.
+  Retain the guard during this runtime rollout. Its removal and the temporary CLI
+  indicator must be considered together in a separate reviewed change.
 
 ## Rollback
 
 Baseline source: e9ae26df0a9614b3b06f2ced4db2c5076fc8613e. Record the corresponding live image digest before rollout.
 The change contains no database or public API schema migration. Revert this commit
-and use the normal gated deployment to roll back; rollback restores the decoder
+and use the normal gated deployment to roll back. The pre-1.4.4 image retains
+the identity guard but contains the old decoder; restoring the original pre-guard
+image restores the decoder
 exposure, so prefer a forward fix if a provider rejects identity responses.
 
 ## Sources
@@ -51,3 +78,15 @@ exposure, so prefer a forward fix if a provider rejects identity responses.
 - https://github.com/oven-sh/bun/blob/bun-v1.4.3/scripts/build/deps/brotli.ts
 - https://github.com/google/brotli/commit/0ed4268a4401abcb44720963
 - https://bun.com/docs/runtime/networking/fetch
+
+## Additional audit corrections — 2026-10-25
+
+Happy DOM and its global registrator are pinned to 21.0.4 for GHSA-834v-8h66-3h79. These are test/development dependencies.
+
+Zod is pinned to 4.6.6 for GHSA-mrhx-c7xc-m3w5. This is also a server runtime dependency; a small bounded-array regression verifies size rejection before element validation.
+
+Only these package records and their direct manifest pins change in bun.lock.
+Other resolved dependencies, application source, schemas and the fetch guard are unchanged.
+
+- https://github.com/capricorn86/happy-dom/releases/tag/v21.0.4
+- https://github.com/colinhacks/zod/releases/tag/v4.6.6

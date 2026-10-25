@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Bun
-        run: npm install -g bun@1.4.3
+        run: npm install -g bun@1.4.4
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Bun
-        run: npm install -g bun@1.4.3
+        run: npm install -g bun@1.4.4
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -87,7 +87,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Bun
-        run: npm install -g bun@1.4.3
+        run: npm install -g bun@1.4.4
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
