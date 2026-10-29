@@ -34,6 +34,19 @@ class MockStorage implements Storage {
   }
 }
 
+const Screen: React.FC<{ storage: Storage; snapshots: string[] }> = ({
+  storage,
+  snapshots,
+}) => {
+  const [items] = genUseStorage<string[]>(storage, "templates", []);
+  snapshots.push(items.join(","));
+  return React.createElement(
+    "ul",
+    null,
+    items.map((x) => React.createElement("li", { key: x }, x)),
+  );
+};
+
 describe("hydration flash が発生しないこと", () => {
   test("[hook] storage に値がある場合、初回レンダリングから storage 値が返る", () => {
     const storage = new MockStorage();
@@ -58,17 +71,9 @@ describe("hydration flash が発生しないこと", () => {
 
     const snapshots: string[] = [];
 
-    const Screen: React.FC = () => {
-      const [items] = genUseStorage<string[]>(storage, "templates", []);
-      snapshots.push(items.join(","));
-      return React.createElement(
-        "ul",
-        null,
-        items.map((x) => React.createElement("li", { key: x }, x)),
-      );
-    };
-
-    const { container } = render(React.createElement(Screen));
+    const { container } = render(
+      React.createElement(Screen, { storage, snapshots }),
+    );
 
     // 初回レンダリングから正しい値
     expect(snapshots[0]).toBe("A,B,C");

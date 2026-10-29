@@ -8,63 +8,61 @@ import { newTemplate, type Template } from "~/model/template";
 import { TemplateForm } from "./component";
 
 // CategorySelectorとInputTagsコンポーネントをモック
-mock.module("~/CategorySelector", () => {
-  return {
-    CategorySelector: ({
-      value,
-      onChange,
-    }: {
-      value?: Category;
-      onChange: (category: Category) => void;
-    }) => (
-      <div data-testid="mock-category-selector">
-        <button
-          type="button"
-          data-testid="mock-category-change"
-          onClick={() =>
-            onChange({
-              id: "mock-category",
-              name: "モックカテゴリ",
-              box_art_url: "",
-            })
-          }
-        >
-          カテゴリ変更
-        </button>
-        <span data-testid="category-id">{value?.id}</span>
-        <span data-testid="category-name">{value?.name}</span>
-      </div>
-    ),
-  };
-});
+const MockCategorySelector = ({
+  value,
+  onChange,
+}: {
+  value?: Category;
+  onChange: (category: Category) => void;
+}) => (
+  <div data-testid="mock-category-selector">
+    <button
+      type="button"
+      data-testid="mock-category-change"
+      onClick={() =>
+        onChange({
+          id: "mock-category",
+          name: "モックカテゴリ",
+          box_art_url: "",
+        })
+      }
+    >
+      カテゴリ変更
+    </button>
+    <span data-testid="category-id">{value?.id}</span>
+    <span data-testid="category-name">{value?.name}</span>
+  </div>
+);
 
-mock.module("~/InputTags", () => {
-  return {
-    InputTags: ({
-      tags,
-      onChange,
-    }: {
-      tags: string[];
-      onChange: (tags: string[]) => void;
-    }) => (
-      <div data-testid="mock-input-tags">
-        <button
-          type="button"
-          data-testid="mock-tags-change"
-          onClick={() => onChange(["モックタグ1", "モックタグ2"])}
-        >
-          タグ変更
-        </button>
-        <span data-testid="tags-count">{tags.length}</span>
-        {tags.map((tag: string, index: number) => (
-          <span key={`tag-${tag}`} data-testid={`tag-${index}`}>
-            {tag}
-          </span>
-        ))}
-      </div>
-    ),
-  };
-});
+mock.module("~/CategorySelector", () => ({
+  CategorySelector: MockCategorySelector,
+}));
+
+const MockInputTags = ({
+  tags,
+  onChange,
+}: {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+}) => (
+  <div data-testid="mock-input-tags">
+    <button
+      type="button"
+      data-testid="mock-tags-change"
+      onClick={() => onChange(["モックタグ1", "モックタグ2"])}
+    >
+      タグ変更
+    </button>
+    <span data-testid="tags-count">{tags.length}</span>
+    {tags.map((tag: string, index: number) => (
+      <span key={`tag-${tag}`} data-testid={`tag-${index}`}>
+        {tag}
+      </span>
+    ))}
+  </div>
+);
+
+mock.module("~/InputTags", () => ({ InputTags: MockInputTags }));
 
 // テスト用のラッパーコンポーネント
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
