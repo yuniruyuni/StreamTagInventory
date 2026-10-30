@@ -41,14 +41,14 @@
     "ulid": "^3.0.2"
   },
   "overrides": {
-    "baseline-browser-mapping": "2.11.0",
-    "browserslist": "4.28.7",
+    "baseline-browser-mapping": "2.11.34",
+    "browserslist": "4.29.5",
     "fast-uri": "3.1.9",
     "js-yaml": "4.3.2",
-    "nanoid": "3.3.18",
-    "postcss-selector-parser": "7.1.6",
+    "nanoid": "3.3.20",
+    "postcss-selector-parser": "7.1.7",
     "source-map-js": "1.2.2",
-    "ws": "8.21.0",
-    "zod": "4.6.6"
+    "ws": "8.22.0",
+    "zod": "4.6.7"
   }
 }
