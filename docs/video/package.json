@@ -6,7 +6,8 @@
   "scripts": {
     "preview": "remotion preview src/index.ts",
     "render": "remotion render src/index.ts IntroVideo ../StreamTagInventory-Intro.mp4 --codec h264",
-    "capture": "npx playwright test --config=playwright.config.ts"
+    "capture": "npx playwright test --config=playwright.config.ts",
+    "test:security": "bun test ./test/extract-zip.test.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -50,5 +51,8 @@
     "source-map-js": "1.2.2",
     "ws": "8.21.0",
     "zod": "4.6.6"
+  },
+  "patchedDependencies": {
+    "extract-zip@2.0.1": "patches/extract-zip@2.0.1.patch"
   }
 }

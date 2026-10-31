@@ -1,0 +1,128 @@
+diff --git a/index.js b/index.js
+index 23384ea16bb848616886f356d8d69f94325535bf..2d8a25336948d2217583669d788b2acfb21a7df7 100644
+--- a/index.js
++++ b/index.js
+@@ -1,7 +1,6 @@
+ const debug = require('debug')('extract-zip')
+ // eslint-disable-next-line node/no-unsupported-features/node-builtins
+ const { createWriteStream, promises: fs } = require('fs')
+-const getStream = require('get-stream')
+ const path = require('path')
+ const { promisify } = require('util')
+ const stream = require('stream')
+@@ -14,12 +13,13 @@ class Extractor {
+   constructor (zipPath, opts) {
+     this.zipPath = zipPath
+     this.opts = opts
++    this.entries = new Set()
+   }
+ 
+   async extract () {
+     debug('opening', this.zipPath, 'with opts', this.opts)
+ 
+-    this.zipfile = await openZip(this.zipPath, { lazyEntries: true })
++    this.zipfile = await openZip(this.zipPath, { lazyEntries: true, strictFileNames: true })
+     this.canceled = false
+ 
+     return new Promise((resolve, reject) => {
+@@ -50,18 +50,7 @@ class Extractor {
+           return
+         }
+ 
+-        const destDir = path.dirname(path.join(this.opts.dir, entry.fileName))
+-
+         try {
+-          await fs.mkdir(destDir, { recursive: true })
+-
+-          const canonicalDestDir = await fs.realpath(destDir)
+-          const relativeDestDir = path.relative(this.opts.dir, canonicalDestDir)
+-
+-          if (relativeDestDir.split(path.sep).includes('..')) {
+-            throw new Error(`Out of bound path "${canonicalDestDir}" found while processing file ${entry.fileName}`)
+-          }
+-
+           await this.extractEntry(entry)
+           debug('finished processing', entry.fileName)
+           this.zipfile.readEntry()
+@@ -85,7 +74,23 @@ class Extractor {
+       this.opts.onEntry(entry, this.zipfile)
+     }
+ 
+-    const dest = path.join(this.opts.dir, entry.fileName)
++    const name = entry.fileName
++    // Treat ZIP paths portably; never let platform-specific separators or roots
++    // reinterpret an entry. Validate before creating any parent directories.
++    if (!name || name.includes('\\') || name.includes('\0') || name.includes(':') ||
++        path.posix.isAbsolute(name) || path.win32.isAbsolute(name) ||
++        name.split('/').includes('..')) {
++      throw new Error(`Unsafe archive path: ${name}`)
++    }
++    const dest = path.resolve(this.opts.dir, name)
++    const relative = path.relative(this.opts.dir, dest)
++    if (!relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
++      throw new Error(`Out of bound archive path: ${name}`)
++    }
++    if (this.entries.has(dest)) {
++      throw new Error(`Duplicate archive path: ${name}`)
++    }
++    this.entries.add(dest)
+ 
+     // convert external file attr int into a fs stat mode int
+     const mode = (entry.externalFileAttributes >> 16) & 0xFFFF
+@@ -94,6 +99,11 @@ class Extractor {
+     const IFDIR = 16384
+     const IFLNK = 40960
+     const symlink = (mode & IFMT) === IFLNK
++    // Chrome Headless Shell needs no symlinks. Reject even in-root links so
++    // neither current nor later entries can introduce a chain or write target.
++    if (symlink) {
++      throw new Error(`Symlink archive entry is not allowed: ${name}`)
++    }
+     let isDir = (mode & IFMT) === IFDIR
+ 
+     // Failsafe, borrowed from jsZip
+@@ -113,23 +123,32 @@ class Extractor {
+     // always ensure folders are created
+     const destDir = isDir ? dest : path.dirname(dest)
+ 
+-    const mkdirOptions = { recursive: true }
+-    if (isDir) {
+-      mkdirOptions.mode = procMode
+-    }
+-    debug('mkdir', { dir: destDir, ...mkdirOptions })
+-    await fs.mkdir(destDir, mkdirOptions)
++    await this.ensureDirectory(destDir, isDir ? procMode : undefined)
+     if (isDir) return
+ 
+     debug('opening read stream', dest)
+     const readStream = await promisify(this.zipfile.openReadStream.bind(this.zipfile))(entry)
+ 
+-    if (symlink) {
+-      const link = await getStream(readStream)
+-      debug('creating symlink', link, dest)
+-      await fs.symlink(link, dest)
+-    } else {
+-      await pipeline(readStream, createWriteStream(dest, { mode: procMode }))
++    // Exclusive creation rejects existing files, hardlinks and leaf symlinks,
++    // including dangling links and duplicate entries, without truncating them.
++    await pipeline(readStream, createWriteStream(dest, { mode: procMode, flags: 'wx' }))
++  }
++
++  async ensureDirectory (dest, mode) {
++    // Check each component before descending: recursive mkdir followed by
++    // realpath can already have created directories through a planted symlink.
++    let current = this.opts.dir
++    for (const part of path.relative(this.opts.dir, dest).split(path.sep).filter(Boolean)) {
++      current = path.join(current, part)
++      try {
++        await fs.mkdir(current, { mode })
++      } catch (err) {
++        if (err.code !== 'EEXIST') throw err
++      }
++      const stat = await fs.lstat(current)
++      if (!stat.isDirectory() || stat.isSymbolicLink()) {
++        throw new Error(`Unsafe archive directory: ${current}`)
++      }
+     }
+   }
+ 
