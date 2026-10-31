@@ -38,6 +38,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "extract-zip@2.0.1": "patches/extract-zip@2.0.1.patch",
+  },
   "overrides": {
     "baseline-browser-mapping": "2.11.0",
     "browserslist": "4.28.7",
