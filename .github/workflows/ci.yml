@@ -49,7 +49,8 @@ jobs:
           fi
 
   e2e:
-    runs-on: ubuntu-latest
+    # Playwright 1.59.1 supports Ubuntu 24.04; ubuntu-latest can select 26.04.
+    runs-on: ubuntu-24.04
     needs: test
 
     steps:
