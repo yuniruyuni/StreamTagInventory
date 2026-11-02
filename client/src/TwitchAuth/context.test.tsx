@@ -3,21 +3,21 @@ import { fireEvent, render } from "@testing-library/react";
 import React from "react";
 import { TwitchAuthContext } from "./context";
 
+const TestComponent = () => {
+  const authContext = React.useContext(TwitchAuthContext);
+  return (
+    <div>
+      <span data-testid="token">{authContext.token}</span>
+      <span data-testid="user">{authContext.user?.login ?? "no-user"}</span>
+      <button type="button" onClick={() => authContext.logout()}>
+        Logout
+      </button>
+    </div>
+  );
+};
+
 test("TwitchAuthContext defaults are sensible", () => {
   expect(TwitchAuthContext).toBeDefined();
-
-  const TestComponent = () => {
-    const authContext = React.useContext(TwitchAuthContext);
-    return (
-      <div>
-        <span data-testid="token">{authContext.token}</span>
-        <span data-testid="user">{authContext.user?.login ?? "no-user"}</span>
-        <button type="button" onClick={() => authContext.logout()}>
-          Logout
-        </button>
-      </div>
-    );
-  };
 
   const { getByTestId, getByRole } = render(<TestComponent />);
 

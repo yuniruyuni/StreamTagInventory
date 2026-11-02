@@ -24,6 +24,36 @@ const renderInProvider = (notification: NotificationProps) =>
     </NotificationProvider>,
   );
 
+const Probe: React.FC<{ seen: { ids: string[] } }> = ({ seen }) => {
+  const { notifications } = useNotification();
+  seen.ids = notifications.map((n) => n.id);
+  return null;
+};
+
+/**
+ * NotificationBanner は props の notification を描画し、removeNotification
+ * に id を渡して消す構造。Harness で useNotification.addNotification を 1 回
+ * 呼び、state 側に同じ id の notification を積んでおく。
+ * render-phase に setState するのは違反なので useEffect でマウント後に実行。
+ */
+const Harness: React.FC = () => {
+  const { addNotification, notifications } = useNotification();
+  // 厳密に 1 回だけ add する (remove → 0 → useEffect 再発火による再 add を防ぐ)
+  const addedRef = useRef(false);
+  useEffect(() => {
+    if (addedRef.current) return;
+    addedRef.current = true;
+    addNotification({
+      type: "info",
+      title: "T",
+      message: "M",
+      autoClose: false,
+    });
+  }, [addNotification]);
+  const n = notifications[0];
+  return n ? <NotificationBanner notification={n} /> : null;
+};
+
 describe("NotificationBanner", () => {
   test("renders title, message, and role=alert", () => {
     const { getByRole, getByText } = renderInProvider(
@@ -68,40 +98,10 @@ describe("NotificationBanner", () => {
 
   test("close button eventually removes notification from provider state", async () => {
     const seen: { ids: string[] } = { ids: [] };
-    const Probe: React.FC = () => {
-      const { notifications } = useNotification();
-      seen.ids = notifications.map((n) => n.id);
-      return null;
-    };
-
-    /**
-     * NotificationBanner は props の notification を描画し、removeNotification
-     * に id を渡して消す構造。Harness で useNotification.addNotification を 1 回
-     * 呼び、state 側に同じ id の notification を積んでおく。
-     * render-phase に setState するのは違反なので useEffect でマウント後に実行。
-     */
-    const Harness: React.FC = () => {
-      const { addNotification, notifications } = useNotification();
-      // 厳密に 1 回だけ add する (remove → 0 → useEffect 再発火による再 add を防ぐ)
-      const addedRef = useRef(false);
-      useEffect(() => {
-        if (addedRef.current) return;
-        addedRef.current = true;
-        addNotification({
-          type: "info",
-          title: "T",
-          message: "M",
-          autoClose: false,
-        });
-      }, [addNotification]);
-      const n = notifications[0];
-      return n ? <NotificationBanner notification={n} /> : null;
-    };
-
     const { getByRole, queryByRole } = render(
       <NotificationProvider>
         <Harness />
-        <Probe />
+        <Probe seen={seen} />
       </NotificationProvider>,
     );
 
