@@ -24,7 +24,7 @@ jobs:
     if: ${{ !cancelled() && !failure() }}
     needs: prepare
     # Keep both screenshot jobs on the same Playwright-supported OS.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v7
@@ -55,7 +55,7 @@ jobs:
   actual:
     if: ${{ !cancelled() && !failure() }}
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v7
