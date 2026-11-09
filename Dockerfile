@@ -33,7 +33,7 @@ RUN bun build src/index.ts --compile --outfile /work/dist/server
 RUN /work/dist/server --runtime-info > /tmp/runtime-info.json \
  && bun -e 'const r = await Bun.file("/tmp/runtime-info.json").json(); if (r.bun !== Bun.version || r.bunRevision !== Bun.revision || r.outboundFetchDecompression !== false) throw new Error("Compiled runtime/guard mismatch"); console.log(JSON.stringify(r));'
 
-FROM gcr.io/distroless/cc-debian12
+FROM gcr.io/distroless/cc-debian12@sha256:e5d81ddde149641e2a9ba55be4545bc125c67de07508b03ba4c22e6eb0ded5aa
 WORKDIR /app
 COPY --from=build-server /work/dist/server /app/server
 COPY --from=build-client /work/client/static/ /app/static/
