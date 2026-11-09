@@ -17,7 +17,7 @@ jobs:
       expected-sha: ${{ steps.prepare.outputs.expected-sha }}
       expected-cache-hit: ${{ steps.prepare.outputs.expected-cache-hit }}
     steps:
-      - uses: yorifuji/easy-vrt/prepare@v2
+      - uses: yorifuji/easy-vrt/prepare@5a06f323dc6c5e97d20ad11cd264262ef334df41 # v2
         id: prepare
 
   expected:
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - name: Checkout base branch
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prepare.outputs.expected-sha }}
 
@@ -47,7 +47,7 @@ jobs:
           SKIP_DB_VERIFY: "1"
           TWITCH_CLIENT_ID: ci-vrt-dummy
 
-      - uses: yorifuji/easy-vrt/expected@v2
+      - uses: yorifuji/easy-vrt/expected@5a06f323dc6c5e97d20ad11cd264262ef334df41 # v2
         with:
           expected-dir: e2e/__snapshots__/
           expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.prepare.outputs.actual-sha }}
 
@@ -79,12 +79,12 @@ jobs:
           TWITCH_CLIENT_ID: ci-vrt-dummy
 
       - name: Upload raw actual snapshots
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: raw-actual-visual-snapshots
           path: e2e/__snapshots__/visual.spec.ts-snapshots/
 
-      - uses: yorifuji/easy-vrt/actual@v2
+      - uses: yorifuji/easy-vrt/actual@5a06f323dc6c5e97d20ad11cd264262ef334df41 # v2
         with:
           actual-dir: e2e/__snapshots__/
           actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
@@ -94,7 +94,7 @@ jobs:
     needs: [prepare, expected, actual]
     runs-on: ubuntu-latest
     steps:
-      - uses: yorifuji/easy-vrt/compare@v2
+      - uses: yorifuji/easy-vrt/compare@5a06f323dc6c5e97d20ad11cd264262ef334df41 # v2
         with:
           expected-cache-key: ${{ needs.prepare.outputs.expected-sha }}
           actual-cache-key: ${{ needs.prepare.outputs.actual-sha }}
