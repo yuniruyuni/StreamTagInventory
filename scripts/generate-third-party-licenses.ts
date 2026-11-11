@@ -87,10 +87,6 @@ const fallbackLicenseDocuments = new Map([
 // Keep overrides version-pinned so a dependency update requires a fresh review.
 const componentLicenseOverrides = new Map([
   [
-    "html-parse-stringify@3.0.1",
-    join(scriptDirectory, "license-overrides/html-parse-stringify-MIT.md"),
-  ],
-  [
     "@hono/trpc-server@0.4.2",
     join(scriptDirectory, "license-overrides/hono-trpc-server-MIT.md"),
   ],
