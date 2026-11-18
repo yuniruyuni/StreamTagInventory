@@ -18,7 +18,7 @@
     "watch:type": "bun run --filter '*' --parallel watch:type"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.6"
+    "@biomejs/biome": "2.6.8"
   },
   "trustedDependencies": [
     "@biomejs/biome",
