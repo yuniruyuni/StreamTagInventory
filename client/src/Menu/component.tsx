@@ -142,6 +142,9 @@ export const Menu: React.FC<Props> = ({
                   {t("settings.postTemplate")}
                 </button>
               </li>
+              <li>
+                <a href="/privacy">{t("legal.privacy")}</a>
+              </li>
               <li data-testid="third-party-licenses-menu-item">
                 <a href="/third-party-licenses.html">
                   {t("legal.thirdPartyLicenses")}

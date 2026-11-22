@@ -98,6 +98,7 @@ export function createApp(ctx: Context) {
     }
   });
 
+  app.get("/privacy", serveStatic({ root: STATIC_DIR, path: "privacy.html" }));
   app.use("/*", serveStatic({ root: STATIC_DIR }));
   app.get("*", serveStatic({ root: STATIC_DIR, path: "index.html" }));
 
