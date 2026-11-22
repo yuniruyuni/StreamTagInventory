@@ -58,6 +58,24 @@ export function createApp(ctx: Context) {
   app.use("/api/*", noStoreMiddleware);
   app.use("/api/*", createJwtAuthMiddleware({ ctx }));
 
+  app.post("/api/usage/visit", async (c) => {
+    c.header("Cache-Control", "no-store");
+    if (c.req.header("X-Yuniview-Visit") !== "1") return c.body(null, 400);
+    const id = c.get("user")?.id;
+    if (!id) return c.body(null, 401);
+    try {
+      const response = await fetch("http://localhost/visit", {
+        unix: "/run/yuniview-otlp/usage.sock",
+        method: "POST",
+        body: id,
+        signal: AbortSignal.timeout(1500),
+      });
+      return c.body(null, response.status === 204 ? 204 : 503);
+    } catch {
+      return c.body(null, 503);
+    }
+  });
+
   app.use(
     "/api/trpc/*",
     trpcServer({

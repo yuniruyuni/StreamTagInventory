@@ -15,6 +15,7 @@ import { APP_BASE_URL } from "~/constant";
 import { ID_TOKEN_STORAGE_KEY, trpc } from "~/trpc/client";
 import { useSession } from "~/useStorage";
 import { type AuthToken, TwitchAuthContext } from "./context";
+import { trackDailyUse } from "./daily-usage";
 import {
   clearHash,
   generateNonce,
@@ -110,6 +111,10 @@ export const TwitchAuthProvider: FC<Props> = ({
     enabled: !!idToken,
   });
 
+  useEffect(() => {
+    if (idToken && meQuery.data?.user)
+      return trackDailyUse({ Authorization: `Bearer ${idToken}` });
+  }, [idToken, meQuery.data?.user]);
   /**
    * 現 nonce を消費し、次回ログイン用に新しい nonce を発行する。
    * localStorage と React state の両方を同期的に更新する。
