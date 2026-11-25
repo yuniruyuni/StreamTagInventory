@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS build-client
+FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS build-client
 # client bundle に焼き込む public env (client/bin/build.ts の allowlist と対応)。
 # build-arg 未指定時は localhost (= ローカル開発用 default) になるため、production
 # image を作る場合は必ず GitHub Actions 側で --build-arg を渡すこと。
@@ -18,7 +18,7 @@ COPY client/ /work/client/
 WORKDIR /work/client
 RUN bun run build
 
-FROM oven/bun:1.4.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS build-server
+FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS build-server
 WORKDIR /work
 COPY package.json bun.lock /work/
 COPY client/package.json /work/client/
